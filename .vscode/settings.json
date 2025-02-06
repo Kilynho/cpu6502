@@ -1,0 +1,13 @@
+{
+    "makefile.buildLog": "",
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/home/kilynho/src/cpu6502",
+            "binaryPath": "/home/kilynho/src/cpu6502/main_6502",
+            "binaryArgs": []
+        }
+    ],
+    "files.associations": {
+        "cerrno": "cpp"
+    }
+}

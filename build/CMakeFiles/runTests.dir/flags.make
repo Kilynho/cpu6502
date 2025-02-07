@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -isystem /home/kilynho/src/cpu6502/lib/googletest/googletest/include -isystem /home/kilynho/src/cpu6502/lib/googletest/googletest
 
-CXX_FLAGS = -g -std=gnu++14
+CXX_FLAGS = -g -std=gnu++17
 

@@ -5,6 +5,8 @@
 #include <cstdio>
 #include <bitset>
 #include <string>
+#include <fstream>
+#include <iostream>
 #include "mem.hpp"
 
 // Definición de tipos para mayor claridad
@@ -35,18 +37,9 @@ public:
     static const Instruction INS_STA_IM; // Instrucción STA Immediate
     static const Instruction INS_JSR;   // Instrucción JSR (Jump to Subroutine)
     static const Instruction INS_RTS;   // Instrucción RTS (Return from Subroutine)
-
-    // Registros de la CPU
-    Word PC;    // Program Counter (Contador de Programa)
-    Byte SP;    // Stack Pointer (Puntero de Pila)
-    Byte A, X, Y; // Registros A, X, Y
-    Byte C : 1; // Carry Flag (Bandera de Acarreo)
-    Byte Z : 1; // Zero Flag (Bandera de Cero)
-    Byte I : 1; // Interrupt Disable (Deshabilitar Interrupciones)
-    Byte D : 1; // Decimal Mode (Modo Decimal)
-    Byte B : 1; // Break Command (Comando de Interrupción)
-    Byte V : 1; // Overflow Flag (Bandera de Desbordamiento)
-    Byte N : 1; // Negative Flag (Bandera de Negativo)
+    static const Instruction INS_LDA_ABS; // Instrucción LDA Absolute
+    static const Instruction INS_LDA_ABSX; // Instrucción LDA Absolute,X
+    static const Instruction INS_LDA_ABSY; // Instrucción LDA Absolute,Y
 
     // Métodos públicos
     void Reset(Mem& memory); // Reinicia la CPU y la memoria
@@ -54,15 +47,11 @@ public:
     void PrintCPUState() const; // Imprime el estado de la CPU
     u32 CalculateCycles(const Mem& mem) const; // Calcula los ciclos necesarios para ejecutar el programa de prueba
     Word FetchWordFromMemory(const Mem& memory, Word address) const; // Obtiene una palabra de la memoria
-    void Log(const std::string& message) const; // Registra un mensaje en el log
     void LogMemoryAccess(Word address, Byte data, bool isWrite) const; // Registra el acceso a la memoria
     void AssignCyclesAndBytes(Word &pc, u32 &cycles, Byte opcode) const; // Asigna ciclos y bytes según el opcode
     void PushPCToStack(u32& cycles, Mem& memory); // Guarda el contador de programa en la pila
     void PullPCFromStack(u32& cycles, Mem& memory); // Recupera el contador de programa de la pila
     Word PopWordFromStack(u32& cycles, Mem& memory); // Recupera el contador de programa de la pila
-
-private:
-    // Métodos privados
     Byte FetchByte(u32& Cycles, Mem& memory); // Obtiene un byte de la memoria
     Word FetchWord(u32& Cycles, Mem& memory); // Obtiene una palabra de la memoria
     Byte ReadByte(u32& Cycles, Byte Address, Mem& memory); // Lee un byte de la memoria
@@ -73,6 +62,26 @@ private:
     std::string ByteToBinaryString(Byte byte) const; // Convierte un byte a una cadena binaria
     std::string WordToBinaryString(Word word) const; // Convierte una palabra a una cadena binaria
     Word SPToAddress(); // Convierte el puntero de pila en una dirección de memoria
+   
+   // Registros de la CPU
+    Word PC;    // Program Counter (Contador de Programa)
+    Byte SP;    // Stack Pointer (Puntero de Pila)
+    Byte A, X, Y; // Registros A, X, Y
+    Byte C : 1; // Carry Flag (Bandera de Acarreo)
+    Byte Z : 1; // Zero Flag (Bandera de Cero)
+    Byte I : 1; // Interrupt Disable (Deshabilitar Interrupciones)
+    Byte D : 1; // Decimal Mode (Modo Decimal)
+    Byte B : 1; // Break Command (Comando de Interrupción)
+    Byte V : 1; // Overflow Flag (Bandera de Desbordamiento)
+    Byte N : 1; // Negative Flag (Bandera de Negativo)
+    
+    mutable std::ofstream logFile; // Archivo de registro de la CPU
+
+    CPU();  // Constructor de la CPU
+    ~CPU(); // Destructor de la CPU
+    
+private:
+    // Métodos privados
 };
 
 #endif // CPU_HPP

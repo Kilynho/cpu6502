@@ -1,0 +1,49 @@
+Start testing: Feb 06 19:52 CET
+----------------------------------------------------------
+1/1 Testing: runTests
+1/1 Test: runTests
+Command: "/home/kilynho/src/cpu6502/build/runTests"
+Directory: /home/kilynho/src/cpu6502/build
+"runTests" start time: Feb 06 19:52 CET
+Output:
+----------------------------------------------------------
+[==========] Running 6 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 6 tests from M6502Test1
+[ RUN      ] M6502Test1.TestSTA
+[       OK ] M6502Test1.TestSTA (0 ms)
+[ RUN      ] M6502Test1.TestLDA_IM
+[       OK ] M6502Test1.TestLDA_IM (0 ms)
+[ RUN      ] M6502Test1.TestLDA_ZP
+[       OK ] M6502Test1.TestLDA_ZP (0 ms)
+[ RUN      ] M6502Test1.TestLDA_ZPX
+[       OK ] M6502Test1.TestLDA_ZPX (0 ms)
+[ RUN      ] M6502Test1.TestJSR
+[       OK ] M6502Test1.TestJSR (0 ms)
+[ RUN      ] M6502Test1.TestRTS
+/home/kilynho/src/cpu6502/test.cpp:86: Failure
+Expected equality of these values:
+  cpu.PC
+    Which is: 256
+  0x8003
+    Which is: 32771
+
+[  FAILED  ] M6502Test1.TestRTS (0 ms)
+[----------] 6 tests from M6502Test1 (3 ms total)
+
+[----------] Global test environment tear-down
+[==========] 6 tests from 1 test suite ran. (3 ms total)
+[  PASSED  ] 5 tests.
+[  FAILED  ] 1 test, listed below:
+[  FAILED  ] M6502Test1.TestRTS
+
+ 1 FAILED TEST
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Failed.
+"runTests" end time: Feb 06 19:52 CET
+"runTests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Feb 06 19:52 CET

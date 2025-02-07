@@ -21,42 +21,14 @@
 	TotalVirtualMemory="4095"
 	TotalPhysicalMemory="7817"
 	LogicalProcessorsPerPhysical="2"
-	ProcessorClockFrequency="2100"
+	ProcessorClockFrequency="2300.09"
 	>
 	<Testing>
-		<StartDateTime>Feb 06 17:39 CET</StartDateTime>
-		<StartTestTime>1738859980</StartTestTime>
-		<TestList>
-			<Test>./runTests</Test>
-		</TestList>
-		<Test Status="passed">
-			<Name>runTests</Name>
-			<Path>.</Path>
-			<FullName>./runTests</FullName>
-			<FullCommandLine>/home/kilynho/src/cpu6502/build/runTests</FullCommandLine>
-			<Results>
-				<NamedMeasurement type="numeric/double" name="Execution Time">
-					<Value>0.00731853</Value>
-				</NamedMeasurement>
-				<NamedMeasurement type="numeric/double" name="Processors">
-					<Value>1</Value>
-				</NamedMeasurement>
-				<NamedMeasurement type="text/string" name="Completion Status">
-					<Value>Completed</Value>
-				</NamedMeasurement>
-				<NamedMeasurement type="text/string" name="Command Line">
-					<Value>/home/kilynho/src/cpu6502/build/runTests</Value>
-				</NamedMeasurement>
-				<NamedMeasurement type="text/string" name="Environment">
-					<Value>#CTEST_RESOURCE_GROUP_COUNT=</Value>
-				</NamedMeasurement>
-				<Measurement>
-					<Value encoding="base64" compression="gzip">eJyNkl8LgjAUxd/3Ke5jPigq2FsPghH9sUQNRJFYtELQLXTW129qiEbZzsPg7pz9xuXeZNErBb+mNKM3sICTildwLVkBRltAVWecaChRe6WwytkZ551P6CMrGS0IFVnC1fr+ER5B3bmlm6GoDZSAf9xDq3RwrzVnENrC73TYfvVhpkNRKZOYnWOf1u4kqYvIwmLvLyz25GGRBC2SwW0CfxIl/B4jMRuYmSILnHGcK0hu9pzgUr2wJ0XJcLV+rhSUmGrjj0QHnh0ES6fp8P1QQy89170c====</Value>
-				</Measurement>
-			</Results>
-		</Test>
-		<EndDateTime>Feb 06 17:39 CET</EndDateTime>
-		<EndTestTime>1738859980</EndTestTime>
+		<StartDateTime>Feb 07 00:38 CET</StartDateTime>
+		<StartTestTime>1738885089</StartTestTime>
+		<TestList/>
+		<EndDateTime>Feb 07 00:38 CET</EndDateTime>
+		<EndTestTime>1738885089</EndTestTime>
 		<ElapsedMinutes>0</ElapsedMinutes>
 	</Testing>
 </Site>

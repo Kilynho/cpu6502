@@ -13,7 +13,7 @@ TEST_TARGET = runTests
 
 # Archivos fuente
 SOURCES = main_6502.cpp cpu.cpp mem.cpp
-TEST_SOURCES = test.cpp
+TEST_SOURCES = test.cpp cpu.cpp mem.cpp
 
 # Archivos objeto generados a partir de los archivos fuente
 OBJECTS = $(SOURCES:.cpp=.o)

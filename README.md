@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![C++](https://img.shields.io/badge/C++-17-blue.svg)
-![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)
+![CI](https://github.com/Kilynho/cpu6502/workflows/CI/badge.svg)
 
 Una implementación moderna de un emulador de CPU 6502 en C++. Este proyecto recrea el comportamiento del legendario procesador MOS Technology 6502, utilizado en sistemas clásicos como Apple II, Commodore 64, y NES.
 
@@ -80,11 +80,36 @@ int main() {
 
 ## 🧪 Testing
 
-El proyecto incluye tests para validar el comportamiento de las instrucciones:
+El proyecto incluye una suite completa de tests unitarios usando Google Test para validar el comportamiento de las instrucciones.
 
+### Ejecutar los tests
+
+#### Usando CMake:
 ```bash
-./test
+cd build
+./runTests
 ```
+
+#### Usando Make:
+```bash
+make
+./runTests
+```
+
+### Cobertura de Tests
+
+Los tests incluyen:
+- **Instrucciones LDA**: Todos los modos de direccionamiento (Immediate, Zero Page, Zero Page X, Absolute, Absolute X, Absolute Y)
+- **Instrucción LDX**: Modo inmediato
+- **Instrucción STA**: Almacenamiento en memoria
+- **Instrucciones JSR/RTS**: Llamadas a subrutinas y manejo de pila
+- **Casos límite**: Valores cero, 0xFF, límites de página
+- **Comportamiento de flags**: Zero flag (Z) y Negative flag (N)
+- **Llamadas anidadas**: Subrutinas anidadas y manejo correcto de la pila
+
+### CI/CD Automatizado
+
+El proyecto usa GitHub Actions para ejecutar automáticamente los tests en cada push y pull request. Puedes ver el estado de la build en el badge de CI en la parte superior del README.
 
 ## 📖 Arquitectura del Proyecto
 

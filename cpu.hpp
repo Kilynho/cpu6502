@@ -61,7 +61,7 @@ public:
     void LDASetStatus(); // Establece el estado de la instrucción LDA
     std::string ByteToBinaryString(Byte byte) const; // Convierte un byte a una cadena binaria
     std::string WordToBinaryString(Word word) const; // Convierte una palabra a una cadena binaria
-    Word SPToAddress(); // Convierte el puntero de pila en una dirección de memoria
+    Word SPToAddress() const; // Convierte el puntero de pila en una dirección de memoria
    
    // Registros de la CPU
     Word PC;    // Program Counter (Contador de Programa)

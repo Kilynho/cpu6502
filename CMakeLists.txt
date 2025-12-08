@@ -1,31 +1,25 @@
 cmake_minimum_required(VERSION 3.10)
 
-# Nombre del proyecto
 project(cpu6502)
 
-# Establecer el estándar de C++
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Habilitar pruebas
+# Put executables directly in the build directory
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
 enable_testing()
 
-# Buscar Google Test
 find_package(GTest REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
 
-# Archivos fuente
+# Source files
 set(SOURCES main_6502.cpp cpu.cpp mem.cpp)
-set(TEST_SOURCES test.cpp)
+set(TEST_SOURCES test.cpp cpu.cpp mem.cpp)
 
-# Añadir el ejecutable principal
 add_executable(cpu6502 ${SOURCES})
+add_executable(runTests ${TEST_SOURCES})
 
-# Añadir el ejecutable de test
-add_executable(runTests ${TEST_SOURCES} cpu.cpp mem.cpp)
+# Link using modern target name (GTest::gtest_main)
+target_link_libraries(runTests GTest::gtest_main pthread)
 
-# Enlazar Google Test con tu ejecutable de test
-target_link_libraries(runTests ${GTEST_LIBRARIES} pthread)
-
-# Añadir pruebas
 add_test(NAME runTests COMMAND runTests)

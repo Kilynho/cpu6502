@@ -169,6 +169,6 @@ Para asuntos de seguridad urgentes, contacta directamente a los mantenedores del
 
 ---
 
-**Última actualización:** Diciembre 2024
+**Última actualización:** 8 de Diciembre de 2024
 
 ¡Gracias por ayudar a mantener seguro el CPU 6502 Emulator!

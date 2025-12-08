@@ -1,1 +1,0 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/cpu6502.dir/link.d CMakeFiles/cpu6502.dir/main_6502.cpp.o CMakeFiles/cpu6502.dir/cpu.cpp.o CMakeFiles/cpu6502.dir/mem.cpp.o -o cpu6502

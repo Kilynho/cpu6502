@@ -1,5 +1,0 @@
-/home/runner/work/cpu6502/cpu6502/build/CMakeFiles/cpu6502.dir
-/home/runner/work/cpu6502/cpu6502/build/CMakeFiles/runTests.dir
-/home/runner/work/cpu6502/cpu6502/build/CMakeFiles/test.dir
-/home/runner/work/cpu6502/cpu6502/build/CMakeFiles/edit_cache.dir
-/home/runner/work/cpu6502/cpu6502/build/CMakeFiles/rebuild_cache.dir

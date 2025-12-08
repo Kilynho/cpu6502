@@ -17,10 +17,6 @@ using Byte = uint8_t;  // Un byte (8 bits)
 using Word = uint16_t; // Una palabra (16 bits)
 using u32 = uint32_t;  // Un entero de 32 bits
 
-// Definición de tipos para mayor claridad
-using Byte = uint8_t;  // Un byte (8 bits)
-using Word = uint16_t; // Una palabra (16 bits)
-
 // Estructura que representa una instrucción con su opcode, ciclos, bytes y nombre
 struct Instruction {
     uint8_t opcode;

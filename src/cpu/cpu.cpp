@@ -223,7 +223,6 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
                 Byte Value = FetchByte(Cycles, memory); // Obtener el valor inmediato
                 A = Value; // Cargar el valor en el acumulador
                 LDASetStatus(); // Establecer los flags de estado
-                //Cycles -= INS_LDA_IM.cycles; // Restar los ciclos consumidos
             } break;
             case 0xA5: { // LDA Zero Page
                 Byte Value = FetchByte(Cycles, memory); // Obtener la dirección de la página cero
@@ -291,7 +290,7 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
                 Cycles--; // Ciclo adicional para el salto
             } break;
             default: {
-                // printf("Instruction not handled %d\n", Ins); // Imprimir un mensaje si la instrucción no es manejada
+                util::LogWarn("Instrucción no manejada: 0x" + std::to_string(Ins));
             } break;
         }
     }

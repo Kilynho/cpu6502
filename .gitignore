@@ -17,6 +17,7 @@ bin/
 lib/*.a
 lib/*.so
 _codeql_build_dir/
+obj/
 
 # CMake files
 CMakeCache.txt

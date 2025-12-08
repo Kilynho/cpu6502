@@ -8,9 +8,10 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/kilynho/src/cpu6502/cpu.cpp" "CMakeFiles/cpu6502.dir/cpu.cpp.o" "gcc" "CMakeFiles/cpu6502.dir/cpu.cpp.o.d"
-  "/home/kilynho/src/cpu6502/main_6502.cpp" "CMakeFiles/cpu6502.dir/main_6502.cpp.o" "gcc" "CMakeFiles/cpu6502.dir/main_6502.cpp.o.d"
-  "/home/kilynho/src/cpu6502/mem.cpp" "CMakeFiles/cpu6502.dir/mem.cpp.o" "gcc" "CMakeFiles/cpu6502.dir/mem.cpp.o.d"
+  "/home/runner/work/cpu6502/cpu6502/cpu.cpp" "CMakeFiles/cpu6502.dir/cpu.cpp.o" "gcc" "CMakeFiles/cpu6502.dir/cpu.cpp.o.d"
+  "/home/runner/work/cpu6502/cpu6502/main_6502.cpp" "CMakeFiles/cpu6502.dir/main_6502.cpp.o" "gcc" "CMakeFiles/cpu6502.dir/main_6502.cpp.o.d"
+  "/home/runner/work/cpu6502/cpu6502/mem.cpp" "CMakeFiles/cpu6502.dir/mem.cpp.o" "gcc" "CMakeFiles/cpu6502.dir/mem.cpp.o.d"
+  "" "cpu6502" "gcc" "CMakeFiles/cpu6502.dir/link.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

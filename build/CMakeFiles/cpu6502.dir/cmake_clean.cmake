@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/cpu6502.dir/link.d"
   "CMakeFiles/cpu6502.dir/cpu.cpp.o"
   "CMakeFiles/cpu6502.dir/cpu.cpp.o.d"
   "CMakeFiles/cpu6502.dir/main_6502.cpp.o"

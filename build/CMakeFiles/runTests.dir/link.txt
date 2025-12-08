@@ -1,1 +1,1 @@
-/usr/bin/c++ -g CMakeFiles/runTests.dir/test.cpp.o CMakeFiles/runTests.dir/cpu.cpp.o CMakeFiles/runTests.dir/mem.cpp.o -o runTests  lib/libgtest.a lib/libgtest_main.a lib/libgtest.a 
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/runTests.dir/link.d CMakeFiles/runTests.dir/test.cpp.o CMakeFiles/runTests.dir/cpu.cpp.o CMakeFiles/runTests.dir/mem.cpp.o -o runTests  /usr/lib/x86_64-linux-gnu/libgtest.a -lpthread

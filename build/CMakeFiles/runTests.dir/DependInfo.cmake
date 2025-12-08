@@ -8,9 +8,10 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/kilynho/src/cpu6502/cpu.cpp" "CMakeFiles/runTests.dir/cpu.cpp.o" "gcc" "CMakeFiles/runTests.dir/cpu.cpp.o.d"
-  "/home/kilynho/src/cpu6502/mem.cpp" "CMakeFiles/runTests.dir/mem.cpp.o" "gcc" "CMakeFiles/runTests.dir/mem.cpp.o.d"
-  "/home/kilynho/src/cpu6502/test.cpp" "CMakeFiles/runTests.dir/test.cpp.o" "gcc" "CMakeFiles/runTests.dir/test.cpp.o.d"
+  "/home/runner/work/cpu6502/cpu6502/cpu.cpp" "CMakeFiles/runTests.dir/cpu.cpp.o" "gcc" "CMakeFiles/runTests.dir/cpu.cpp.o.d"
+  "/home/runner/work/cpu6502/cpu6502/mem.cpp" "CMakeFiles/runTests.dir/mem.cpp.o" "gcc" "CMakeFiles/runTests.dir/mem.cpp.o.d"
+  "/home/runner/work/cpu6502/cpu6502/test.cpp" "CMakeFiles/runTests.dir/test.cpp.o" "gcc" "CMakeFiles/runTests.dir/test.cpp.o.d"
+  "" "runTests" "gcc" "CMakeFiles/runTests.dir/link.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

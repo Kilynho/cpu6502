@@ -1,3 +1,0 @@
-runTests 8 0
----
-runTests

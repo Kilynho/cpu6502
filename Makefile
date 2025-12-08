@@ -1,42 +1,59 @@
-# filepath: /home/kilynho/src/cpu6502/Makefile
-# Compilador a utilizar
-CXX = g++
+# Makefile wrapper para CMake
+# Este Makefile proporciona compatibilidad con el flujo de trabajo anterior
+# pero utiliza CMake internamente para la compilación
 
-# Opciones de compilación
-CXXFLAGS = -std=c++17 -Wall -Wextra -g
+BUILD_DIR = build
 
-# Nombre del ejecutable principal
-TARGET = cpu6502
+# Regla principal: compilar todo con CMake
+all: cmake_build
 
-# Nombre del ejecutable de test
-TEST_TARGET = runTests
+# Configurar y compilar con CMake
+cmake_build:
+	@mkdir -p $(BUILD_DIR)
+	@cd $(BUILD_DIR) && cmake .. && $(MAKE)
+	@echo ""
+	@echo "==================================="
+	@echo "Build completado exitosamente!"
+	@echo "Ejecutables:"
+	@echo "  - Librería: $(BUILD_DIR)/src/libcpu6502_lib.a"
+	@echo "  - Demo: $(BUILD_DIR)/src/cpu_demo"
+	@echo "  - Tests: $(BUILD_DIR)/runTests"
+	@echo "==================================="
 
-# Archivos fuente
-SOURCES = main_6502.cpp cpu.cpp mem.cpp
-TEST_SOURCES = test.cpp cpu.cpp mem.cpp
+# Ejecutar tests
+test: cmake_build
+	@echo "Ejecutando tests con CTest..."
+	@cd $(BUILD_DIR) && ctest --output-on-failure
 
-# Archivos objeto generados a partir de los archivos fuente
-OBJECTS = $(SOURCES:.cpp=.o)
-TEST_OBJECTS = $(TEST_SOURCES:.cpp=.o)
+# Ejecutar tests directamente
+runTests: cmake_build
+	@$(BUILD_DIR)/runTests
 
-# Regla principal: compilar todo
-all: $(TARGET) $(TEST_TARGET)
+# Ejecutar el demo
+demo: cmake_build
+	@$(BUILD_DIR)/src/cpu_demo
 
-# Regla para generar el ejecutable principal a partir de los archivos objeto
-$(TARGET): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
-
-# Regla para generar el ejecutable de test a partir de los archivos objeto
-$(TEST_TARGET): $(TEST_OBJECTS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ -lgtest -lgtest_main -pthread
-
-# Regla para generar un archivo objeto a partir de un archivo fuente
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# Regla para limpiar los archivos generados (ejecutable y objetos)
+# Limpiar archivos generados
 clean:
-	rm -f $(TARGET) $(TEST_TARGET) $(OBJECTS) $(TEST_OBJECTS)
+	@rm -rf $(BUILD_DIR)
+	@rm -f *.o cpu6502 main_6502 runTests cpu_demo
+	@echo "Limpieza completada"
 
-# Declarar las reglas 'all' y 'clean' como phony (no generan archivos)
-.PHONY: all clean
+# Recompilar desde cero
+rebuild: clean all
+
+# Ayuda
+help:
+	@echo "Makefile para CPU 6502 Emulator"
+	@echo ""
+	@echo "Objetivos disponibles:"
+	@echo "  all       - Compilar todo el proyecto (default)"
+	@echo "  test      - Compilar y ejecutar tests con CTest"
+	@echo "  runTests  - Compilar y ejecutar tests directamente"
+	@echo "  demo      - Compilar y ejecutar el demo"
+	@echo "  clean     - Limpiar archivos generados"
+	@echo "  rebuild   - Limpiar y recompilar desde cero"
+	@echo "  help      - Mostrar esta ayuda"
+
+# Declarar reglas phony
+.PHONY: all cmake_build test runTests demo clean rebuild help

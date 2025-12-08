@@ -10,7 +10,7 @@ const Instruction CPU::INS_LDA_IM = {0xA9, 2, 2, "LDA_IM"}; // LDA Immediate
 const Instruction CPU::INS_LDA_ZP = {0xA5, 3, 2, "LDA_ZP"}; // LDA Zero Page
 const Instruction CPU::INS_LDA_ZPX = {0xB5, 4, 2, "LDA_ZPX"}; // LDA Zero Page,X
 const Instruction CPU::INS_LDX_IM = {0xA2, 2, 2, "LDX_IM"}; // LDX Immediate
-const Instruction CPU::INS_STA_IM = {0x85, 3, 2, "STA_IM"}; // STA Immediate
+const Instruction CPU::INS_STA_ZP = {0x85, 3, 2, "STA_ZP"}; // STA Zero Page
 const Instruction CPU::INS_JSR = {0x20, 6, 3, "JSR"};   // JSR (Jump to Subroutine)
 const Instruction CPU::INS_RTS = {0x60, 6, 1, "RTS"};   // RTS (Return from Subroutine)
 const Instruction CPU::INS_LDA_ABS = {0xAD, 4, 3, "LDA_ABS"}; // LDA Absolute
@@ -46,8 +46,8 @@ void CPU::AssignCyclesAndBytes(Word &pc, u32 &cycles, Byte opcode) const {
         instruction = &INS_LDA_ZPX;
     } else if (opcode == INS_LDX_IM.opcode) {
         instruction = &INS_LDX_IM;
-    } else if (opcode == INS_STA_IM.opcode) {
-        instruction = &INS_STA_IM;
+    } else if (opcode == INS_STA_ZP.opcode) {
+        instruction = &INS_STA_ZP;
     } else if (opcode == INS_RTS.opcode) {
         instruction = &INS_RTS;
     } else if (opcode == INS_LDA_ABS.opcode) {
@@ -118,19 +118,28 @@ void CPU::WriteByte(u32& Cycles, Byte Address, Byte Data, Mem& memory) {
 void CPU::WriteWord(u32& Cycles, Word Address, Word Data, Mem& memory) {
     memory[Address] = Data & 0x00FF; // Escribir el byte bajo de la palabra en la memoria
     LogMemoryAccess(Address, Data & 0x00FF, true); // Registrar el acceso de escritura a la memoria
+    Cycles--; // Decrementar los ciclos restantes
     memory[Address + 1] = (Data & 0xFF00) >> 8; // Escribir el byte alto de la palabra en la memoria
     LogMemoryAccess(Address + 1, (Data & 0xFF00) >> 8, true); // Registrar el acceso de escritura a la memoria
     Cycles--; // Decrementar los ciclos restantes
 }
 
-Word CPU::SPToAddress() {
-    SP++; // Incrementar el puntero de pila
+Word CPU::SPToAddress() const {
     return 0x0100 + SP; // Devolver la dirección de la pila
 }
 
 void CPU::PushPCToStack(u32& Cycles, Mem& memory) {
-    WriteWord(Cycles, SPToAddress() - 1, PC - 1, memory); // Guardar el contador de programa en la pila
-    SP -= 2; // Decrementar el puntero de pila
+    Word returnAddr = PC - 1;
+    // Push high byte first
+    memory[SPToAddress()] = returnAddr >> 8;
+    LogMemoryAccess(SPToAddress(), returnAddr >> 8, true);
+    Cycles--;
+    SP--;
+    // Push low byte
+    memory[SPToAddress()] = returnAddr & 0xFF;
+    LogMemoryAccess(SPToAddress(), returnAddr & 0xFF, true);
+    Cycles--;
+    SP--;
 }
 
 void CPU::PullPCFromStack(u32 &cycles, Mem &memory)
@@ -148,6 +157,11 @@ Word CPU::PopWordFromStack(u32& Cycles, Mem& memory) {
 void CPU::LDASetStatus() {
     Z = (A == 0); // Establecer el flag de cero si el acumulador es cero
     N = (A & 0b10000000) > 0; // Establecer el flag de negativo si el bit más significativo del acumulador es 1
+}
+
+void CPU::LDXSetStatus() {
+    Z = (X == 0); // Establecer el flag de cero si el registro X es cero
+    N = (X & 0b10000000) > 0; // Establecer el flag de negativo si el bit más significativo del registro X es 1
 }
 
 void CPU::Reset(Mem& memory) {
@@ -214,51 +228,66 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
                 Byte Value = FetchByte(Cycles, memory); // Obtener la dirección de la página cero
                 A = ReadByte(Cycles, Value, memory); // Leer el valor de la memoria y cargarlo en el acumulador
                 LDASetStatus(); // Establecer los flags de estado
-                Cycles -= INS_LDA_ZP.cycles; // Restar los ciclos consumidos
             } break;
             case 0xB5: { // LDA Zero Page,X
                 Byte Value = FetchByte(Cycles, memory); // Obtener la dirección de la página cero
                 Value += X; // Sumar el valor del registro X
+                Cycles--; // Ciclo adicional para el cálculo de la dirección
                 A = ReadByte(Cycles, Value, memory); // Leer el valor de la memoria y cargarlo en el acumulador
                 LDASetStatus(); // Establecer los flags de estado
-                Cycles -= INS_LDA_ZPX.cycles; // Restar los ciclos consumidos
-                PC += INS_LDA_ZPX.bytes - 1; // Avanzar el contador de programa
             } break;
             case 0xAD: { // LDA Absolute
                 Word Address = FetchWord(Cycles, memory); // Obtener la dirección absoluta
-                A = ReadByte(Cycles, Address, memory); // Leer el valor de la memoria y cargarlo en el acumulador
+                A = memory[Address]; // Leer el valor de la memoria y cargarlo en el acumulador
+                LogMemoryAccess(Address, A, false); // Registrar el acceso de lectura a la memoria
+                Cycles--; // Decrementar los ciclos restantes
                 LDASetStatus(); // Establecer los flags de estado
-                Cycles -= INS_LDA_ABS.cycles; // Restar los ciclos consumidos
             } break;
             case 0xBD: { // LDA Absolute,X
                 Word Address = FetchWord(Cycles, memory); // Obtener la dirección absoluta
                 Address += X; // Sumar el valor del registro X
-                A = ReadByte(Cycles, Address, memory); // Leer el valor de la memoria y cargarlo en el acumulador
+                A = memory[Address]; // Leer el valor de la memoria y cargarlo en el acumulador
+                LogMemoryAccess(Address, A, false); // Registrar el acceso de lectura a la memoria
+                Cycles--; // Decrementar los ciclos restantes
                 LDASetStatus(); // Establecer los flags de estado
-                Cycles -= INS_LDA_ABSX.cycles; // Restar los ciclos consumidos
             } break;
             case 0xB9: { // LDA Absolute,Y
                 Word Address = FetchWord(Cycles, memory); // Obtener la dirección absoluta
                 Address += Y; // Sumar el valor del registro Y
-                A = ReadByte(Cycles, Address, memory); // Leer el valor de la memoria y cargarlo en el acumulador
+                A = memory[Address]; // Leer el valor de la memoria y cargarlo en el acumulador
+                LogMemoryAccess(Address, A, false); // Registrar el acceso de lectura a la memoria
+                Cycles--; // Decrementar los ciclos restantes
                 LDASetStatus(); // Establecer los flags de estado
-                Cycles -= INS_LDA_ABSY.cycles; // Restar los ciclos consumidos
             } break;
             case 0x60: { // RTS (Return from Subroutine)
+                Cycles--; // Ciclo interno
                 SP++; // Incrementar el puntero de pila
+                Cycles--; // Ciclo para leer byte bajo
                 Word LowByte = memory[0x0100 + SP]; // Leer el byte bajo de la dirección de retorno
                 LogMemoryAccess(0x0100 + SP, LowByte, false); // Registrar el acceso de lectura a la memoria
                 SP++; // Incrementar el puntero de pila
+                Cycles--; // Ciclo para leer byte alto
                 Word HighByte = memory[0x0100 + SP]; // Leer el byte alto de la dirección de retorno
                 LogMemoryAccess(0x0100 + SP, HighByte, false); // Registrar el acceso de lectura a la memoria
                 PC = (HighByte << 8) | LowByte; // Combinar los bytes alto y bajo para obtener la dirección de retorno
+                Cycles--; // Ciclo para incrementar PC
                 PC++; // Incrementar el contador de programa
-                Cycles -= INS_RTS.cycles; // Restar los ciclos consumidos
+                Cycles--; // Ciclo adicional
             } break;
             case 0x85: {  // STA Store Accumulator in Memory
                 Byte Address = FetchByte(Cycles, memory); // Obtener la dirección de memoria
                 WriteByte(Cycles, Address, A, memory); // Escribir el valor del acumulador en la memoria
-                Cycles -= INS_STA_IM.cycles; // Restar los ciclos consumidos
+            } break;
+            case 0xA2: { // LDX Immediate
+                Byte Value = FetchByte(Cycles, memory); // Obtener el valor inmediato
+                X = Value; // Cargar el valor en el registro X
+                LDXSetStatus(); // Establecer los flags de estado
+            } break;
+            case 0x20: { // JSR (Jump to Subroutine)
+                Word SubAddr = FetchWord(Cycles, memory); // Obtener la dirección de la subrutina
+                PushPCToStack(Cycles, memory); // Guardar el contador de programa en la pila
+                PC = SubAddr; // Saltar a la subrutina
+                Cycles--; // Ciclo adicional para el salto
             } break;
             default: {
                 // printf("Instruction not handled %d\n", Ins); // Imprimir un mensaje si la instrucción no es manejada

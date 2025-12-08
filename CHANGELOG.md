@@ -8,6 +8,20 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Añadido
+- Suite completa de tests unitarios con Google Test
+  - Tests para todas las variantes de LDA (IM, ZP, ZPX, ABS, ABSX, ABSY)
+  - Tests para LDX en modo inmediato
+  - Tests para STA con diferentes valores
+  - Tests para JSR/RTS con validación de pila
+  - Tests de casos límite (cero, 0xFF, límites de página)
+  - Tests de comportamiento de flags (Z, N)
+  - Tests de llamadas a subrutinas anidadas
+  - Total de 30+ tests unitarios
+- CI/CD con GitHub Actions (.github/workflows/ci.yml)
+  - Compilación automática en cada push y PR
+  - Ejecución automática de tests
+  - Soporte para CMake y Make
+- Badge de CI en README.md mostrando estado de build
 - Documentación completa del proyecto (README.md, CONTRIBUTING.md, CHANGELOG.md)
 - Archivo LICENSE con licencia MIT
 - Política de seguridad (SECURITY.md)
@@ -18,6 +32,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ### Cambiado
 - Mejorada la documentación del README con secciones detalladas
 - Añadidas instrucciones completas de instalación y uso
+- Expandida la sección de testing en README.md con descripción detallada de cobertura
+- Actualizado CONTRIBUTING.md con información sobre tests y CI
 
 ## [0.1.0] - 2024-12-08
 

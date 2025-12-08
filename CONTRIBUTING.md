@@ -226,41 +226,87 @@ cpu6502/
 
 ### Ejecutar Tests
 
+#### Con CMake:
 ```bash
-make test
-# o
-./test
+cd build
+cmake ..
+make
+./runTests
+```
+
+#### Con Make:
+```bash
+make
+./runTests
 ```
 
 ### Escribir Tests
 
-Los tests deben:
+Usamos Google Test como framework de testing. Los tests deben:
 - Ser independientes entre sí
-- Tener nombres descriptivos
-- Probar un solo comportamiento
-- Incluir casos edge
+- Tener nombres descriptivos que indiquen qué se está probando
+- Probar un solo comportamiento o escenario
+- Incluir casos límite (edge cases)
+- Validar el comportamiento de los flags cuando sea relevante
+- Seguir el patrón Arrange-Act-Assert
 
-Ejemplo:
+Ejemplo usando Google Test:
 
 ```cpp
-void TestLDAImmediate() {
-    CPU cpu;
-    Mem mem;
-    cpu.Reset(mem);
-    
+TEST_F(M6502Test1, TestLDA_IM_Zero) {
     // Arrange
     mem[0x8000] = CPU::INS_LDA_IM.opcode;
-    mem[0x8001] = 0x42;
+    mem[0x8001] = 0x00;
     
     // Act
     cpu.Execute(2, mem);
     
     // Assert
-    assert(cpu.A == 0x42);
-    assert(!cpu.Z);  // Zero flag should be clear
-    assert(!cpu.N);  // Negative flag should be clear
+    EXPECT_EQ(cpu.A, 0x00);
+    EXPECT_EQ(cpu.Z, 1);  // Zero flag should be set
+    EXPECT_EQ(cpu.N, 0);  // Negative flag should be clear
 }
 ```
+
+### Categorías de Tests Requeridas
+
+Al añadir nuevas instrucciones, asegúrate de incluir tests para:
+
+1. **Casos normales**: Comportamiento típico de la instrucción
+2. **Casos límite**: 
+   - Valores cero (0x00)
+   - Valores máximos (0xFF)
+   - Límites de memoria
+   - Wraparound en zero page
+3. **Comportamiento de flags**: Verificar que los flags Z, N, C, V se establezcan correctamente
+4. **Casos de error**: Comportamiento ante condiciones inusuales
+
+### Integración Continua (CI)
+
+El proyecto usa GitHub Actions para CI/CD. Cada push y pull request ejecuta automáticamente:
+
+1. **Compilación**: Con CMake y Make
+2. **Tests**: Suite completa de tests unitarios
+3. **Validación**: Verificación de que el código compila sin warnings
+
+Los tests deben pasar en CI antes de que un PR pueda ser merged. Puedes ver el estado de CI en:
+- El badge en el README.md
+- La pestaña "Actions" en GitHub
+- Los checks en tu pull request
+
+### Depuración de Fallos en CI
+
+Si los tests fallan en CI:
+
+1. Revisa los logs en la pestaña "Actions" de GitHub
+2. Reproduce el fallo localmente:
+   ```bash
+   make clean
+   make
+   ./runTests
+   ```
+3. Corrige el problema y push nuevamente
+4. CI ejecutará automáticamente los tests otra vez
 
 ## 📝 Documentación
 

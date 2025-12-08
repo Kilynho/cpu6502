@@ -1,1 +1,0 @@
-/usr/bin/c++ -g CMakeFiles/cpu6502.dir/main_6502.cpp.o CMakeFiles/cpu6502.dir/cpu.cpp.o CMakeFiles/cpu6502.dir/mem.cpp.o -o cpu6502 

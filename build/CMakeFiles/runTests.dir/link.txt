@@ -1,1 +1,0 @@
-/usr/bin/c++ -g CMakeFiles/runTests.dir/test.cpp.o CMakeFiles/runTests.dir/cpu.cpp.o CMakeFiles/runTests.dir/mem.cpp.o -o runTests  lib/libgtest.a lib/libgtest_main.a lib/libgtest.a 

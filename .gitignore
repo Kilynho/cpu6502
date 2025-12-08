@@ -33,6 +33,7 @@ Thumbs.db
 # Test results
 *.log
 *.xml
+cpu_log.txt
 
 # Dependencies
 lib/googletest/

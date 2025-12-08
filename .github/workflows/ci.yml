@@ -11,47 +11,75 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         submodules: recursive
-    
+
     - name: Install dependencies
       run: |
+        set -eux
         sudo apt-get update
         sudo apt-get install -y cmake g++ libgtest-dev
-        
+
     - name: Install Google Test
       run: |
+        set -eux
         cd /usr/src/gtest
         sudo cmake .
         sudo make
         sudo cp lib/*.a /usr/lib
-        
+
     - name: Create build directory
       run: mkdir -p build
-      
+
     - name: Configure with CMake
       run: |
+        set -eux
         cd build
         cmake ..
-        
-    - name: Build project
+
+    - name: Build project (CMake)
       run: |
+        set -eux
         cd build
-        make
-        
-    - name: Run tests
+        cmake --build . -- -j$(nproc)
+
+    - name: Inspect build artifacts
       run: |
+        set -eux
         cd build
-        ./runTests
-        
+        echo "Listing build directory:"
+        ls -la
+
+    - name: Run tests (CMake build)
+      run: |
+        set -eux
+        cd build
+        if [ -x ./runTests ]; then
+          ./runTests
+        else
+          echo "ERROR: runTests not found in build/"; ls -la; exit 2
+        fi
+
     - name: Build with Make (alternative)
       run: |
-        make clean
-        make
-        
-    - name: Run tests with Make
-      run: ./runTests
+        set -eux
+        make clean || true
+        make -j$(nproc)
+
+    - name: Inspect build artifacts (Make)
+      run: |
+        set -eux
+        echo "Listing build directory after Make:"
+        ls -la build/
+
+    - name: Run tests with Make (build/)
+      run: |
+        set -eux
+        if [ -x ./build/runTests ]; then
+          ./build/runTests
+        else
+          echo "ERROR: runTests not found in build/ after Make build"; ls -la build/; exit 2
+        fi

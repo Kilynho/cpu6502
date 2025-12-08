@@ -1,25 +1,25 @@
 cmake_minimum_required(VERSION 3.10)
 
-# Nombre del proyecto
-project(cpu6502 VERSION 0.2.0 LANGUAGES CXX)
+project(cpu6502)
 
-# Establecer el estándar de C++
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Opciones de compilación
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+# Put executables directly in the build directory
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-# Añadir el directorio include para que sea visible en todo el proyecto
-include_directories(${PROJECT_SOURCE_DIR}/include)
-
-# Habilitar pruebas
 enable_testing()
 
-# Añadir subdirectorios
-add_subdirectory(src)
-add_subdirectory(tests)
+find_package(GTest REQUIRED)
 
-# Instalación (opcional)
-# install(TARGETS cpu6502_lib cpu_demo DESTINATION bin)
-# install(DIRECTORY include/ DESTINATION include)
+# Source files
+set(SOURCES main_6502.cpp cpu.cpp mem.cpp)
+set(TEST_SOURCES test.cpp cpu.cpp mem.cpp)
+
+add_executable(cpu6502 ${SOURCES})
+add_executable(runTests ${TEST_SOURCES})
+
+# Link using modern target name (GTest::gtest_main)
+target_link_libraries(runTests GTest::gtest_main pthread)
+
+add_test(NAME runTests COMMAND runTests)

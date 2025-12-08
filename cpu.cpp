@@ -10,7 +10,7 @@ const Instruction CPU::INS_LDA_IM = {0xA9, 2, 2, "LDA_IM"}; // LDA Immediate
 const Instruction CPU::INS_LDA_ZP = {0xA5, 3, 2, "LDA_ZP"}; // LDA Zero Page
 const Instruction CPU::INS_LDA_ZPX = {0xB5, 4, 2, "LDA_ZPX"}; // LDA Zero Page,X
 const Instruction CPU::INS_LDX_IM = {0xA2, 2, 2, "LDX_IM"}; // LDX Immediate
-const Instruction CPU::INS_STA_IM = {0x85, 3, 2, "STA_IM"}; // STA Immediate
+const Instruction CPU::INS_STA_ZP = {0x85, 3, 2, "STA_ZP"}; // STA Zero Page
 const Instruction CPU::INS_JSR = {0x20, 6, 3, "JSR"};   // JSR (Jump to Subroutine)
 const Instruction CPU::INS_RTS = {0x60, 6, 1, "RTS"};   // RTS (Return from Subroutine)
 const Instruction CPU::INS_LDA_ABS = {0xAD, 4, 3, "LDA_ABS"}; // LDA Absolute
@@ -46,8 +46,8 @@ void CPU::AssignCyclesAndBytes(Word &pc, u32 &cycles, Byte opcode) const {
         instruction = &INS_LDA_ZPX;
     } else if (opcode == INS_LDX_IM.opcode) {
         instruction = &INS_LDX_IM;
-    } else if (opcode == INS_STA_IM.opcode) {
-        instruction = &INS_STA_IM;
+    } else if (opcode == INS_STA_ZP.opcode) {
+        instruction = &INS_STA_ZP;
     } else if (opcode == INS_RTS.opcode) {
         instruction = &INS_RTS;
     } else if (opcode == INS_LDA_ABS.opcode) {
@@ -157,6 +157,11 @@ Word CPU::PopWordFromStack(u32& Cycles, Mem& memory) {
 void CPU::LDASetStatus() {
     Z = (A == 0); // Establecer el flag de cero si el acumulador es cero
     N = (A & 0b10000000) > 0; // Establecer el flag de negativo si el bit más significativo del acumulador es 1
+}
+
+void CPU::LDXSetStatus() {
+    Z = (X == 0); // Establecer el flag de cero si el registro X es cero
+    N = (X & 0b10000000) > 0; // Establecer el flag de negativo si el bit más significativo del registro X es 1
 }
 
 void CPU::Reset(Mem& memory) {
@@ -276,6 +281,7 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
             case 0xA2: { // LDX Immediate
                 Byte Value = FetchByte(Cycles, memory); // Obtener el valor inmediato
                 X = Value; // Cargar el valor en el registro X
+                LDXSetStatus(); // Establecer los flags de estado
             } break;
             case 0x20: { // JSR (Jump to Subroutine)
                 Word SubAddr = FetchWord(Cycles, memory); // Obtener la dirección de la subrutina

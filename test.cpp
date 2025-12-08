@@ -19,10 +19,10 @@ public:
 };
 
 // ========== STA Tests ==========
-TEST_F(M6502Test1, TestSTA)
+TEST_F(M6502Test1, TestSTA_ZP)
 {
     cpu.A = 0x42;
-    mem[0x8000] = CPU::INS_STA_IM.opcode;
+    mem[0x8000] = CPU::INS_STA_ZP.opcode;
     mem[0x8001] = 0x40;
 
     cpu.Execute(3, mem);
@@ -30,10 +30,10 @@ TEST_F(M6502Test1, TestSTA)
     EXPECT_EQ(mem[0x40], 0x42);
 }
 
-TEST_F(M6502Test1, TestSTA_Zero)
+TEST_F(M6502Test1, TestSTA_ZP_Zero)
 {
     cpu.A = 0x00;
-    mem[0x8000] = CPU::INS_STA_IM.opcode;
+    mem[0x8000] = CPU::INS_STA_ZP.opcode;
     mem[0x8001] = 0x50;
 
     cpu.Execute(3, mem);
@@ -41,10 +41,10 @@ TEST_F(M6502Test1, TestSTA_Zero)
     EXPECT_EQ(mem[0x50], 0x00);
 }
 
-TEST_F(M6502Test1, TestSTA_MaxValue)
+TEST_F(M6502Test1, TestSTA_ZP_MaxValue)
 {
     cpu.A = 0xFF;
-    mem[0x8000] = CPU::INS_STA_IM.opcode;
+    mem[0x8000] = CPU::INS_STA_ZP.opcode;
     mem[0x8001] = 0xFF;
 
     cpu.Execute(3, mem);
@@ -263,6 +263,8 @@ TEST_F(M6502Test1, TestLDX_IM)
     cpu.Execute(2, mem);
 
     EXPECT_EQ(cpu.X, 0x55);
+    EXPECT_EQ(cpu.Z, 0); // Zero flag should be clear
+    EXPECT_EQ(cpu.N, 0); // Negative flag should be clear
 }
 
 TEST_F(M6502Test1, TestLDX_IM_Zero)
@@ -273,6 +275,8 @@ TEST_F(M6502Test1, TestLDX_IM_Zero)
     cpu.Execute(2, mem);
 
     EXPECT_EQ(cpu.X, 0x00);
+    EXPECT_EQ(cpu.Z, 1); // Zero flag should be set
+    EXPECT_EQ(cpu.N, 0); // Negative flag should be clear
 }
 
 TEST_F(M6502Test1, TestLDX_IM_MaxValue)
@@ -283,6 +287,8 @@ TEST_F(M6502Test1, TestLDX_IM_MaxValue)
     cpu.Execute(2, mem);
 
     EXPECT_EQ(cpu.X, 0xFF);
+    EXPECT_EQ(cpu.Z, 0); // Zero flag should be clear
+    EXPECT_EQ(cpu.N, 1); // Negative flag should be set
 }
 
 // ========== JSR/RTS Tests ==========

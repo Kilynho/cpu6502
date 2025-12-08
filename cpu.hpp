@@ -34,7 +34,7 @@ public:
     static const Instruction INS_LDA_ZP; // Instrucción LDA Zero Page
     static const Instruction INS_LDA_ZPX; // Instrucción LDA Zero Page,X
     static const Instruction INS_LDX_IM; // Instrucción LDX Immediate
-    static const Instruction INS_STA_IM; // Instrucción STA Immediate
+    static const Instruction INS_STA_ZP; // Instrucción STA Zero Page
     static const Instruction INS_JSR;   // Instrucción JSR (Jump to Subroutine)
     static const Instruction INS_RTS;   // Instrucción RTS (Return from Subroutine)
     static const Instruction INS_LDA_ABS; // Instrucción LDA Absolute
@@ -59,6 +59,7 @@ public:
     void WriteByte(u32& Cycles, Byte Address, Byte Value, Mem& memory); // Escribe un byte en la memoria
     void WriteWord(u32& Cycles, Word Address, Word Value, Mem& memory); // Escribe una palabra en la memoria
     void LDASetStatus(); // Establece el estado de la instrucción LDA
+    void LDXSetStatus(); // Establece el estado de la instrucción LDX
     std::string ByteToBinaryString(Byte byte) const; // Convierte un byte a una cadena binaria
     std::string WordToBinaryString(Word word) const; // Convierte una palabra a una cadena binaria
     Word SPToAddress() const; // Convierte el puntero de pila en una dirección de memoria

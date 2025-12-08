@@ -31,8 +31,8 @@ int main(int argc, char* argv[]) {
     mem[0x8005] = 0x40;                     // Dirección de la página cero para cargar en el acumulador
     mem[0x8006] = CPU::INS_LDA_ZPX.opcode;  // Instrucción LDA Zero Page X
     mem[0x8007] = 0x41;                     // Dirección de la página cero para cargar en el acumulador con desplazamiento X
-    mem[0x8008] = CPU::INS_STA_IM.opcode;   // Instrucción STA Immediate
-    mem[0x8009] = 0x42;                     // Dirección inmediata para almacenar el acumulador
+    mem[0x8008] = CPU::INS_STA_ZP.opcode;   // Instrucción STA Zero Page
+    mem[0x8009] = 0x42;                     // Dirección de página cero para almacenar el acumulador
     mem[0x800A] = CPU::INS_JSR.opcode;      // Instrucción JSR (Jump to Subroutine)
     mem[0x800B] = 0x00;                     // Dirección baja de la subrutina
     mem[0x800C] = 0x80;                     // Dirección alta de la subrutina

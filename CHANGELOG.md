@@ -8,6 +8,26 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Añadido
+- **Arquitectura modular completa**
+  - Nueva estructura de directorios: `src/`, `include/`, `tests/`, `examples/`
+  - Separación clara entre API pública (`include/`) e implementación (`src/`)
+  - Subdirectorios organizados: `src/cpu/`, `src/mem/`, `src/util/`, `src/main/`
+- **Sistema de logging configurable**
+  - Logger con niveles: NONE, ERROR, WARN, INFO, DEBUG
+  - Control de nivel en runtime con `LogSetLevel()`
+  - Funciones helper: `LogError()`, `LogWarn()`, `LogInfo()`, `LogDebug()`
+  - Macros para logging con streams: `LOG_ERROR()`, `LOG_WARN()`, etc.
+  - Implementación en `include/util/logger.hpp` y `src/util/logger.cpp`
+- **Build system multi-target con CMake**
+  - CMakeLists.txt modular (root, src/, tests/)
+  - Generación de librería estática reutilizable (`libcpu6502_lib.a`)
+  - Ejecutable de demostración (`cpu_demo`)
+  - Suite de tests integrada con CTest
+  - Soporte para GoogleTest como submódulo y sistema
+- **Makefile mejorado**
+  - Wrapper de CMake para compatibilidad hacia atrás
+  - Targets útiles: `all`, `test`, `runTests`, `demo`, `clean`, `rebuild`, `help`
+  - Mensajes informativos sobre artefactos generados
 - Suite completa de tests unitarios con Google Test
   - Tests para todas las variantes de LDA (IM, ZP, ZPX, ABS, ABSX, ABSY)
   - Tests para LDX en modo inmediato
@@ -16,7 +36,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
   - Tests de casos límite (cero, 0xFF, límites de página)
   - Tests de comportamiento de flags (Z, N)
   - Tests de llamadas a subrutinas anidadas
-  - Total de 30+ tests unitarios
+  - Total de 27 tests unitarios (todos pasando)
 - CI/CD con GitHub Actions (.github/workflows/ci.yml)
   - Compilación automática en cada push y PR
   - Ejecución automática de tests
@@ -30,10 +50,35 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Badges en README para licencia, versión de C++ y estado de build
 
 ### Cambiado
+- **Reorganización completa del código fuente**
+  - `cpu.cpp` → `src/cpu/cpu.cpp` con `include/cpu.hpp` como API pública
+  - `mem.cpp` → `src/mem/mem.cpp` con `include/mem.hpp` como API pública
+  - `main_6502.cpp` → `src/main/cpu_demo.cpp` (programa de demostración)
+  - `test.cpp` → `tests/test_main.cpp`
+  - Binario `main_6502` → `examples/main_6502_legacy` (referencia)
+- **Actualización de includes**
+  - Todos los archivos fuente ahora usan headers de `include/`
+  - Paths relativos a la raíz del proyecto
 - Mejorada la documentación del README con secciones detalladas
+  - Nueva sección de arquitectura del proyecto
+  - Instrucciones actualizadas para CMake y Make
+  - Documentación del sistema de logging
+  - Ejemplos de código actualizados
 - Añadidas instrucciones completas de instalación y uso
 - Expandida la sección de testing en README.md con descripción detallada de cobertura
-- Actualizado CONTRIBUTING.md con información sobre tests y CI
+- Actualizado CONTRIBUTING.md con información sobre:
+  - Nueva estructura de directorios
+  - Comandos de desarrollo actualizados
+  - Guía para añadir tests en nueva estructura
+  - Información sobre tests y CI
+- Actualizado .gitignore para nuevos artefactos de build
+
+### Técnico
+- CMake 3.10+ requerido
+- C++17 estándar
+- GoogleTest integrado como submódulo en `lib/googletest/`
+- Librería estática `libcpu6502_lib.a` para reutilización
+- CTest integrado para ejecución de tests
 
 ## [0.1.0] - 2024-12-08
 

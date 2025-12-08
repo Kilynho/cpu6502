@@ -12,8 +12,11 @@ Una implementación moderna de un emulador de CPU 6502 en C++. Este proyecto rec
 - **Sistema de memoria** con soporte para ROM y RAM
 - **Soporte para múltiples modos de direccionamiento**
 - **Registro de ejecución** con tracing detallado
-- **Tests integrados** para validación de instrucciones
-- **Arquitectura modular** y extensible
+- **Tests integrados** para validación de instrucciones (27+ tests unitarios)
+- **Arquitectura modular** y extensible con separación clara de componentes
+- **Logger configurable** con niveles de log (ERROR, WARN, INFO, DEBUG)
+- **Librería reutilizable** (libcpu6502) para integración en otros proyectos
+- **Build system dual**: CMake y Make para máxima compatibilidad
 
 ## 📋 Requisitos
 
@@ -30,14 +33,27 @@ git clone https://github.com/Kilynho/cpu6502.git
 cd cpu6502
 ```
 
-### 2. Compilar el proyecto
+### 2. Inicializar submódulos (para GoogleTest)
 
-#### Usando Make:
+```bash
+git submodule update --init --recursive
+```
+
+### 3. Compilar el proyecto
+
+El proyecto soporta dos sistemas de compilación para máxima flexibilidad:
+
+#### Opción A: Usando Make (Recomendado)
 ```bash
 make
 ```
 
-#### Usando CMake:
+Esto generará:
+- `build/src/libcpu6502_lib.a` - Librería estática reutilizable
+- `build/src/cpu_demo` - Ejecutable de demostración
+- `build/runTests` - Suite de tests
+
+#### Opción B: Usando CMake directamente
 ```bash
 mkdir -p build
 cd build
@@ -45,10 +61,14 @@ cmake ..
 make
 ```
 
-### 3. Ejecutar el emulador
+### 4. Ejecutar el emulador
 
 ```bash
-./main_6502
+# Desde la raíz del proyecto con Make
+make demo
+
+# O directamente
+./build/src/cpu_demo
 ```
 
 ## 🎯 Uso
@@ -60,8 +80,12 @@ El emulador ejecuta programas escritos en código máquina 6502. Los programas s
 ```cpp
 #include "cpu.hpp"
 #include "mem.hpp"
+#include "util/logger.hpp"
 
 int main() {
+    // Configurar nivel de log (opcional)
+    util::LogSetLevel(util::LogLevel::INFO);
+    
     CPU cpu;
     Mem mem;
     
@@ -78,21 +102,50 @@ int main() {
 }
 ```
 
+### Uso del Logger
+
+El proyecto incluye un sistema de logging configurable:
+
+```cpp
+#include "util/logger.hpp"
+
+// Establecer nivel de log
+util::LogSetLevel(util::LogLevel::DEBUG);  // NONE, ERROR, WARN, INFO, DEBUG
+
+// Usar funciones de log
+util::LogError("Error message");
+util::LogWarn("Warning message");
+util::LogInfo("Info message");
+util::LogDebug("Debug message");
+
+// O usar macros
+LOG_ERROR("Error: " << variable);
+LOG_INFO("CPU initialized successfully");
+```
+
 ## 🧪 Testing
 
 El proyecto incluye una suite completa de tests unitarios usando Google Test para validar el comportamiento de las instrucciones.
 
 ### Ejecutar los tests
 
-#### Usando CMake:
+#### Opción A: Usando Make con CTest
 ```bash
-cd build
-./runTests
+make test
 ```
 
-#### Usando Make:
+#### Opción B: Ejecutar tests directamente
 ```bash
-make
+make runTests
+# O manualmente
+./build/runTests
+```
+
+#### Opción C: Desde build directory con CMake
+```bash
+cd build
+ctest --output-on-failure
+# O
 ./runTests
 ```
 
@@ -113,17 +166,41 @@ El proyecto usa GitHub Actions para ejecutar automáticamente los tests en cada 
 
 ## 📖 Arquitectura del Proyecto
 
+El proyecto está organizado de forma modular para facilitar el mantenimiento y la reutilización:
+
 ```
 cpu6502/
-├── cpu.cpp           # Implementación de la CPU 6502
-├── cpu.hpp           # Definiciones de la CPU
-├── mem.cpp           # Sistema de memoria
-├── mem.hpp           # Definiciones de memoria
-├── main_6502.cpp     # Punto de entrada principal
-├── test.cpp          # Suite de tests
-├── CMakeLists.txt    # Configuración de CMake
-└── Makefile          # Configuración de Make
+├── include/              # Headers públicos de la API
+│   ├── cpu.hpp          # Interfaz pública de la CPU
+│   ├── mem.hpp          # Interfaz pública de la memoria
+│   └── util/
+│       └── logger.hpp   # Sistema de logging
+├── src/                  # Implementaciones
+│   ├── cpu/
+│   │   └── cpu.cpp      # Implementación de la CPU 6502
+│   ├── mem/
+│   │   └── mem.cpp      # Implementación del sistema de memoria
+│   ├── util/
+│   │   └── logger.cpp   # Implementación del logger
+│   ├── main/
+│   │   └── cpu_demo.cpp # Programa de demostración
+│   └── CMakeLists.txt   # Configuración de build de src
+├── tests/                # Suite de tests
+│   ├── test_main.cpp    # Tests unitarios (27+ tests)
+│   └── CMakeLists.txt   # Configuración de tests
+├── examples/             # Binarios y ejemplos de referencia
+│   └── main_6502_legacy # Binario de referencia
+├── lib/                  # Librerías externas
+│   └── googletest/      # Framework de testing (submódulo)
+├── CMakeLists.txt        # Configuración principal de CMake
+└── Makefile              # Wrapper de Make para CMake
 ```
+
+### Componentes Principales
+
+- **libcpu6502_lib.a**: Librería estática que contiene CPU, Memoria y Logger
+- **cpu_demo**: Ejecutable de demostración del emulador
+- **runTests**: Suite completa de tests unitarios
 
 ## 🤝 Contribuir
 

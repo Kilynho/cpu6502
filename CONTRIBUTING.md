@@ -200,49 +200,101 @@ if (PageCrossed(oldPC, PC)) {
 
 ## 🏗️ Estructura del Proyecto
 
+El proyecto sigue una arquitectura modular moderna:
+
 ```
 cpu6502/
 ├── .github/              # Templates y workflows de GitHub
 │   ├── ISSUE_TEMPLATE/   # Plantillas de issues
 │   └── pull_request_template.md
+├── include/              # Headers públicos de la API
+│   ├── cpu.hpp          # Interfaz pública de la CPU
+│   ├── mem.hpp          # Interfaz pública de la memoria
+│   └── util/
+│       └── logger.hpp   # Sistema de logging
+├── src/                  # Implementaciones
+│   ├── cpu/             # Implementación de CPU
+│   ├── mem/             # Implementación de memoria
+│   ├── util/            # Utilidades (logger)
+│   ├── main/            # Ejecutable de demo
+│   └── CMakeLists.txt
+├── tests/                # Suite de tests
+│   ├── test_main.cpp
+│   └── CMakeLists.txt
+├── examples/             # Ejemplos y binarios de referencia
+├── lib/                  # Librerías externas (googletest)
 ├── build/                # Archivos de build (ignorado en git)
-├── lib/                  # Librerías externas
-├── cpu.hpp              # Declaraciones de la CPU
-├── cpu.cpp              # Implementación de la CPU
-├── mem.hpp              # Declaraciones de memoria
-├── mem.cpp              # Implementación de memoria
-├── main_6502.cpp        # Programa principal
-├── test.cpp             # Suite de tests
-├── CMakeLists.txt       # Configuración CMake
-├── Makefile             # Configuración Make
-├── README.md            # Documentación principal
-├── CONTRIBUTING.md      # Esta guía
-├── CHANGELOG.md         # Historial de cambios
-├── LICENSE              # Licencia MIT
-└── SECURITY.md          # Política de seguridad
+├── CMakeLists.txt        # Configuración CMake principal
+├── Makefile              # Wrapper de Make
+├── README.md             # Documentación principal
+├── CONTRIBUTING.md       # Esta guía
+├── CHANGELOG.md          # Historial de cambios
+├── LICENSE               # Licencia MIT
+└── SECURITY.md           # Política de seguridad
 ```
+
+### Directorio de Trabajo
+
+- **include/**: Headers públicos - modificar aquí para cambios en la API pública
+- **src/**: Implementaciones - código fuente de los componentes
+- **tests/**: Tests unitarios - siempre añade tests para nuevas funcionalidades
 
 ## 🧪 Testing
 
 ### Ejecutar Tests
 
-#### Con CMake:
+El proyecto proporciona múltiples formas de ejecutar tests:
+
+#### Opción 1: Make con CTest (Recomendado)
 ```bash
+make test
+```
+
+#### Opción 2: Ejecutar tests directamente con Make
+```bash
+make runTests
+```
+
+#### Opción 3: Con CMake manualmente
+```bash
+mkdir -p build
 cd build
 cmake ..
 make
-./runTests
+ctest --output-on-failure  # O ./runTests
 ```
 
-#### Con Make:
+### Comandos Útiles de Desarrollo
+
 ```bash
+# Compilar todo
 make
-./runTests
+
+# Ejecutar tests
+make test
+
+# Ejecutar demo
+make demo
+
+# Limpiar build
+make clean
+
+# Recompilar desde cero
+make rebuild
+
+# Ver ayuda del Makefile
+make help
 ```
 
 ### Escribir Tests
 
-Usamos Google Test como framework de testing. Los tests deben:
+Todos los tests están en el directorio `tests/`. Usamos Google Test como framework de testing.
+
+**Ubicación de archivos de test:**
+- Tests principales: `tests/test_main.cpp`
+- Nuevos tests se pueden añadir al mismo archivo o crear nuevos archivos en `tests/`
+
+Los tests deben:
 - Ser independientes entre sí
 - Tener nombres descriptivos que indiquen qué se está probando
 - Probar un solo comportamiento o escenario
@@ -266,6 +318,17 @@ TEST_F(M6502Test1, TestLDA_IM_Zero) {
     EXPECT_EQ(cpu.Z, 1);  // Zero flag should be set
     EXPECT_EQ(cpu.N, 0);  // Negative flag should be clear
 }
+```
+
+**Actualizar CMakeLists.txt de tests:**
+
+Si añades nuevos archivos de test, actualiza `tests/CMakeLists.txt`:
+
+```cmake
+set(TEST_SOURCES
+    test_main.cpp
+    test_nuevo.cpp  # Añadir aquí
+)
 ```
 
 ### Categorías de Tests Requeridas

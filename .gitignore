@@ -8,10 +8,15 @@
 cpu6502
 main_6502
 runTests
+cpu_demo
 
 # Build directories
 build/
 cmake-build-*/
+bin/
+lib/*.a
+lib/*.so
+_codeql_build_dir/
 
 # CMake files
 CMakeCache.txt

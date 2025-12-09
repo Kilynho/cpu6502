@@ -13,4 +13,16 @@
   - `infinite`: ejecuta ciclos infinitos.
 - Mejoras en la documentación inline y comentarios del código.
 
+### Integración de E/S Apple II (nueva característica)
+
+- La CPU ahora soporta dispositivos de E/S modulares mediante la interfaz `IODevice`.
+- Se incluye `AppleIO` para simular el teclado ($FD0C) y pantalla ($FDED) de Apple II.
+- Registrar dispositivos IO:
+  ```cpp
+  auto appleIO = std::make_shared<AppleIO>();
+  cpu.registerIODevice(appleIO);
+  ```
+- Los dispositivos IO interceptan accesos a memoria antes de la lectura/escritura estándar.
+- Ideal para extender el emulador con periféricos, timers, gráficos, etc.
+
 Consulta los archivos en `docs/` para detalles de arquitectura e instrucciones soportadas.

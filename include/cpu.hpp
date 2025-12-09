@@ -83,10 +83,17 @@ public:
     mutable std::ofstream logFile; // Archivo de registro de la CPU
 
     CPU();  // Constructor de la CPU
+    // --- Integración de IODevices ---
+    void registerIODevice(std::shared_ptr<IODevice> device);
+    void unregisterIODevice(std::shared_ptr<IODevice> device);
     ~CPU(); // Destructor de la CPU
     
 private:
-    // Métodos privados
+    std::vector<std::shared_ptr<IODevice>> ioDevices; // Dispositivos de E/S registrados
+
+    // Métodos auxiliares para IO
+    IODevice* findIODeviceForRead(uint16_t address) const;
+    IODevice* findIODeviceForWrite(uint16_t address) const;
 };
 
 #endif // CPU_HPP

@@ -1,3 +1,5 @@
+#include "io_device.hpp"
+#include <algorithm>
 #include "cpu.hpp"
 #include "mem.hpp"
 #include "util/logger.hpp"
@@ -93,11 +95,19 @@ Word CPU::FetchWordFromMemory(const Mem& memory, Word address) const {
     return (memory[address] | (memory[address + 1] << 8));
 } 
 
+
 Byte CPU::ReadByte(u32& Cycles, Byte Address, Mem& memory) {
-    Byte Data = memory[Address]; // Leer el byte de la memoria en la dirección especificada
-    LogMemoryAccess(Address, Data, false); // Registrar el acceso de lectura a la memoria
-    Cycles--; // Decrementar los ciclos restantes
-    return Data; // Devolver el byte leído
+    // Consultar IODevices primero
+    if (IODevice* io = findIODeviceForRead(Address)) {
+        Byte Data = io->read(Address);
+        LogMemoryAccess(Address, Data, false);
+        Cycles--;
+        return Data;
+    }
+    Byte Data = memory[Address];
+    LogMemoryAccess(Address, Data, false);
+    Cycles--;
+    return Data;
 }
 
 Word CPU::ReadWord(u32& Cycles, Word Address, Mem& memory) {
@@ -110,10 +120,40 @@ Word CPU::ReadWord(u32& Cycles, Word Address, Mem& memory) {
     return Data; // Devolver la palabra leída
 }
 
+
 void CPU::WriteByte(u32& Cycles, Byte Address, Byte Data, Mem& memory) {
-    memory[Address] = Data; // Escribir el byte en la memoria en la dirección especificada
-    LogMemoryAccess(Address, Data, true); // Registrar el acceso de escritura a la memoria
-    Cycles--; // Decrementar los ciclos restantes
+    // Consultar IODevices primero
+    if (IODevice* io = findIODeviceForWrite(Address)) {
+        io->write(Address, Data);
+        LogMemoryAccess(Address, Data, true);
+        Cycles--;
+        return;
+    }
+    memory[Address] = Data;
+    LogMemoryAccess(Address, Data, true);
+    Cycles--;
+}
+// --- Métodos de integración IODevice ---
+void CPU::registerIODevice(std::shared_ptr<IODevice> device) {
+    ioDevices.push_back(device);
+}
+
+void CPU::unregisterIODevice(std::shared_ptr<IODevice> device) {
+    ioDevices.erase(std::remove(ioDevices.begin(), ioDevices.end(), device), ioDevices.end());
+}
+
+IODevice* CPU::findIODeviceForRead(uint16_t address) const {
+    for (const auto& dev : ioDevices) {
+        if (dev && dev->handlesRead(address)) return dev.get();
+    }
+    return nullptr;
+}
+
+IODevice* CPU::findIODeviceForWrite(uint16_t address) const {
+    for (const auto& dev : ioDevices) {
+        if (dev && dev->handlesWrite(address)) return dev.get();
+    }
+    return nullptr;
 }
 
 void CPU::WriteWord(u32& Cycles, Word Address, Word Data, Mem& memory) {

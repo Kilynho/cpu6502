@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "apple_io.hpp"
+#include "devices/apple_io.hpp"
 #include <memory>
 
 class AppleIOTest : public testing::Test {

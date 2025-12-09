@@ -1,6 +1,6 @@
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "apple_io.hpp"
+#include "devices/apple_io.hpp"
 #include <memory>
 #include <iostream>
 

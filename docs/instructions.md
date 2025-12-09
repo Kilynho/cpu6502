@@ -35,7 +35,7 @@ El emulador soporta la simulación de E/S Apple II mediante la clase `AppleIO`:
 ```cpp
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "apple_io.hpp"
+#include "devices/apple_io.hpp"
 
 CPU cpu;
 Mem mem;

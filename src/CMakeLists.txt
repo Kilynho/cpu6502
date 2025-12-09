@@ -14,8 +14,6 @@ add_library(cpu6502_lib STATIC ${LIB_SOURCES})
 # Especificar directorios de inclusión para la librería
 target_include_directories(cpu6502_lib PUBLIC
     ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/inc
-    ${PROJECT_SOURCE_DIR}/src/devices
 )
 
 # Crear el ejecutable de demostración
@@ -36,8 +34,6 @@ target_link_libraries(apple_io_demo cpu6502_lib)
 # Especificar directorios de inclusión para el demo
 target_include_directories(apple_io_demo PRIVATE
     ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/inc
-    ${PROJECT_SOURCE_DIR}/src/devices
 )
 
 # Establecer el nombre de salida del ejecutable

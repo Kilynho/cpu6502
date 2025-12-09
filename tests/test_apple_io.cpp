@@ -14,6 +14,7 @@ public:
         cpu.Reset(mem);
         appleIO = std::make_shared<AppleIO>();
         cpu.registerIODevice(appleIO);
+        // El PC ya está en $8000 después de Reset()
     }
 
     virtual void TearDown() {
@@ -136,9 +137,4 @@ TEST_F(AppleIOTest, RegisterUnregisterDevice) {
     EXPECT_EQ(cpu.A, 'Z');
 
     cpu.unregisterIODevice(anotherIO);
-}
-
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
 }

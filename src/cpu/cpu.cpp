@@ -156,6 +156,22 @@ IODevice* CPU::findIODeviceForWrite(uint16_t address) const {
     return nullptr;
 }
 
+// Métodos de acceso a memoria con soporte IODevice
+Byte CPU::ReadMemory(Word address, Mem& memory) {
+    if (IODevice* io = findIODeviceForRead(address)) {
+        return io->read(address);
+    }
+    return memory[address];
+}
+
+void CPU::WriteMemory(Word address, Byte value, Mem& memory) {
+    if (IODevice* io = findIODeviceForWrite(address)) {
+        io->write(address, value);
+        return;
+    }
+    memory[address] = value;
+}
+
 void CPU::WriteWord(u32& Cycles, Word Address, Word Data, Mem& memory) {
     memory[Address] = Data & 0x00FF; // Escribir el byte bajo de la palabra en la memoria
     LogMemoryAccess(Address, Data & 0x00FF, true); // Registrar el acceso de escritura a la memoria
@@ -291,7 +307,7 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
             } break;
             case 0xAD: { // LDA Absolute
                 Word Address = FetchWord(Cycles, memory); // Obtener la dirección absoluta
-                A = memory[Address]; // Leer el valor de la memoria y cargarlo en el acumulador
+                A = ReadMemory(Address, memory); // Leer el valor de la memoria y cargarlo en el acumulador
                 LogMemoryAccess(Address, A, false); // Registrar el acceso de lectura a la memoria
                 Cycles--; // Decrementar los ciclos restantes
                 LDASetStatus(); // Establecer los flags de estado
@@ -299,7 +315,7 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
             case 0xBD: { // LDA Absolute,X
                 Word Address = FetchWord(Cycles, memory); // Obtener la dirección absoluta
                 Address += X; // Sumar el valor del registro X
-                A = memory[Address]; // Leer el valor de la memoria y cargarlo en el acumulador
+                A = ReadMemory(Address, memory); // Leer el valor de la memoria y cargarlo en el acumulador
                 LogMemoryAccess(Address, A, false); // Registrar el acceso de lectura a la memoria
                 Cycles--; // Decrementar los ciclos restantes
                 LDASetStatus(); // Establecer los flags de estado
@@ -307,7 +323,7 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
             case 0xB9: { // LDA Absolute,Y
                 Word Address = FetchWord(Cycles, memory); // Obtener la dirección absoluta
                 Address += Y; // Sumar el valor del registro Y
-                A = memory[Address]; // Leer el valor de la memoria y cargarlo en el acumulador
+                A = ReadMemory(Address, memory); // Leer el valor de la memoria y cargarlo en el acumulador
                 LogMemoryAccess(Address, A, false); // Registrar el acceso de lectura a la memoria
                 Cycles--; // Decrementar los ciclos restantes
                 LDASetStatus(); // Establecer los flags de estado
@@ -327,9 +343,15 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
                 PC++; // Incrementar el contador de programa
                 Cycles--; // Ciclo adicional
             } break;
-            case 0x85: {  // STA Store Accumulator in Memory
+            case 0x85: {  // STA Store Accumulator in Memory (Zero Page)
                 Byte Address = FetchByte(Cycles, memory); // Obtener la dirección de memoria
                 WriteByte(Cycles, Address, A, memory); // Escribir el valor del acumulador en la memoria
+            } break;
+            case 0x8D: { // STA Absolute
+                Word Address = FetchWord(Cycles, memory); // Obtener la dirección absoluta
+                WriteMemory(Address, A, memory); // Escribir el acumulador en la memoria
+                LogMemoryAccess(Address, A, true); // Registrar el acceso de escritura
+                Cycles--; // Decrementar los ciclos restantes
             } break;
             case 0xA2: { // LDX Immediate
                 Byte Value = FetchByte(Cycles, memory); // Obtener el valor inmediato

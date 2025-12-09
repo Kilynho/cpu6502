@@ -7,7 +7,10 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <vector>
+#include <memory>
 #include "mem.hpp"
+#include "io_device.hpp"
 
 // Public API for CPU 6502 Emulator
 // This header provides the main interface for using the CPU emulator
@@ -86,6 +89,11 @@ public:
     // --- Integración de IODevices ---
     void registerIODevice(std::shared_ptr<IODevice> device);
     void unregisterIODevice(std::shared_ptr<IODevice> device);
+    
+    // Métodos para acceso a memoria con soporte de IODevice
+    Byte ReadMemory(Word address, Mem& memory);
+    void WriteMemory(Word address, Byte value, Mem& memory);
+    
     ~CPU(); // Destructor de la CPU
     
 private:

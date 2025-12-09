@@ -20,6 +20,7 @@ endif()
 set(TEST_SOURCES
     test_main.cpp
     instruction_handlers_test.cpp
+    test_apple_io.cpp
 )
 
 # Crear ejecutable de test
@@ -36,6 +37,8 @@ target_link_libraries(runTests
 # Especificar directorios de inclusión
 target_include_directories(runTests PRIVATE
     ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/inc
+    ${PROJECT_SOURCE_DIR}/src/devices
 )
 
 # Añadir tests a CTest

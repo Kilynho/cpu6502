@@ -18,6 +18,7 @@ lib/*.a
 lib/*.so
 _codeql_build_dir/
 obj/
+_codeql_detected_source_root
 
 # CMake files
 CMakeCache.txt

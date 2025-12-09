@@ -62,6 +62,11 @@ public:
     std::string ByteToBinaryString(Byte byte) const; // Convierte un byte a una cadena binaria
     std::string WordToBinaryString(Word word) const; // Convierte una palabra a una cadena binaria
     Word SPToAddress() const; // Convierte el puntero de pila en una dirección de memoria
+    
+    // Helper functions for new instruction system (public for instruction handlers)
+    void UpdateZeroAndNegativeFlags(Byte value); // Actualiza los flags Z y N
+    void UpdateCarryFlag(bool carry); // Actualiza el flag C
+    void UpdateOverflowFlag(bool overflow); // Actualiza el flag V
    
    // Registros de la CPU
     Word PC;    // Program Counter (Contador de Programa)

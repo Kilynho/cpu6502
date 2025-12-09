@@ -165,6 +165,19 @@ void CPU::LDXSetStatus() {
     N = (X & 0b10000000) > 0; // Establecer el flag de negativo si el bit más significativo del registro X es 1
 }
 
+void CPU::UpdateZeroAndNegativeFlags(Byte value) {
+    Z = (value == 0);
+    N = (value & 0x80) != 0;
+}
+
+void CPU::UpdateCarryFlag(bool carry) {
+    C = carry ? 1 : 0;
+}
+
+void CPU::UpdateOverflowFlag(bool overflow) {
+    V = overflow ? 1 : 0;
+}
+
 void CPU::Reset(Mem& memory) {
     // Limpiar el fichero de log
     std::ofstream logFile("cpu_log.txt", std::ios_base::trunc);

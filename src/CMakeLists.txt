@@ -1,6 +1,8 @@
 # Archivos fuente de la librería
 set(LIB_SOURCES
     cpu/cpu.cpp
+    cpu/addressing.cpp
+    cpu/instructions.cpp
     mem/mem.cpp
     util/logger.cpp
 )

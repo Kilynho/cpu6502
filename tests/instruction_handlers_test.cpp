@@ -464,10 +464,12 @@ TEST_F(InstructionHandlersTest, TestBranch_NotTaken)
     cpu.PC = 0x8000;
     mem[0x8000] = 0x10;
     u32 cycles = 2;
+    Word initialPC = cpu.PC;
     
-    Byte originalByte = cpu.FetchByte(cycles, mem);
+    Instructions::Branch(cpu, cycles, mem, false);
     
-    EXPECT_EQ(cpu.PC, 0x8001);
+    EXPECT_EQ(cpu.PC, 0x8001); // Only consumed offset byte, no branch taken
+    EXPECT_EQ(cycles, 1); // Should have consumed 1 cycle for fetch
 }
 
 // ========== Flag Tests ==========

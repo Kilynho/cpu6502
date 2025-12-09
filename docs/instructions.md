@@ -54,7 +54,7 @@ Push and pull data from the stack.
 - PLA: Z, N
 - PLP: All flags
 
-###Logical Instructions
+### Logical Instructions
 Perform bitwise logical operations.
 
 **Instructions:** AND, EOR, ORA, BIT

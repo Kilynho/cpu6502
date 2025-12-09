@@ -16,7 +16,7 @@ all: configure
 
 # Configure CMake (only runs if build directory doesn't exist or CMakeLists.txt changed)
 configure:
-	@if [ ! -d "$(BUILDDIR)" ]; then \
+	@if [ ! -d "$(BUILDDIR)" ] || [ ! -f "$(BUILDDIR)/Makefile" ]; then \
 		echo "Initializing Git submodules (GoogleTest)..."; \
 		git submodule update --init --recursive; \
 		echo "Configuring project with CMake..."; \

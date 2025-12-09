@@ -202,6 +202,41 @@ cpu6502/
 - **cpu_demo**: Ejecutable de demostración del emulador
 - **runTests**: Suite completa de tests unitarios
 
+## 📚 Documentación
+
+El proyecto incluye documentación técnica completa:
+
+### Guías de Desarrollo
+- **[docs/instructions.md](docs/instructions.md)** - Guía completa para implementar y testear instrucciones
+- **[docs/architecture.md](docs/architecture.md)** - Descripción de la arquitectura del emulador
+
+### Generación de Documentación con Doxygen
+
+Para generar la documentación del código:
+
+```bash
+cd docs
+doxygen Doxyfile
+```
+
+La documentación se generará en `docs/doxygen/html/`. Abre `index.html` en tu navegador para verla.
+
+### Comandos Útiles
+
+```bash
+# Compilar el proyecto
+make
+
+# Ejecutar tests
+make test
+
+# Ejecutar demo
+make demo
+
+# Generar documentación
+cd docs && doxygen Doxyfile
+```
+
 ## 🤝 Contribuir
 
 ¡Las contribuciones son bienvenidas! Por favor, lee [CONTRIBUTING.md](CONTRIBUTING.md) para conocer los detalles sobre nuestro código de conducta y el proceso para enviarnos pull requests.
@@ -220,13 +255,66 @@ Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](L
 
 ## �� Instrucciones Soportadas
 
-El emulador actualmente soporta las siguientes instrucciones:
+El emulador implementa **el conjunto completo de 151 instrucciones oficiales del 6502**:
 
-- **LDA** (Load Accumulator): Immediate, Zero Page, Zero Page X, Absolute, Absolute X, Absolute Y
-- **LDX** (Load X Register): Immediate
-- **STA** (Store Accumulator): Immediate
+### Load/Store Operations
+- **LDA** (Load Accumulator): Immediate, Zero Page, Zero Page,X, Absolute, Absolute,X, Absolute,Y, Indirect,X, Indirect,Y
+- **LDX** (Load X Register): Immediate, Zero Page, Zero Page,Y, Absolute, Absolute,Y
+- **LDY** (Load Y Register): Immediate, Zero Page, Zero Page,X, Absolute, Absolute,X
+- **STA** (Store Accumulator): Zero Page, Zero Page,X, Absolute, Absolute,X, Absolute,Y, Indirect,X, Indirect,Y
+- **STX** (Store X Register): Zero Page, Zero Page,Y, Absolute
+- **STY** (Store Y Register): Zero Page, Zero Page,X, Absolute
+
+### Register Transfers
+- **TAX, TAY, TXA, TYA** (Transfer between A, X, Y)
+- **TSX, TXS** (Transfer between stack pointer and X)
+
+### Stack Operations
+- **PHA, PLA** (Push/Pull Accumulator)
+- **PHP, PLP** (Push/Pull Processor Status)
+
+### Logical Operations
+- **AND, EOR, ORA** (Bitwise operations): All addressing modes
+- **BIT** (Bit test): Zero Page, Absolute
+
+### Arithmetic Operations
+- **ADC, SBC** (Add/Subtract with Carry): All addressing modes
+
+### Increments & Decrements
+- **INC, DEC** (Memory): Zero Page, Zero Page,X, Absolute, Absolute,X
+- **INX, INY, DEX, DEY** (Registers)
+
+### Shifts & Rotates
+- **ASL, LSR** (Arithmetic/Logical Shift): Accumulator and Memory modes
+- **ROL, ROR** (Rotate Left/Right): Accumulator and Memory modes
+
+### Jumps & Calls
+- **JMP** (Jump): Absolute, Indirect
 - **JSR** (Jump to Subroutine)
 - **RTS** (Return from Subroutine)
+
+### Branches (Conditional)
+- **BCC, BCS** (Branch on Carry Clear/Set)
+- **BEQ, BNE** (Branch on Equal/Not Equal)
+- **BMI, BPL** (Branch on Minus/Plus)
+- **BVC, BVS** (Branch on Overflow Clear/Set)
+
+### Comparisons
+- **CMP** (Compare Accumulator): All addressing modes
+- **CPX, CPY** (Compare X/Y): Immediate, Zero Page, Absolute
+
+### Status Flag Changes
+- **CLC, SEC** (Clear/Set Carry)
+- **CLD, SED** (Clear/Set Decimal Mode)
+- **CLI, SEI** (Clear/Set Interrupt Disable)
+- **CLV** (Clear Overflow)
+
+### System Functions
+- **BRK** (Break/Interrupt)
+- **RTI** (Return from Interrupt)
+- **NOP** (No Operation)
+
+Para más detalles sobre cada instrucción, consulta `docs/instructions.md`.
 
 ## 👥 Autores
 

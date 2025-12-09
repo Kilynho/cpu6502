@@ -8,8 +8,43 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Añadido
+- **Conjunto completo de instrucciones 6502 (151 instrucciones oficiales)**
+  - Todas las instrucciones load/store (LDA, LDX, LDY, STA, STX, STY) con todos los modos de direccionamiento
+  - Instrucciones de transferencia (TAX, TAY, TXA, TYA, TSX, TXS)
+  - Operaciones de pila (PHA, PHP, PLA, PLP)
+  - Operaciones lógicas (AND, EOR, ORA, BIT)
+  - Operaciones aritméticas (ADC, SBC)
+  - Comparaciones (CMP, CPX, CPY)
+  - Incrementos y decrementos (INC, INX, INY, DEC, DEX, DEY)
+  - Operaciones de desplazamiento y rotación (ASL, LSR, ROL, ROR)
+  - Saltos y subrutinas (JMP, JSR, RTS, RTI)
+  - Branches condicionales (BEQ, BNE, BPL, BMI, BCS, BCC, BVC, BVS)
+  - Instrucciones de flags (CLC, SEC, CLD, SED, CLI, SEI, CLV)
+  - Instrucciones de sistema (BRK, RTI, NOP)
+- **Sistema de addressing modes modular**
+  - Archivo dedicado `src/cpu/addressing.cpp` con todos los modos de direccionamiento
+  - Soporte para Immediate, Zero Page, Zero Page X/Y, Absolute, Absolute X/Y, Indirect X/Y, Indirect
+  - Manejo correcto de page boundary crossings
+  - Emulación del bug del 6502 en JMP indirect
+- **Sistema de instruction handlers optimizado**
+  - Tabla de lookup array[256] para dispatch rápido de instrucciones
+  - Handlers individuales por instrucción en `src/cpu/instructions.cpp`
+  - Funciones helper para actualización de flags (UpdateZeroAndNegativeFlags, UpdateCarryFlag, UpdateOverflowFlag)
+  - Inicialización única de la tabla de instrucciones
+- **Suite de tests exhaustiva**
+  - 68 tests unitarios en total (27 originales + 41 nuevos)
+  - Tests dedicados para cada familia de instrucciones
+  - Cobertura de casos límite, flags, y edge cases
+  - Validación de operaciones aritméticas con carry y overflow
+  - Tests de branch con offsets positivos y negativos
+  - Archivo `tests/instruction_handlers_test.cpp` con tests para nuevas instrucciones
+- **Documentación técnica completa**
+  - `docs/instructions.md`: Guía exhaustiva para implementar y testear instrucciones
+  - `docs/architecture.md`: Descripción detallada de la arquitectura del emulador
+  - `docs/Doxyfile`: Configuración de Doxygen para generación de documentación
+  - Sección de documentación en README.md con instrucciones para generar docs
 - **Arquitectura modular completa**
-  - Nueva estructura de directorios: `src/`, `include/`, `tests/`, `examples/`
+  - Nueva estructura de directorios: `src/`, `include/`, `tests/`, `examples/`, `docs/`
   - Separación clara entre API pública (`include/`) e implementación (`src/`)
   - Subdirectorios organizados: `src/cpu/`, `src/mem/`, `src/util/`, `src/main/`
 - **Sistema de logging configurable**

@@ -1,48 +1,78 @@
-# Compilador a utilizar
-CXX = g++
+# Makefile - CMake wrapper for CPU 6502 Emulator
+# This Makefile provides convenient shortcuts for CMake-based builds
 
-# Opciones de compilación
-CXXFLAGS = -std=c++17 -Wall -Wextra -g
+# Build directory
+BUILDDIR := build
 
-# Directorio de salida de binarios/objetos
-BINDIR := build
-OBJDIR := $(BINDIR)/obj
+# Default target: build everything
+all: configure
+	@echo "Building project with CMake..."
+	@$(MAKE) -C $(BUILDDIR) --no-print-directory
+	@echo ""
+	@echo "✓ Build complete!"
+	@echo "  - Library: $(BUILDDIR)/src/libcpu6502_lib.a"
+	@echo "  - Demo:    $(BUILDDIR)/cpu_demo"
+	@echo "  - Tests:   $(BUILDDIR)/runTests"
 
-# Nombre del ejecutable principal (en build/)
-TARGET := $(BINDIR)/cpu6502
+# Configure CMake (only runs if build directory doesn't exist or CMakeLists.txt changed)
+configure:
+	@if [ ! -d "$(BUILDDIR)" ]; then \
+		echo "Initializing Git submodules (GoogleTest)..."; \
+		git submodule update --init --recursive; \
+		echo "Configuring project with CMake..."; \
+		mkdir -p $(BUILDDIR); \
+		cd $(BUILDDIR) && cmake ..; \
+	fi
 
-# Nombre del ejecutable de test (en build/)
-TEST_TARGET := $(BINDIR)/runTests
+# Run tests
+test: all
+	@echo "Running tests with CTest..."
+	@cd $(BUILDDIR) && ctest --output-on-failure
 
-# Archivos fuente
-SOURCES = main_6502.cpp cpu.cpp mem.cpp
-TEST_SOURCES = test.cpp cpu.cpp mem.cpp
+# Run tests directly (without CTest wrapper)
+runTests: all
+	@echo "Running tests directly..."
+	@$(BUILDDIR)/runTests
 
-# Archivos objeto generados a partir de los archivos fuente (en build/obj)
-OBJECTS := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SOURCES))
-TEST_OBJECTS := $(patsubst %.cpp,$(OBJDIR)/%.o,$(TEST_SOURCES))
+# Run demo
+demo: all
+	@echo "Running CPU demo..."
+	@$(BUILDDIR)/cpu_demo
 
-# Regla principal: compilar todo
-all: $(TARGET) $(TEST_TARGET)
-
-# Regla para generar el ejecutable principal a partir de los archivos objeto
-$(TARGET): $(OBJECTS)
-	@mkdir -p $(BINDIR)
-	$(CXX) $(CXXFLAGS) -o $@ $^
-
-# Regla para generar el ejecutable de test a partir de los archivos objeto
-$(TEST_TARGET): $(TEST_OBJECTS)
-	@mkdir -p $(BINDIR)
-	$(CXX) $(CXXFLAGS) -o $@ $^ -lgtest -lgtest_main -pthread
-
-# Regla para generar un archivo objeto a partir de un archivo fuente (coloca en build/obj)
-$(OBJDIR)/%.o: %.cpp
-	@mkdir -p $(OBJDIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# Regla para limpiar los archivos generados (ejecutable y objetos)
+# Clean build artifacts
 clean:
-	rm -rf $(BINDIR)
+	@echo "Cleaning build directory..."
+	@rm -rf $(BUILDDIR)
+	@echo "✓ Clean complete!"
 
-# Declarar las reglas 'all' y 'clean' como phony (no generan archivos)
-.PHONY: all clean
+# Rebuild everything from scratch
+rebuild: clean all
+
+# Force reconfigure (useful if CMakeLists.txt changed)
+reconfigure:
+	@echo "Forcing CMake reconfiguration..."
+	@rm -rf $(BUILDDIR)
+	@$(MAKE) configure
+
+# Install (if CMAKE_INSTALL_PREFIX is set)
+install: all
+	@echo "Installing..."
+	@cd $(BUILDDIR) && $(MAKE) install
+
+# Show help
+help:
+	@echo "CPU 6502 Emulator - Makefile targets:"
+	@echo ""
+	@echo "  make              - Build all targets (library, demo, tests)"
+	@echo "  make test         - Build and run tests with CTest"
+	@echo "  make runTests     - Build and run tests directly"
+	@echo "  make demo         - Build and run demo program"
+	@echo "  make clean        - Remove all build artifacts"
+	@echo "  make rebuild      - Clean and build from scratch"
+	@echo "  make reconfigure  - Force CMake reconfiguration"
+	@echo "  make help         - Show this help message"
+	@echo ""
+	@echo "Build artifacts will be in: $(BUILDDIR)/"
+
+# Declare phony targets
+.PHONY: all configure test runTests demo clean rebuild reconfigure install help

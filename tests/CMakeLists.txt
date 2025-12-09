@@ -19,6 +19,7 @@ endif()
 # Archivos fuente de test
 set(TEST_SOURCES
     test_main.cpp
+    instruction_handlers_test.cpp
 )
 
 # Crear ejecutable de test

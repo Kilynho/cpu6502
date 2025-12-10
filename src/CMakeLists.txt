@@ -39,3 +39,17 @@ target_include_directories(apple_io_demo PRIVATE
 
 # Establecer el nombre de salida del ejecutable
 set_target_properties(apple_io_demo PROPERTIES OUTPUT_NAME apple_io_demo)
+
+# Crear el ejecutable de ejemplo de FileDevice
+add_executable(file_device_demo ${PROJECT_SOURCE_DIR}/examples/file_device_demo.cpp)
+
+# Enlazar el ejecutable con la librería
+target_link_libraries(file_device_demo cpu6502_lib)
+
+# Especificar directorios de inclusión para el demo
+target_include_directories(file_device_demo PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+)
+
+# Establecer el nombre de salida del ejecutable
+set_target_properties(file_device_demo PROPERTIES OUTPUT_NAME file_device_demo)

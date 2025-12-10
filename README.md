@@ -13,7 +13,7 @@
   - `infinite`: ejecuta ciclos infinitos.
 - Mejoras en la documentación inline y comentarios del código.
 
-### Integración de E/S Apple II (nueva característica)
+### Integración de E/S Apple II
 
 - La CPU ahora soporta dispositivos de E/S modulares mediante la interfaz `IODevice`.
 - Se incluye `AppleIO` para simular el teclado ($FD0C) y pantalla ($FDED) de Apple II.
@@ -24,5 +24,25 @@
   ```
 - Los dispositivos IO interceptan accesos a memoria antes de la lectura/escritura estándar.
 - Ideal para extender el emulador con periféricos, timers, gráficos, etc.
+
+### Soporte para Almacenamiento de Archivos (FileDevice)
+
+- Nuevo dispositivo `FileDevice` que permite cargar y guardar binarios desde/hacia archivos del host.
+- Dos modos de operación:
+  - **API directa en C++**: Métodos `loadBinary()` y `saveBinary()`
+  - **Registros mapeados en memoria**: Control desde código 6502 en direcciones `$FE00-$FE4F`
+- Perfecto para desarrollo, pruebas y persistencia de datos.
+- Ejemplo de uso:
+  ```cpp
+  auto fileDevice = std::make_shared<FileDevice>(&mem);
+  cpu.registerIODevice(fileDevice);
+  
+  // Cargar programa desde archivo
+  fileDevice->loadBinary("programa.bin", 0x8000);
+  
+  // Guardar datos de memoria
+  fileDevice->saveBinary("datos.bin", 0x0200, 256);
+  ```
+- Ver `docs/file_device.md` para documentación completa y `examples/file_device_demo.cpp` para ejemplos.
 
 Consulta los archivos en `docs/` para detalles de arquitectura e instrucciones soportadas.

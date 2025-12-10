@@ -48,6 +48,30 @@ The main CPU class that emulates the 6502 processor.
 - Execute loop that fetches and executes instructions
 - Memory access logging
 - Stack operations
+- **IODevice integration**: Supports modular I/O devices that intercept memory reads/writes at specific addresses
+
+### IODevice Architecture (`io_device.hpp` / `apple_io.cpp/hpp`)
+
+The emulator now supports modular I/O devices through an abstract `IODevice` interface.
+
+**Key Features:**
+- Abstract interface for read/write interception at specific memory addresses
+- CPU queries registered IODevices before accessing memory
+- Devices can handle specific addresses (e.g., $FD0C/$FDED for Apple II keyboard/screen)
+- Register/unregister devices dynamically
+
+**Example Usage:**
+```cpp
+auto appleIO = std::make_shared<AppleIO>();
+cpu.registerIODevice(appleIO);
+// Now reads from $FD0C and writes to $FDED are handled by AppleIO
+```
+
+**AppleIO Implementation:**
+- Simulates Apple II keyboard input at $FD0C
+- Simulates Apple II screen output at $FDED
+- Buffers keyboard input for testing
+- Captures screen output for verification
 
 **Public Interface:**
 ```cpp

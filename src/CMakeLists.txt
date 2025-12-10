@@ -6,6 +6,7 @@ set(LIB_SOURCES
     mem/mem.cpp
     util/logger.cpp
     devices/apple_io.cpp
+    devices/file_device.cpp
 )
 
 # Crear la librería estática

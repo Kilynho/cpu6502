@@ -288,6 +288,11 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
     while (Cycles > 0) {
         Byte Ins = FetchByte(Cycles, memory); // Obtener el opcode de la instrucción
         switch (Ins) {
+            case 0x00: { // BRK (Force Interrupt)
+                // Simula el comportamiento básico de BRK: detener la ejecución
+                util::LogInfo("BRK ejecutado: Deteniendo la CPU");
+                Cycles = 0;
+            } break;
             case 0xA9: { // LDA Immediate
                 Byte Value = FetchByte(Cycles, memory); // Obtener el valor inmediato
                 A = Value; // Cargar el valor en el acumulador
@@ -357,6 +362,20 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
                 Byte Value = FetchByte(Cycles, memory); // Obtener el valor inmediato
                 X = Value; // Cargar el valor en el registro X
                 LDXSetStatus(); // Establecer los flags de estado
+            } break;
+            case 0xCA: { // DEX (Decrement X)
+                X--;
+                Cycles--;
+                LDXSetStatus();
+            } break;
+            case 0xD0: { // BNE (Branch if Not Equal)
+                Byte offset = FetchByte(Cycles, memory); // Leer el offset
+                if (!Z) {
+                    // Offset es signed, pero en 6502 es un byte
+                    int8_t rel = static_cast<int8_t>(offset);
+                    PC += rel;
+                    Cycles--;
+                }
             } break;
             case 0x20: { // JSR (Jump to Subroutine)
                 Word SubAddr = FetchWord(Cycles, memory); // Obtener la dirección de la subrutina

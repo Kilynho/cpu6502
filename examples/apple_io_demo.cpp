@@ -35,7 +35,7 @@ int main() {
     mem[0x8007] = 0xFD;
     mem[0x8008] = 0xCA;          // DEX (decrementar X)
     mem[0x8009] = 0xD0;          // BNE loop (si X != 0, volver a $8002)
-    mem[0x800A] = 0xF6;          // offset: -10 bytes
+    mem[0x800A] = 0xF7;          // offset: -10 bytes
 
     // Configurar vector de reset
     mem[Mem::RESET_VECTOR] = 0x00;

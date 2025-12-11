@@ -152,7 +152,8 @@ bool FileDevice::saveBinary(const std::string& filename, uint16_t startAddr, uin
     }
     
     // Verificar que no se salga del espacio de memoria
-    if (startAddr + len > 0x10000 || startAddr + len < startAddr) {
+    // Usar comparación segura para evitar overflow
+    if (len > 0x10000 || startAddr > 0x10000 - len) {
         std::cerr << "FileDevice: Rango de memoria inválido\n";
         return false;
     }

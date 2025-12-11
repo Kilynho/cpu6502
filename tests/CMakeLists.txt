@@ -22,6 +22,7 @@ set(TEST_SOURCES
     instruction_handlers_test.cpp
     test_apple_io.cpp
     test_file_device.cpp
+    test_text_screen.cpp
 )
 
 # Crear ejecutable de test

@@ -49,6 +49,11 @@ file_device_demo: all
 	@echo "Running File Device demo..."
 	@$(BUILDDIR)/file_device_demo
 
+# Run Text Screen demo
+text_screen_demo: all
+	@echo "Running Text Screen demo..."
+	@$(BUILDDIR)/text_screen_demo
+
 # Clean build artifacts
 clean:
 	@echo "Cleaning build directory..."
@@ -79,6 +84,7 @@ help:
 	@echo "  make demo         - Build and run CPU demo program"
 	@echo "  make apple_io_demo    - Build and run Apple IO demo"
 	@echo "  make file_device_demo - Build and run File Device demo"
+	@echo "  make text_screen_demo - Build and run Text Screen demo"
 	@echo "  make clean        - Remove all build artifacts"
 	@echo "  make rebuild      - Clean and build from scratch"
 	@echo "  make reconfigure  - Force CMake reconfiguration"
@@ -87,4 +93,4 @@ help:
 	@echo "Build artifacts will be in: $(BUILDDIR)/"
 
 # Declare phony targets
-.PHONY: all configure test runTests demo apple_io_demo file_device_demo clean rebuild reconfigure install help
+.PHONY: all configure test runTests demo apple_io_demo file_device_demo text_screen_demo clean rebuild reconfigure install help

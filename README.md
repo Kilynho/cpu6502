@@ -45,4 +45,33 @@
   ```
 - Ver `docs/file_device.md` para documentación completa y `examples/file_device_demo.cpp` para ejemplos.
 
+### Soporte Gráfico: Pantalla de Texto (TextScreen)
+
+- Nuevo dispositivo `TextScreen` que simula una pantalla de texto de 40x24 caracteres.
+- Características principales:
+  - **Buffer de video mapeado en memoria**: `$FC00-$FFFB` (960 bytes)
+  - **Puerto de caracteres**: `$FFFF` - escribir caracteres directamente
+  - **Control de cursor**: `$FFFC` (columna) y `$FFFD` (fila)
+  - **Registro de control**: `$FFFE` (auto-scroll, limpiar pantalla, etc.)
+  - **Soporte para caracteres de control**: `\n`, `\r`, `\t`, `\b`
+  - **Auto-scroll automático** cuando se llena la pantalla
+- Ejemplo de uso:
+  ```cpp
+  auto textScreen = std::make_shared<TextScreen>();
+  cpu.registerIODevice(textScreen);
+  
+  // Escribir desde código 6502 mediante puerto de caracteres
+  mem[0x8000] = 0xA9;  // LDA #'H'
+  mem[0x8001] = 'H';
+  mem[0x8002] = 0x8D;  // STA $FFFF
+  mem[0x8003] = 0xFF;
+  mem[0x8004] = 0xFF;
+  
+  // O usar la API C++ directamente
+  textScreen->writeCharAtCursor('H');
+  textScreen->writeCharAtCursor('i');
+  std::cout << textScreen->getBuffer();
+  ```
+- Ver `docs/video_device.md` para documentación completa y `examples/text_screen_demo.cpp` para ejemplos.
+
 Consulta los archivos en `docs/` para detalles de arquitectura e instrucciones soportadas.

@@ -7,6 +7,7 @@ set(LIB_SOURCES
     util/logger.cpp
     devices/apple_io.cpp
     devices/file_device.cpp
+    devices/text_screen.cpp
 )
 
 # Crear la librería estática
@@ -53,3 +54,17 @@ target_include_directories(file_device_demo PRIVATE
 
 # Establecer el nombre de salida del ejecutable
 set_target_properties(file_device_demo PROPERTIES OUTPUT_NAME file_device_demo)
+
+# Crear el ejecutable de ejemplo de TextScreen
+add_executable(text_screen_demo ${PROJECT_SOURCE_DIR}/examples/text_screen_demo.cpp)
+
+# Enlazar el ejecutable con la librería
+target_link_libraries(text_screen_demo cpu6502_lib)
+
+# Especificar directorios de inclusión para el demo
+target_include_directories(text_screen_demo PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+)
+
+# Establecer el nombre de salida del ejecutable
+set_target_properties(text_screen_demo PROPERTIES OUTPUT_NAME text_screen_demo)

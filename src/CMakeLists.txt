@@ -8,6 +8,7 @@ set(LIB_SOURCES
     devices/apple_io.cpp
     devices/file_device.cpp
     devices/text_screen.cpp
+    devices/basic_audio.cpp
     gui/emulator_gui.cpp
 )
 
@@ -106,3 +107,17 @@ target_include_directories(screenshot_demo PRIVATE
 
 # Establecer el nombre de salida del ejecutable
 set_target_properties(screenshot_demo PROPERTIES OUTPUT_NAME screenshot_demo)
+
+# Crear el ejecutable de audio demo
+add_executable(audio_demo ${PROJECT_SOURCE_DIR}/examples/audio_demo.cpp)
+
+# Enlazar el ejecutable con la librería
+target_link_libraries(audio_demo cpu6502_lib)
+
+# Especificar directorios de inclusión para el demo
+target_include_directories(audio_demo PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+)
+
+# Establecer el nombre de salida del ejecutable
+set_target_properties(audio_demo PROPERTIES OUTPUT_NAME audio_demo)

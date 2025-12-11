@@ -74,6 +74,39 @@
   ```
 - Ver `docs/video_device.md` para documentación completa y `examples/text_screen_demo.cpp` para ejemplos.
 
+### Soporte de Audio: Generador de Tonos (BasicAudio)
+
+- Nuevo dispositivo `BasicAudio` que simula un generador de tonos simple para reproducir audio.
+- Características principales:
+  - **Generación de ondas cuadradas** con frecuencias de 20 Hz a 20 kHz
+  - **Registros mapeados en memoria**: `$FB00-$FB05` para control completo desde 6502
+  - **Control de frecuencia, duración y volumen** programable
+  - **Reproducción en tiempo real** usando SDL2 Audio
+  - **Ideal para música retro y efectos de sonido** como los chips de las computadoras clásicas
+- Ejemplo de uso:
+  ```cpp
+  auto audio = std::make_shared<BasicAudio>();
+  audio->initialize();
+  cpu.registerIODevice(audio);
+  
+  // Reproducir La (440 Hz) durante 500 ms
+  audio->playTone(440, 500, 200);
+  
+  // O desde código 6502:
+  // LDA #$B8 : STA $FB00  ; Frecuencia baja
+  // LDA #$01 : STA $FB01  ; Frecuencia alta
+  // LDA #$F4 : STA $FB02  ; Duración baja (500 ms)
+  // LDA #$01 : STA $FB03  ; Duración alta
+  // LDA #$C8 : STA $FB04  ; Volumen (200)
+  // LDA #$01 : STA $FB05  ; Reproducir
+  ```
+- Ejecutar la demo (¡escucha la escala musical!):
+  ```bash
+  cd build
+  ./audio_demo
+  ```
+- Ver `docs/audio_device.md` para documentación completa y `examples/audio_demo.cpp` para ejemplos.
+
 ### Interfaz Gráfica Retro (EmulatorGUI)
 
 - **Nueva GUI con estilo retro de los años 80** inspirada en Apple II, Commodore 64 y MSX

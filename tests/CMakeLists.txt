@@ -23,6 +23,7 @@ set(TEST_SOURCES
     test_apple_io.cpp
     test_file_device.cpp
     test_text_screen.cpp
+    test_emulator_gui.cpp
 )
 
 # Crear ejecutable de test

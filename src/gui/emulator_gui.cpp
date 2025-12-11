@@ -2,6 +2,26 @@
 #include "devices/text_screen.hpp"
 #include <iostream>
 
+// Define the color palette
+const SDL_Color EmulatorGUI::PALETTE[16] = {
+    {0x00, 0x00, 0x00, 0xFF},  // 0: Black
+    {0x88, 0x00, 0x00, 0xFF},  // 1: Dark Red
+    {0x00, 0x00, 0xCC, 0xFF},  // 2: Dark Blue
+    {0xDD, 0x22, 0xDD, 0xFF},  // 3: Purple
+    {0x00, 0x88, 0x00, 0xFF},  // 4: Dark Green
+    {0x80, 0x80, 0x80, 0xFF},  // 5: Gray
+    {0x22, 0x22, 0xFF, 0xFF},  // 6: Medium Blue
+    {0x66, 0xDD, 0xFF, 0xFF},  // 7: Light Blue
+    {0x88, 0x55, 0x00, 0xFF},  // 8: Brown
+    {0xFF, 0x66, 0x00, 0xFF},  // 9: Orange
+    {0xCC, 0xCC, 0xCC, 0xFF},  // 10: Pink (Light Gray)
+    {0xFF, 0x99, 0x99, 0xFF},  // 11: Light Red
+    {0x00, 0xFF, 0x00, 0xFF},  // 12: Light Green
+    {0xFF, 0xFF, 0x00, 0xFF},  // 13: Yellow
+    {0x00, 0xFF, 0xFF, 0xFF},  // 14: Aqua
+    {0xFF, 0xFF, 0xFF, 0xFF}   // 15: White
+};
+
 EmulatorGUI::EmulatorGUI(const std::string& title, int charWidth, int charHeight)
     : charWidth(charWidth),
       charHeight(charHeight),
@@ -155,7 +175,9 @@ void EmulatorGUI::handleEvents() {
                 
             case SDL_TEXTINPUT:
                 // Handle regular text input
-                if (event.text.text[0] >= 0x20 && event.text.text[0] <= 0x7E) {
+                // Use unsigned char to properly handle all ASCII values
+                if (static_cast<unsigned char>(event.text.text[0]) >= 0x20 && 
+                    static_cast<unsigned char>(event.text.text[0]) <= 0x7E) {
                     lastKey = event.text.text[0];
                     keyAvailable = true;
                 }
@@ -196,24 +218,30 @@ void EmulatorGUI::renderTextScreen() {
     textScreen->getCursorPosition(cursorCol, cursorRow);
     
     // Render each character
-    int charIndex = 0;
-    for (int row = 0; row < SCREEN_HEIGHT_CHARS; row++) {
-        for (int col = 0; col < SCREEN_WIDTH_CHARS; col++) {
-            char c = ' ';
-            
-            // Calculate position in buffer (skip newlines)
-            int bufferPos = row * (SCREEN_WIDTH_CHARS + 1) + col;
-            if (bufferPos < static_cast<int>(buffer.size()) && buffer[bufferPos] != '\n') {
-                c = buffer[bufferPos];
-            }
-            
-            // Draw character
+    // Parse the buffer which has newlines between rows
+    int row = 0;
+    int col = 0;
+    
+    for (size_t i = 0; i < buffer.size() && row < SCREEN_HEIGHT_CHARS; i++) {
+        char c = buffer[i];
+        
+        // Handle newline - move to next row
+        if (c == '\n') {
+            row++;
+            col = 0;
+            continue;
+        }
+        
+        // Draw character if we haven't exceeded the width
+        if (col < SCREEN_WIDTH_CHARS) {
             drawChar(col, row, c, DEFAULT_FG_COLOR, DEFAULT_BG_COLOR);
             
             // Draw cursor if at this position and visible
             if (col == cursorCol && row == cursorRow && cursorVisible) {
                 drawCursor(col, row);
             }
+            
+            col++;
         }
     }
 }
@@ -239,7 +267,7 @@ void EmulatorGUI::drawChar(int x, int y, char c, int fgColor, int bgColor) {
     // Draw a simplified version of each character using geometric shapes
     // This creates a retro "blocky" look similar to early computers
     
-    if (c >= 0x20 && c <= 0x7E) {
+    if (static_cast<unsigned char>(c) >= 0x20 && static_cast<unsigned char>(c) <= 0x7E) {
         // For simplicity, we'll draw a small filled rectangle to represent each character
         // In a production version, you'd use a proper bitmap font
         

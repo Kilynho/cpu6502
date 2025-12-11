@@ -8,15 +8,23 @@ set(LIB_SOURCES
     devices/apple_io.cpp
     devices/file_device.cpp
     devices/text_screen.cpp
+    gui/emulator_gui.cpp
 )
 
 # Crear la librería estática
 add_library(cpu6502_lib STATIC ${LIB_SOURCES})
 
+# Find SDL2 package
+find_package(SDL2 REQUIRED)
+
 # Especificar directorios de inclusión para la librería
 target_include_directories(cpu6502_lib PUBLIC
     ${PROJECT_SOURCE_DIR}/include
+    ${SDL2_INCLUDE_DIRS}
 )
+
+# Link SDL2 to the library
+target_link_libraries(cpu6502_lib PUBLIC ${SDL2_LIBRARIES})
 
 # Crear el ejecutable de demostración
 add_executable(cpu_demo main/cpu_demo.cpp)
@@ -68,3 +76,33 @@ target_include_directories(text_screen_demo PRIVATE
 
 # Establecer el nombre de salida del ejecutable
 set_target_properties(text_screen_demo PROPERTIES OUTPUT_NAME text_screen_demo)
+
+# Crear el ejecutable de GUI demo
+add_executable(gui_demo ${PROJECT_SOURCE_DIR}/examples/gui_demo.cpp)
+
+# Enlazar el ejecutable con la librería y SDL2
+target_link_libraries(gui_demo cpu6502_lib ${SDL2_LIBRARIES})
+
+# Especificar directorios de inclusión para el demo
+target_include_directories(gui_demo PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${SDL2_INCLUDE_DIRS}
+)
+
+# Establecer el nombre de salida del ejecutable
+set_target_properties(gui_demo PROPERTIES OUTPUT_NAME gui_demo)
+
+# Crear el ejecutable de screenshot demo
+add_executable(screenshot_demo ${PROJECT_SOURCE_DIR}/examples/screenshot_demo.cpp)
+
+# Enlazar el ejecutable con la librería y SDL2
+target_link_libraries(screenshot_demo cpu6502_lib ${SDL2_LIBRARIES})
+
+# Especificar directorios de inclusión para el demo
+target_include_directories(screenshot_demo PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${SDL2_INCLUDE_DIRS}
+)
+
+# Establecer el nombre de salida del ejecutable
+set_target_properties(screenshot_demo PROPERTIES OUTPUT_NAME screenshot_demo)

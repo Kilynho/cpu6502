@@ -74,4 +74,44 @@
   ```
 - Ver `docs/video_device.md` para documentación completa y `examples/text_screen_demo.cpp` para ejemplos.
 
+### Interfaz Gráfica Retro (EmulatorGUI)
+
+- **Nueva GUI con estilo retro de los años 80** inspirada en Apple II, Commodore 64 y MSX
+- Características principales:
+  - **Pantalla de 40x24 caracteres** con aspecto vintage auténtico
+  - **Paleta de 16 colores** estilo Apple II/Commodore 64
+  - **Cursor de bloque parpadeante** como las terminales clásicas
+  - **Renderizado con SDL2** para rendimiento fluido
+  - **Entrada de teclado completa** con caracteres especiales
+  - **Integración perfecta con TextScreen**
+- Ejemplo de uso:
+  ```cpp
+  #include "gui/emulator_gui.hpp"
+  #include "devices/text_screen.hpp"
+  
+  // Crear GUI con caracteres de 16x16 píxeles
+  EmulatorGUI gui("6502 Retro Terminal", 16, 16);
+  gui.initialize();
+  
+  // Conectar con TextScreen
+  auto textScreen = std::make_shared<TextScreen>();
+  gui.attachTextScreen(textScreen);
+  
+  // Bucle principal
+  while (gui.isInitialized()) {
+      if (gui.hasKey()) {
+          char key = gui.getLastKey();
+          textScreen->writeCharAtCursor(key);
+      }
+      gui.update();
+      SDL_Delay(16);
+  }
+  ```
+- Ejecutar la demo:
+  ```bash
+  cd build
+  ./gui_demo
+  ```
+- Ver `docs/emulator_gui.md` o `docs/emulator_gui_es.md` para documentación completa
+
 Consulta los archivos en `docs/` para detalles de arquitectura e instrucciones soportadas.

@@ -74,7 +74,7 @@ void BasicAudio::cleanup() {
         deviceId = 0;
     }
     
-    SDL_Quit();
+    SDL_QuitSubSystem(SDL_INIT_AUDIO);
     initialized = false;
 }
 
@@ -87,6 +87,8 @@ bool BasicAudio::handlesWrite(uint16_t address) const {
 }
 
 uint8_t BasicAudio::read(uint16_t address) {
+    std::lock_guard<std::mutex> lock(audioMutex);
+    
     switch (address) {
         case FREQ_LOW_ADDR:
             return frequencyLow;
@@ -111,6 +113,8 @@ uint8_t BasicAudio::read(uint16_t address) {
 }
 
 void BasicAudio::write(uint16_t address, uint8_t value) {
+    std::lock_guard<std::mutex> lock(audioMutex);
+    
     switch (address) {
         case FREQ_LOW_ADDR:
             frequencyLow = value;
@@ -158,6 +162,7 @@ void BasicAudio::playTone(uint16_t frequency, uint16_t duration, uint8_t vol) {
 }
 
 void BasicAudio::stop() {
+    std::lock_guard<std::mutex> lock(audioMutex);
     playing = false;
     samplesPlayed = 0;
     totalSamples = 0;

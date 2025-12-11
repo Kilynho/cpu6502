@@ -128,15 +128,15 @@ int main() {
     auto audio = std::make_shared<BasicAudio>();
     
     if (!audio->initialize()) {
-        std::cerr << "Error: No se pudo inicializar el dispositivo de audio" << std::endl;
-        std::cerr << "Asegúrate de tener un dispositivo de audio disponible" << std::endl;
+        std::cerr << "Error: Could not initialize audio device" << std::endl;
+        std::cerr << "Make sure you have an audio device available" << std::endl;
         return 1;
     }
     
     cpu.registerIODevice(audio);
     
-    std::cout << "Dispositivo de audio inicializado correctamente" << std::endl;
-    std::cout << "Registros de audio mapeados en:" << std::endl;
+    std::cout << "Audio device initialized successfully" << std::endl;
+    std::cout << "Audio registers mapped at:" << std::endl;
     std::cout << "  $FB00-$FB01: Frecuencia (16-bit)" << std::endl;
     std::cout << "  $FB02-$FB03: Duración (16-bit, en ms)" << std::endl;
     std::cout << "  $FB04:       Volumen (0-255)" << std::endl;
@@ -154,15 +154,15 @@ int main() {
     playNote(audio, NOTE_B4, "Si");
     playNote(audio, NOTE_C5, "Do");
     
-    std::cout << "\n¡Escala completada!" << std::endl;
+    std::cout << "\nScale completed!" << std::endl;
     
     // Opción 2: Reproducir escala usando código 6502
-    std::cout << "\nPresiona Enter para reproducir la escala usando código 6502..." << std::endl;
+    std::cout << "\nPress Enter to play the scale using 6502 code..." << std::endl;
     std::cin.get();
     
     playCPUGeneratedScale(cpu, mem, audio);
     
-    std::cout << "\n¡Demostración completada!" << std::endl;
+    std::cout << "\nDemo completed!" << std::endl;
     
     // Limpiar
     cpu.unregisterIODevice(audio);

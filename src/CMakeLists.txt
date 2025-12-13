@@ -9,6 +9,7 @@ set(LIB_SOURCES
     devices/file_device.cpp
     devices/text_screen.cpp
     devices/basic_audio.cpp
+    devices/tcp_serial.cpp
     gui/emulator_gui.cpp
 )
 
@@ -121,3 +122,17 @@ target_include_directories(audio_demo PRIVATE
 
 # Establecer el nombre de salida del ejecutable
 set_target_properties(audio_demo PROPERTIES OUTPUT_NAME audio_demo)
+
+# Crear el ejecutable de TCP Serial demo
+add_executable(tcp_serial_demo ${PROJECT_SOURCE_DIR}/examples/tcp_serial_demo.cpp)
+
+# Enlazar el ejecutable con la librería
+target_link_libraries(tcp_serial_demo cpu6502_lib)
+
+# Especificar directorios de inclusión para el demo
+target_include_directories(tcp_serial_demo PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+)
+
+# Establecer el nombre de salida del ejecutable
+set_target_properties(tcp_serial_demo PROPERTIES OUTPUT_NAME tcp_serial_demo)

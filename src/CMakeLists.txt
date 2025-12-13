@@ -10,6 +10,7 @@ set(LIB_SOURCES
     devices/text_screen.cpp
     devices/basic_audio.cpp
     devices/tcp_serial.cpp
+    devices/basic_timer.cpp
     gui/emulator_gui.cpp
 )
 

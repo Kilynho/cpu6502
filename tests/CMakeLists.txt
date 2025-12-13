@@ -26,6 +26,7 @@ set(TEST_SOURCES
     test_emulator_gui.cpp
     test_audio_device.cpp
     test_tcp_serial.cpp
+    test_timer_device.cpp
 )
 
 # Crear ejecutable de test

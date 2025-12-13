@@ -235,14 +235,6 @@ bool BasicTimer::isAutoReload() const {
     return autoReload.load();
 }
 
-uint32_t BasicTimer::readCounter() const {
-    return counter.load();
-}
-
-uint32_t BasicTimer::readLimit() const {
-    return limit.load();
-}
-
 void BasicTimer::updateControlFlags(uint8_t value) {
     // Guardar el valor del registro de control
     control = value;

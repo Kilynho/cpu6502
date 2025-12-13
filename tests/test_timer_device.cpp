@@ -87,17 +87,17 @@ TEST_F(BasicTimerTest, EnableDisable) {
     
     EXPECT_TRUE(timer->isEnabled());
     
-    // Verificar registro de status
+    // Verify status register
     uint8_t status = timer->read(0xFC09);
-    EXPECT_TRUE((status & 0x01) != 0);  // Enabled bit
+    EXPECT_TRUE((status & BasicTimer::STATUS_ENABLED) != 0);  // Enabled bit
     
-    // Deshabilitar timer
+    // Disable timer
     timer->write(0xFC08, 0x00);
     
     EXPECT_FALSE(timer->isEnabled());
     
     status = timer->read(0xFC09);
-    EXPECT_TRUE((status & 0x01) == 0);
+    EXPECT_TRUE((status & BasicTimer::STATUS_ENABLED) == 0);
 }
 
 // Test: Conteo de ciclos
@@ -142,10 +142,10 @@ TEST_F(BasicTimerTest, IRQGeneration) {
     EXPECT_TRUE(timer->hasIRQ());
     EXPECT_EQ(timer->getCounter(), 1000);
     
-    // Verificar registro de status
+    // Verify status register
     uint8_t status = timer->read(0xFC09);
-    EXPECT_TRUE((status & 0x02) != 0);  // IRQ Pending bit
-    EXPECT_TRUE((status & 0x04) != 0);  // Limit Reached bit
+    EXPECT_TRUE((status & BasicTimer::STATUS_IRQ_PENDING) != 0);  // IRQ Pending bit
+    EXPECT_TRUE((status & BasicTimer::STATUS_LIMIT_REACHED) != 0);  // Limit Reached bit
 }
 
 // Test: Limpiar IRQ
@@ -162,9 +162,9 @@ TEST_F(BasicTimerTest, ClearIRQ) {
     
     EXPECT_FALSE(timer->hasIRQ());
     
-    // Verificar registro de status
+    // Verify status register
     uint8_t status = timer->read(0xFC09);
-    EXPECT_TRUE((status & 0x02) == 0);  // IRQ Pending bit debe estar en 0
+    EXPECT_TRUE((status & BasicTimer::STATUS_IRQ_PENDING) == 0);  // IRQ Pending bit should be 0
 }
 
 // Test: Auto-reload
@@ -281,11 +281,12 @@ TEST_F(BasicTimerTest, PeriodicIRQ) {
 
 // Test: Control register bits
 TEST_F(BasicTimerTest, ControlRegisterBits) {
-    // Escribir todos los bits de control
-    timer->write(0xFC08, 0x1F);  // All bits set
+    // Write all control bits (Enable | IRQ Enable | IRQ Flag | Reset | Auto-reload)
+    uint8_t allBits = 0x01 | 0x02 | 0x04 | 0x08 | 0x10;  // 0x1F
+    timer->write(0xFC08, allBits);
     
     uint8_t control = timer->read(0xFC08);
-    EXPECT_EQ(control, 0x1F);
+    EXPECT_EQ(control, allBits);
     
     EXPECT_TRUE(timer->isEnabled());
     EXPECT_TRUE(timer->isIRQEnabled());
@@ -306,10 +307,10 @@ TEST_F(BasicTimerTest, NoIRQWhenDisabled) {
     // Ejecutar ciclos hasta alcanzar el límite
     timer->tick(100);
     
-    // No debe generar IRQ
+    // Should not generate IRQ
     EXPECT_FALSE(timer->hasIRQ());
     
-    // Pero el límite debe haberse alcanzado
+    // But limit should have been reached
     uint8_t status = timer->read(0xFC09);
-    EXPECT_TRUE((status & 0x04) != 0);  // Limit Reached bit
+    EXPECT_TRUE((status & BasicTimer::STATUS_LIMIT_REACHED) != 0);  // Limit Reached bit
 }

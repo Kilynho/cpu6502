@@ -124,11 +124,13 @@ private:
     static constexpr uint8_t CTRL_RESET = 0x08;               // Bit 3: Reset
     static constexpr uint8_t CTRL_AUTO_RELOAD = 0x10;         // Bit 4: Auto-reload
     
-    // Bits del registro de status
+public:
+    // Bits del registro de status (public para tests)
     static constexpr uint8_t STATUS_ENABLED = 0x01;           // Bit 0: Enabled
     static constexpr uint8_t STATUS_IRQ_PENDING = 0x02;       // Bit 1: IRQ Pending
     static constexpr uint8_t STATUS_LIMIT_REACHED = 0x04;     // Bit 2: Limit Reached
-    
+
+private:
     // Estado interno
     std::atomic<uint32_t> counter;                            // Contador actual
     std::atomic<uint32_t> limit;                              // Límite para IRQ
@@ -143,8 +145,6 @@ private:
     std::mutex timerMutex;                                    // Mutex para operaciones thread-safe
     
     // Métodos auxiliares
-    uint32_t readCounter() const;
-    uint32_t readLimit() const;
     void updateControlFlags(uint8_t value);
     uint8_t getStatusRegister() const;
 };

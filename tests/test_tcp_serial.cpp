@@ -308,9 +308,9 @@ TEST_F(TcpSerialTest, AddressBuffer) {
 TEST_F(TcpSerialTest, StatusDisconnected) {
     uint8_t status = tcpSerial->read(0xFA01);
     
-    // Sin conexión: solo TXE debe estar activo
+    // Sin conexión: TXE debe estar activo (buffer listo), pero no RDR ni IRQ
     EXPECT_EQ(status & 0x01, 0x00);  // RDR bit off
-    EXPECT_EQ(status & 0x02, 0x00);  // TXE bit off (no conectado)
+    EXPECT_EQ(status & 0x02, 0x02);  // TXE bit on (transmisor listo)
     EXPECT_EQ(status & 0x80, 0x00);  // IRQ bit off
 }
 

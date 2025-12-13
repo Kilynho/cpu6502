@@ -51,7 +51,7 @@ public:
     
     // Métodos específicos para TCP
     bool listen(uint16_t port);
-    bool acceptConnection();
+    bool acceptConnection() const;
     
     // Métodos de diagnóstico
     std::string getConnectionInfo() const;
@@ -85,7 +85,7 @@ private:
     
     // Registros del dispositivo
     uint8_t dataReg;           // Último byte leído/escrito
-    uint8_t statusReg;         // Estado del dispositivo
+    mutable uint8_t statusReg; // Estado del dispositivo
     uint8_t commandReg;        // Registro de comando
     uint8_t controlReg;        // Registro de control
     uint16_t tcpPort;          // Puerto TCP configurado
@@ -93,23 +93,23 @@ private:
     
     // Buffers
     std::vector<uint8_t> addressBuffer;  // Buffer para dirección IP/hostname
-    std::queue<uint8_t> receiveBuffer;   // Buffer de recepción
+    mutable std::queue<uint8_t> receiveBuffer;   // Buffer de recepción
     std::queue<uint8_t> transmitBuffer;  // Buffer de transmisión
     
     // Estado de conexión
-    int socketFd;              // Descriptor de socket
-    int clientFd;              // Descriptor de cliente (para modo servidor)
-    bool initialized;          // Sistema inicializado
-    bool connected;            // Conexión establecida
-    bool listening;            // Modo escucha activado
-    std::string currentAddress; // Dirección actual
+    int socketFd;                   // Descriptor de socket
+    mutable int clientFd;           // Descriptor de cliente (para modo servidor)
+    bool initialized;               // Sistema inicializado
+    mutable bool connected;         // Conexión establecida
+    mutable bool listening;         // Modo escucha activado
+    mutable std::string currentAddress; // Dirección actual
     
     // Métodos internos
-    void updateStatus();                        // Actualiza el registro de estado
-    void executeConnOperation();                // Ejecuta operación de conexión
-    std::string getAddressFromBuffer() const;   // Obtrae dirección del buffer
+    void updateStatus() const;                      // Actualiza el registro de estado
+    void executeConnOperation();                    // Ejecuta operación de conexión
+    std::string getAddressFromBuffer() const;       // Obtrae dirección del buffer
     void updateAddressBuffer(uint16_t address, uint8_t value);
-    void pollSocket();                          // Lee datos del socket si están disponibles
-    void flushTransmitBuffer();                 // Envía datos pendientes
-    void closeSocket();                         // Cierra socket actual
+    void pollSocket() const;                        // Lee datos del socket si están disponibles
+    void flushTransmitBuffer();                     // Envía datos pendientes
+    void closeSocket();                             // Cierra socket actual
 };

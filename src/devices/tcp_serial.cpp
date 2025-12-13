@@ -101,10 +101,8 @@ void TcpSerial::write(uint16_t address, uint8_t value) {
         tcpPort = (tcpPort & 0x00FF) | (static_cast<uint16_t>(value) << 8);
     } else if (address == CONN_CONTROL) {
         connControl = value;
-        // Ejecutar operación de conexión
-        if (connControl != 0) {
-            executeConnOperation();
-        }
+        // Ejecutar operación de conexión (incluyendo disconnect que es 0)
+        executeConnOperation();
     } else if (address >= ADDR_BUFFER_START && address <= ADDR_BUFFER_END) {
         updateAddressBuffer(address, value);
     }
@@ -273,7 +271,7 @@ bool TcpSerial::listen(uint16_t port) {
     return true;
 }
 
-bool TcpSerial::acceptConnection() {
+bool TcpSerial::acceptConnection() const {
     if (!listening || socketFd < 0) {
         return false;
     }
@@ -333,6 +331,7 @@ void TcpSerial::closeSocket() {
 }
 
 bool TcpSerial::dataAvailable() const {
+    pollSocket();  // Poll to get latest data
     return !receiveBuffer.empty();
 }
 
@@ -375,7 +374,7 @@ bool TcpSerial::isConnected() const {
     return connected;
 }
 
-void TcpSerial::pollSocket() {
+void TcpSerial::pollSocket() const {
     if (listening && !connected) {
         // Intentar aceptar conexión pendiente
         acceptConnection();
@@ -402,12 +401,15 @@ void TcpSerial::pollSocket() {
         }
         updateStatus();
     } else if (received == 0) {
-        // Conexión cerrada por el otro extremo
+        // Conexión cerrada por el otro extremo - marcar como desconectado
         std::cout << "TcpSerial: Conexión cerrada por el cliente\n";
-        disconnect();
+        connected = false;
+        updateStatus();
     } else if (errno != EAGAIN && errno != EWOULDBLOCK) {
+        // Error real - marcar como desconectado
         std::cerr << "TcpSerial: Error al recibir: " << strerror(errno) << "\n";
-        disconnect();
+        connected = false;
+        updateStatus();
     }
 }
 
@@ -443,7 +445,7 @@ void TcpSerial::flushTransmitBuffer() {
     updateStatus();
 }
 
-void TcpSerial::updateStatus() {
+void TcpSerial::updateStatus() const {
     statusReg = 0;
     
     // Bit 0: Dato recibido disponible
@@ -451,8 +453,8 @@ void TcpSerial::updateStatus() {
         statusReg |= STATUS_RDR;
     }
     
-    // Bit 1: Transmisor vacío (siempre listo si está conectado)
-    if (connected && transmitBuffer.empty()) {
+    // Bit 1: Transmisor vacío (listo cuando el buffer de transmisión está vacío)
+    if (transmitBuffer.empty()) {
         statusReg |= STATUS_TXE;
     }
     

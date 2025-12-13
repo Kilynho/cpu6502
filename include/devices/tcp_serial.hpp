@@ -43,10 +43,26 @@ public:
     bool initialize() override;
     bool connect(const std::string& address) override;
     void disconnect() override;
+    
+    /**
+     * @brief Verifica si hay datos disponibles para leer
+     * @note Este método const puede tener efectos secundarios: actualiza buffers internos,
+     *       acepta conexiones pendientes y puede modificar el estado de conexión.
+     *       Esto es necesario para mantener la compatibilidad con dispositivos I/O tradicionales.
+     * @return true si hay datos disponibles, false en caso contrario
+     */
     bool dataAvailable() const override;
+    
     uint8_t receiveByte() override;
     bool transmitByte(uint8_t data) override;
+    
+    /**
+     * @brief Verifica si el dispositivo está conectado
+     * @note Este método const puede tener efectos secundarios similares a dataAvailable()
+     * @return true si está conectado, false en caso contrario
+     */
     bool isConnected() const override;
+    
     void cleanup() override;
     
     // Métodos específicos para TCP
@@ -70,6 +86,7 @@ private:
     static constexpr uint16_t CONN_CONTROL = 0xFA06;   // Control de conexión
     static constexpr uint16_t ADDR_BUFFER_START = 0xFA10; // Inicio buffer dirección
     static constexpr uint16_t ADDR_BUFFER_END = 0xFA4F;   // Fin buffer dirección
+    static constexpr size_t ADDR_BUFFER_SIZE = ADDR_BUFFER_END - ADDR_BUFFER_START + 1; // 64 bytes
     
     // Bits de estado
     static constexpr uint8_t STATUS_RDR = 0x01;   // Dato recibido disponible

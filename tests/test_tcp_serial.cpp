@@ -16,6 +16,8 @@ public:
     CPU cpu;
     std::shared_ptr<TcpSerial> tcpSerial;
     
+    // Note: Using a fixed high port to minimize conflicts in CI/CD.
+    // If port conflicts occur, tests will fail gracefully.
     const uint16_t TEST_PORT = 12345;
 
     virtual void SetUp() {

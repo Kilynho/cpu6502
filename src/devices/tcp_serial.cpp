@@ -13,7 +13,8 @@ TcpSerial::TcpSerial()
     : dataReg(0), statusReg(STATUS_TXE), commandReg(0), controlReg(0),
       tcpPort(0), connControl(0), socketFd(-1), clientFd(-1),
       initialized(false), connected(false), listening(false) {
-    addressBuffer.resize(ADDR_BUFFER_END - ADDR_BUFFER_START + 1, 0);
+    addressBuffer.resize(ADDR_BUFFER_SIZE, 0);
+    static_assert(ADDR_BUFFER_SIZE == 64, "Address buffer must be 64 bytes as documented");
 }
 
 TcpSerial::~TcpSerial() {
@@ -186,7 +187,18 @@ bool TcpSerial::connect(const std::string& address) {
     
     // Configurar socket como no bloqueante
     int flags = fcntl(socketFd, F_GETFL, 0);
-    fcntl(socketFd, F_SETFL, flags | O_NONBLOCK);
+    if (flags < 0) {
+        std::cerr << "TcpSerial: Error al obtener flags del socket: " << strerror(errno) << "\n";
+        close(socketFd);
+        socketFd = -1;
+        return false;
+    }
+    if (fcntl(socketFd, F_SETFL, flags | O_NONBLOCK) < 0) {
+        std::cerr << "TcpSerial: Error al configurar socket no bloqueante: " << strerror(errno) << "\n";
+        close(socketFd);
+        socketFd = -1;
+        return false;
+    }
     
     // Resolver hostname
     struct addrinfo hints, *result;
@@ -262,7 +274,18 @@ bool TcpSerial::listen(uint16_t port) {
     
     // Configurar socket como no bloqueante
     int flags = fcntl(socketFd, F_GETFL, 0);
-    fcntl(socketFd, F_SETFL, flags | O_NONBLOCK);
+    if (flags < 0) {
+        std::cerr << "TcpSerial: Error al obtener flags del socket: " << strerror(errno) << "\n";
+        close(socketFd);
+        socketFd = -1;
+        return false;
+    }
+    if (fcntl(socketFd, F_SETFL, flags | O_NONBLOCK) < 0) {
+        std::cerr << "TcpSerial: Error al configurar socket no bloqueante: " << strerror(errno) << "\n";
+        close(socketFd);
+        socketFd = -1;
+        return false;
+    }
     
     listening = true;
     tcpPort = port;
@@ -289,7 +312,15 @@ bool TcpSerial::acceptConnection() const {
     
     // Configurar cliente como no bloqueante
     int flags = fcntl(clientFd, F_GETFL, 0);
-    fcntl(clientFd, F_SETFL, flags | O_NONBLOCK);
+    if (flags >= 0) {
+        if (fcntl(clientFd, F_SETFL, flags | O_NONBLOCK) < 0) {
+            std::cerr << "TcpSerial: Error al configurar cliente no bloqueante: " << strerror(errno) << "\n";
+            // No es fatal, continuar de todos modos
+        }
+    } else {
+        std::cerr << "TcpSerial: Error al obtener flags del cliente: " << strerror(errno) << "\n";
+        // No es fatal, continuar de todos modos
+    }
     
     connected = true;
     listening = false;

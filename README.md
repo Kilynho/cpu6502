@@ -107,6 +107,46 @@
   ```
 - Ver `docs/audio_device.md` para documentación completa y `examples/audio_demo.cpp` para ejemplos.
 
+### Comunicación Serial sobre TCP (TcpSerial)
+
+- Nuevo dispositivo `TcpSerial` que simula un puerto serial ACIA 6551 utilizando TCP/IP
+- Características principales:
+  - **Compatible con ACIA 6551**: Registros estándar `$FA00-$FA03` para código 6502 clásico
+  - **Extensiones TCP**: Configuración de red mediante registros adicionales
+  - **Modo cliente**: Conectar a servidores TCP remotos
+  - **Modo servidor**: Escuchar conexiones entrantes en un puerto
+  - **Comunicación bidireccional** en tiempo real
+  - **Integración con herramientas modernas**: netcat, telnet, Python, etc.
+- Ejemplo de uso:
+  ```cpp
+  auto tcpSerial = std::make_shared<TcpSerial>();
+  tcpSerial->initialize();
+  cpu.registerIODevice(tcpSerial);
+  
+  // Escuchar conexiones en puerto 12345
+  tcpSerial->listen(12345);
+  
+  // Enviar/recibir datos
+  while (tcpSerial->dataAvailable()) {
+      uint8_t byte = tcpSerial->receiveByte();
+      tcpSerial->transmitByte(byte);  // Echo
+  }
+  
+  // O desde código 6502:
+  // LDA #$39 : STA $FA04  ; Puerto bajo (12345)
+  // LDA #$30 : STA $FA05  ; Puerto alto
+  // LDA #$02 : STA $FA06  ; Activar modo escucha
+  // ; Loop: LDA $FA01 : AND #$01 : BEQ Loop
+  // LDA $FA00             ; Leer dato
+  // STA $FA00             ; Enviar (echo)
+  ```
+- Ejecutar la demo (¡conéctate con `nc localhost 12345`!):
+  ```bash
+  cd build
+  ./tcp_serial_demo
+  ```
+- Ver `docs/serial_device.md` para documentación completa y `examples/tcp_serial_demo.cpp` para ejemplos.
+
 ### Interfaz Gráfica Retro (EmulatorGUI)
 
 - **Nueva GUI con estilo retro de los años 80** inspirada en Apple II, Commodore 64 y MSX

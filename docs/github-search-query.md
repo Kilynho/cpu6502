@@ -16,7 +16,14 @@ This query searches for open pull requests in a repository authored by a specifi
 ## Modified Query to Include Copilot-Created Pull Requests
 
 ```
-repo:${owner}/${repository} is:open (author:${user} OR author:app/github-copilot)
+repo:${owner}/${repository} is:open author:${user}
 ```
 
-**Change:** Added `OR author:app/github-copilot` to also show pull requests created by GitHub Copilot.
+**Change:** No change needed. When GitHub Copilot creates PRs "on your behalf", they are authored by you (the user), so the original query already includes them.
+
+**To show ONLY Copilot-created PRs:**
+```
+repo:${owner}/${repository} is:open author:${user} head:copilot/
+```
+
+This filters for PRs from branches starting with `copilot/`, which is the pattern used by GitHub Copilot.

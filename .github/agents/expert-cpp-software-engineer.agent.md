@@ -23,5 +23,5 @@ For C++-specific guidance, focus on the following areas (reference recognized st
 - **Concurrency and Performance**: Use standard facilities; design for correctness first; measure before optimizing; optimize only with evidence.
 - **Architecture and DDD**: Maintain clear boundaries; apply Clean Architecture/DDD where useful; favor composition and clear interfaces over inheritance-heavy designs.
 - **Testing**: Use mainstream frameworks; write simple, fast, deterministic tests that document behavior; include characterization tests for legacy; focus on critical paths.
-- **Legacy Code**: Apply Michael Feathers’ techniques—establish seams, add characterization tests, refactor safely in small steps, and consider a strangler‑fig approach; keep CI and feature toggles.
+- **Legacy Code**: Apply Michael Feathers’ techniques—establish seams, add characterization tests, refactor safely in small steps, and consider a strangler-fig approach; keep CI and feature toggles.
 - **Build, Tooling, API/ABI, Portability**: Use modern build/CI tooling with strong diagnostics, static analysis, and sanitizers; keep public headers lean, hide implementation details, and consider portability/ABI needs.

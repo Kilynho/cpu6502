@@ -1,337 +1,190 @@
-# CPU 6502 Emulator
-
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![C++](https://img.shields.io/badge/C++-17-blue.svg)
-![CI](https://github.com/Kilynho/cpu6502/workflows/CI/badge.svg)
-
-Una implementación moderna de un emulador de CPU 6502 en C++. Este proyecto recrea el comportamiento del legendario procesador MOS Technology 6502, utilizado en sistemas clásicos como Apple II, Commodore 64, y NES.
-
-## 🚀 Características
-
-- **Emulación precisa** del conjunto de instrucciones 6502
-- **Sistema de memoria** con soporte para ROM y RAM
-- **Soporte para múltiples modos de direccionamiento**
-- **Registro de ejecución** con tracing detallado
-- **Tests integrados** para validación de instrucciones (27+ tests unitarios)
-- **Arquitectura modular** y extensible con separación clara de componentes
-- **Logger configurable** con niveles de log (ERROR, WARN, INFO, DEBUG)
-- **Librería reutilizable** (libcpu6502) para integración en otros proyectos
-- **Build system dual**: CMake y Make para máxima compatibilidad
-
-## 📋 Requisitos
-
-- **CMake** 3.10 o superior
-- **g++ (GCC)** 7.5.0 o superior, o cualquier compilador compatible con C++17
-- **Make** para la construcción del proyecto
-
-## 🔧 Instalación y Configuración
-
-### 1. Clonar el repositorio
-
-```bash
-git clone https://github.com/Kilynho/cpu6502.git
-cd cpu6502
-```
-
-### 2. Inicializar submódulos (para GoogleTest)
-
-```bash
-git submodule update --init --recursive
-```
-
-### 3. Compilar el proyecto
-
-El proyecto soporta dos sistemas de compilación para máxima flexibilidad:
-
-#### Opción A: Usando Make (Recomendado)
-```bash
-make
-```
-
-Esto generará:
-- `build/src/libcpu6502_lib.a` - Librería estática reutilizable
-- `build/src/cpu_demo` - Ejecutable de demostración
-- `build/runTests` - Suite de tests
-
-#### Opción B: Usando CMake directamente
-```bash
-mkdir -p build
-cd build
-cmake ..
-make
-```
-
-### 4. Ejecutar el emulador
-
-```bash
-# Desde la raíz del proyecto con Make
-make demo
-
-# O directamente
-./build/src/cpu_demo
-```
-
-## 🎯 Uso
-
-El emulador ejecuta programas escritos en código máquina 6502. Los programas se cargan en la memoria ROM (direcciones 0x8000-0xFFFF) y el emulador ejecuta las instrucciones secuencialmente.
-
-### Ejemplo de uso básico:
-
-```cpp
-#include "cpu.hpp"
-#include "mem.hpp"
-#include "util/logger.hpp"
-
-int main() {
-    // Configurar nivel de log (opcional)
-    util::LogSetLevel(util::LogLevel::INFO);
-    
-    CPU cpu;
-    Mem mem;
-    
-    cpu.Reset(mem);
-    
-    // Cargar programa en memoria
-    mem[0x8000] = CPU::INS_LDA_IM.opcode;  // LDA #$42
-    mem[0x8001] = 0x42;
-    
-    // Ejecutar
-    cpu.Execute(2, mem);
-    
-    return 0;
-}
-```
-
-### Uso del Logger
-
-El proyecto incluye un sistema de logging configurable:
-
-```cpp
-#include "util/logger.hpp"
-
-// Establecer nivel de log
-util::LogSetLevel(util::LogLevel::DEBUG);  // NONE, ERROR, WARN, INFO, DEBUG
-
-// Usar funciones de log
-util::LogError("Error message");
-util::LogWarn("Warning message");
-util::LogInfo("Info message");
-util::LogDebug("Debug message");
-
-// O usar macros
-LOG_ERROR("Error: " << variable);
-LOG_INFO("CPU initialized successfully");
-```
-
-## 🧪 Testing
-
-El proyecto incluye una suite completa de tests unitarios usando Google Test para validar el comportamiento de las instrucciones.
-
-### Ejecutar los tests
-
-#### Opción A: Usando Make con CTest
-```bash
-make test
-```
-
-#### Opción B: Ejecutar tests directamente
-```bash
-make runTests
-# O manualmente
-./build/runTests
-```
-
-#### Opción C: Desde build directory con CMake
-```bash
-cd build
-ctest --output-on-failure
-# O
-./runTests
-```
-
-### Cobertura de Tests
-
-Los tests incluyen:
-- **Instrucciones LDA**: Todos los modos de direccionamiento (Immediate, Zero Page, Zero Page X, Absolute, Absolute X, Absolute Y)
-- **Instrucción LDX**: Modo inmediato
-- **Instrucción STA**: Almacenamiento en memoria
-- **Instrucciones JSR/RTS**: Llamadas a subrutinas y manejo de pila
-- **Casos límite**: Valores cero, 0xFF, límites de página
-- **Comportamiento de flags**: Zero flag (Z) y Negative flag (N)
-- **Llamadas anidadas**: Subrutinas anidadas y manejo correcto de la pila
-
-### CI/CD Automatizado
-
-El proyecto usa GitHub Actions para ejecutar automáticamente los tests en cada push y pull request. Puedes ver el estado de la build en el badge de CI en la parte superior del README.
-
-## 📖 Arquitectura del Proyecto
-
-El proyecto está organizado de forma modular para facilitar el mantenimiento y la reutilización:
-
-```
-cpu6502/
-├── include/              # Headers públicos de la API
-│   ├── cpu.hpp          # Interfaz pública de la CPU
-│   ├── mem.hpp          # Interfaz pública de la memoria
-│   └── util/
-│       └── logger.hpp   # Sistema de logging
-├── src/                  # Implementaciones
-│   ├── cpu/
-│   │   └── cpu.cpp      # Implementación de la CPU 6502
-│   ├── mem/
-│   │   └── mem.cpp      # Implementación del sistema de memoria
-│   ├── util/
-│   │   └── logger.cpp   # Implementación del logger
-│   ├── main/
-│   │   └── cpu_demo.cpp # Programa de demostración
-│   └── CMakeLists.txt   # Configuración de build de src
-├── tests/                # Suite de tests
-│   ├── test_main.cpp    # Tests unitarios (27+ tests)
-│   └── CMakeLists.txt   # Configuración de tests
-├── examples/             # Binarios y ejemplos de referencia
-│   └── main_6502_legacy # Binario de referencia
-├── lib/                  # Librerías externas
-│   └── googletest/      # Framework de testing (submódulo)
-├── CMakeLists.txt        # Configuración principal de CMake
-└── Makefile              # Wrapper de Make para CMake
-```
-
-### Componentes Principales
-
-- **libcpu6502_lib.a**: Librería estática que contiene CPU, Memoria y Logger
-- **cpu_demo**: Ejecutable de demostración del emulador
-- **runTests**: Suite completa de tests unitarios
-
-## 📚 Documentación
-
-El proyecto incluye documentación técnica completa:
-
-### Guías de Desarrollo
-- **[docs/instructions.md](docs/instructions.md)** - Guía completa para implementar y testear instrucciones
-- **[docs/architecture.md](docs/architecture.md)** - Descripción de la arquitectura del emulador
-
-### Generación de Documentación con Doxygen
-
-Para generar la documentación del código:
-
-```bash
-cd docs
-doxygen Doxyfile
-```
-
-La documentación se generará en `docs/doxygen/html/`. Abre `index.html` en tu navegador para verla.
-
-### Comandos Útiles
-
-```bash
-# Compilar el proyecto
-make
-
-# Ejecutar tests
-make test
-
-# Ejecutar demo
-make demo
-
-# Generar documentación
-cd docs && doxygen Doxyfile
-```
-
-## 🤝 Contribuir
-
-¡Las contribuciones son bienvenidas! Por favor, lee [CONTRIBUTING.md](CONTRIBUTING.md) para conocer los detalles sobre nuestro código de conducta y el proceso para enviarnos pull requests.
-
-## 📝 Changelog
-
-Para ver el historial de cambios del proyecto, consulta [CHANGELOG.md](CHANGELOG.md).
-
-## 🔒 Seguridad
-
-Si descubres una vulnerabilidad de seguridad, por favor consulta [SECURITY.md](SECURITY.md) para saber cómo reportarla de manera responsable.
-
-## 📄 Licencia
-
-Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
-
-## �� Instrucciones Soportadas
-
-El emulador implementa **el conjunto completo de 151 instrucciones oficiales del 6502**:
-
-### Load/Store Operations
-- **LDA** (Load Accumulator): Immediate, Zero Page, Zero Page,X, Absolute, Absolute,X, Absolute,Y, Indirect,X, Indirect,Y
-- **LDX** (Load X Register): Immediate, Zero Page, Zero Page,Y, Absolute, Absolute,Y
-- **LDY** (Load Y Register): Immediate, Zero Page, Zero Page,X, Absolute, Absolute,X
-- **STA** (Store Accumulator): Zero Page, Zero Page,X, Absolute, Absolute,X, Absolute,Y, Indirect,X, Indirect,Y
-- **STX** (Store X Register): Zero Page, Zero Page,Y, Absolute
-- **STY** (Store Y Register): Zero Page, Zero Page,X, Absolute
-
-### Register Transfers
-- **TAX, TAY, TXA, TYA** (Transfer between A, X, Y)
-- **TSX, TXS** (Transfer between stack pointer and X)
-
-### Stack Operations
-- **PHA, PLA** (Push/Pull Accumulator)
-- **PHP, PLP** (Push/Pull Processor Status)
-
-### Logical Operations
-- **AND, EOR, ORA** (Bitwise operations): All addressing modes
-- **BIT** (Bit test): Zero Page, Absolute
-
-### Arithmetic Operations
-- **ADC, SBC** (Add/Subtract with Carry): All addressing modes
-
-### Increments & Decrements
-- **INC, DEC** (Memory): Zero Page, Zero Page,X, Absolute, Absolute,X
-- **INX, INY, DEX, DEY** (Registers)
-
-### Shifts & Rotates
-- **ASL, LSR** (Arithmetic/Logical Shift): Accumulator and Memory modes
-- **ROL, ROR** (Rotate Left/Right): Accumulator and Memory modes
-
-### Jumps & Calls
-- **JMP** (Jump): Absolute, Indirect
-- **JSR** (Jump to Subroutine)
-- **RTS** (Return from Subroutine)
-
-### Branches (Conditional)
-- **BCC, BCS** (Branch on Carry Clear/Set)
-- **BEQ, BNE** (Branch on Equal/Not Equal)
-- **BMI, BPL** (Branch on Minus/Plus)
-- **BVC, BVS** (Branch on Overflow Clear/Set)
-
-### Comparisons
-- **CMP** (Compare Accumulator): All addressing modes
-- **CPX, CPY** (Compare X/Y): Immediate, Zero Page, Absolute
-
-### Status Flag Changes
-- **CLC, SEC** (Clear/Set Carry)
-- **CLD, SED** (Clear/Set Decimal Mode)
-- **CLI, SEI** (Clear/Set Interrupt Disable)
-- **CLV** (Clear Overflow)
-
-### System Functions
-- **BRK** (Break/Interrupt)
-- **RTI** (Return from Interrupt)
-- **NOP** (No Operation)
-
-Para más detalles sobre cada instrucción, consulta `docs/instructions.md`.
-
-## 👥 Autores
-
-* **Kilynho** - *Trabajo inicial* - [Kilynho](https://github.com/Kilynho)
-
-## 🙏 Agradecimientos
-
-- Inspirado en el legendario procesador MOS Technology 6502
-- Comunidad de desarrolladores de emuladores retro
-- Documentación técnica del 6502
-
-## 📚 Recursos
-
-- [6502 Instruction Reference](http://www.6502.org/tutorials/6502opcodes.html)
-- [6502.org - The 6502 Microprocessor Resource](http://www.6502.org/)
-- [Visual 6502](http://www.visual6502.org/)
-
----
-
-**Nota:** Este es un proyecto educativo y de aprendizaje. No pretende ser una emulación perfecta del hardware original.
+# cpu6502
+
+## Cambios recientes (diciembre 2025)
+
+- Ahora `cpu_demo` permite cargar binarios externos usando:
+  ```
+  ./cpu_demo file ../examples/demo_program.bin
+  ```
+- Si no se especifica un binario, ejecuta un programa de prueba clásico en memoria.
+- Se añadió logging detallado de accesos a memoria en `cpu_log.txt`.
+- Argumentos de línea de comandos:
+  - `file <ruta>`: carga un binario externo en 0x8000.
+  - `infinite`: ejecuta ciclos infinitos.
+- Mejoras en la documentación inline y comentarios del código.
+
+### Integración de E/S Apple II
+
+- La CPU ahora soporta dispositivos de E/S modulares mediante la interfaz `IODevice`.
+- Se incluye `AppleIO` para simular el teclado ($FD0C) y pantalla ($FDED) de Apple II.
+- Registrar dispositivos IO:
+  ```cpp
+  auto appleIO = std::make_shared<AppleIO>();
+  cpu.registerIODevice(appleIO);
+  ```
+- Los dispositivos IO interceptan accesos a memoria antes de la lectura/escritura estándar.
+- Ideal para extender el emulador con periféricos, timers, gráficos, etc.
+
+### Soporte para Almacenamiento de Archivos (FileDevice)
+
+- Nuevo dispositivo `FileDevice` que permite cargar y guardar binarios desde/hacia archivos del host.
+- Dos modos de operación:
+  - **API directa en C++**: Métodos `loadBinary()` y `saveBinary()`
+  - **Registros mapeados en memoria**: Control desde código 6502 en direcciones `$FE00-$FE4F`
+- Perfecto para desarrollo, pruebas y persistencia de datos.
+- Ejemplo de uso:
+  ```cpp
+  auto fileDevice = std::make_shared<FileDevice>(&mem);
+  cpu.registerIODevice(fileDevice);
+  
+  // Cargar programa desde archivo
+  fileDevice->loadBinary("programa.bin", 0x8000);
+  
+  // Guardar datos de memoria
+  fileDevice->saveBinary("datos.bin", 0x0200, 256);
+  ```
+- Ver `docs/file_device.md` para documentación completa y `examples/file_device_demo.cpp` para ejemplos.
+
+### Soporte Gráfico: Pantalla de Texto (TextScreen)
+
+- Nuevo dispositivo `TextScreen` que simula una pantalla de texto de 40x24 caracteres.
+- Características principales:
+  - **Buffer de video mapeado en memoria**: `$FC00-$FFFB` (960 bytes)
+  - **Puerto de caracteres**: `$FFFF` - escribir caracteres directamente
+  - **Control de cursor**: `$FFFC` (columna) y `$FFFD` (fila)
+  - **Registro de control**: `$FFFE` (auto-scroll, limpiar pantalla, etc.)
+  - **Soporte para caracteres de control**: `\n`, `\r`, `\t`, `\b`
+  - **Auto-scroll automático** cuando se llena la pantalla
+- Ejemplo de uso:
+  ```cpp
+  auto textScreen = std::make_shared<TextScreen>();
+  cpu.registerIODevice(textScreen);
+  
+  // Escribir desde código 6502 mediante puerto de caracteres
+  mem[0x8000] = 0xA9;  // LDA #'H'
+  mem[0x8001] = 'H';
+  mem[0x8002] = 0x8D;  // STA $FFFF
+  mem[0x8003] = 0xFF;
+  mem[0x8004] = 0xFF;
+  
+  // O usar la API C++ directamente
+  textScreen->writeCharAtCursor('H');
+  textScreen->writeCharAtCursor('i');
+  std::cout << textScreen->getBuffer();
+  ```
+- Ver `docs/video_device.md` para documentación completa y `examples/text_screen_demo.cpp` para ejemplos.
+
+### Soporte de Audio: Generador de Tonos (BasicAudio)
+
+- Nuevo dispositivo `BasicAudio` que simula un generador de tonos simple para reproducir audio.
+- Características principales:
+  - **Generación de ondas cuadradas** con frecuencias de 20 Hz a 20 kHz
+  - **Registros mapeados en memoria**: `$FB00-$FB05` para control completo desde 6502
+  - **Control de frecuencia, duración y volumen** programable
+  - **Reproducción en tiempo real** usando SDL2 Audio
+  - **Ideal para música retro y efectos de sonido** como los chips de las computadoras clásicas
+- Ejemplo de uso:
+  ```cpp
+  auto audio = std::make_shared<BasicAudio>();
+  audio->initialize();
+  cpu.registerIODevice(audio);
+  
+  // Reproducir La (440 Hz) durante 500 ms
+  audio->playTone(440, 500, 200);
+  
+  // O desde código 6502:
+  // LDA #$B8 : STA $FB00  ; Frecuencia baja
+  // LDA #$01 : STA $FB01  ; Frecuencia alta
+  // LDA #$F4 : STA $FB02  ; Duración baja (500 ms)
+  // LDA #$01 : STA $FB03  ; Duración alta
+  // LDA #$C8 : STA $FB04  ; Volumen (200)
+  // LDA #$01 : STA $FB05  ; Reproducir
+  ```
+- Ejecutar la demo (¡escucha la escala musical!):
+  ```bash
+  cd build
+  ./audio_demo
+  ```
+- Ver `docs/audio_device.md` para documentación completa y `examples/audio_demo.cpp` para ejemplos.
+
+### Comunicación Serial sobre TCP (TcpSerial)
+
+- Nuevo dispositivo `TcpSerial` que simula un puerto serial ACIA 6551 utilizando TCP/IP
+- Características principales:
+  - **Compatible con ACIA 6551**: Registros estándar `$FA00-$FA03` para código 6502 clásico
+  - **Extensiones TCP**: Configuración de red mediante registros adicionales
+  - **Modo cliente**: Conectar a servidores TCP remotos
+  - **Modo servidor**: Escuchar conexiones entrantes en un puerto
+  - **Comunicación bidireccional** en tiempo real
+  - **Integración con herramientas modernas**: netcat, telnet, Python, etc.
+- Ejemplo de uso:
+  ```cpp
+  auto tcpSerial = std::make_shared<TcpSerial>();
+  tcpSerial->initialize();
+  cpu.registerIODevice(tcpSerial);
+  
+  // Escuchar conexiones en puerto 12345
+  tcpSerial->listen(12345);
+  
+  // Enviar/recibir datos
+  while (tcpSerial->dataAvailable()) {
+      uint8_t byte = tcpSerial->receiveByte();
+      tcpSerial->transmitByte(byte);  // Echo
+  }
+  
+  // O desde código 6502:
+  // LDA #$39 : STA $FA04  ; Puerto bajo (12345)
+  // LDA #$30 : STA $FA05  ; Puerto alto
+  // LDA #$02 : STA $FA06  ; Activar modo escucha
+  // ; Loop: LDA $FA01 : AND #$01 : BEQ Loop
+  // LDA $FA00             ; Leer dato
+  // STA $FA00             ; Enviar (echo)
+  ```
+- Ejecutar la demo (¡conéctate con `nc localhost 12345`!):
+  ```bash
+  cd build
+  ./tcp_serial_demo
+  ```
+- Ver `docs/serial_device.md` para documentación completa y `examples/tcp_serial_demo.cpp` para ejemplos.
+
+### Interfaz Gráfica Retro (EmulatorGUI)
+
+- **Nueva GUI con estilo retro de los años 80** inspirada en Apple II, Commodore 64 y MSX
+- Características principales:
+  - **Pantalla de 40x24 caracteres** con aspecto vintage auténtico
+  - **Paleta de 16 colores** estilo Apple II/Commodore 64
+  - **Cursor de bloque parpadeante** como las terminales clásicas
+  - **Renderizado con SDL2** para rendimiento fluido
+  - **Entrada de teclado completa** con caracteres especiales
+  - **Integración perfecta con TextScreen**
+- Ejemplo de uso:
+  ```cpp
+  #include "gui/emulator_gui.hpp"
+  #include "devices/text_screen.hpp"
+  
+  // Crear GUI con caracteres de 16x16 píxeles
+  EmulatorGUI gui("6502 Retro Terminal", 16, 16);
+  gui.initialize();
+  
+  // Conectar con TextScreen
+  auto textScreen = std::make_shared<TextScreen>();
+  gui.attachTextScreen(textScreen);
+  
+  // Bucle principal
+  while (gui.isInitialized()) {
+      if (gui.hasKey()) {
+          char key = gui.getLastKey();
+          textScreen->writeCharAtCursor(key);
+      }
+      gui.update();
+      SDL_Delay(16);
+  }
+  ```
+- Ejecutar la demo:
+  ```bash
+  cd build
+  ./gui_demo
+  ```
+- Ver `docs/emulator_gui.md` o `docs/emulator_gui_es.md` para documentación completa
+
+Consulta los archivos en `docs/` para detalles de arquitectura e instrucciones soportadas.

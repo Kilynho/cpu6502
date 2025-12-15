@@ -16,7 +16,7 @@ all: configure
 
 # Configure CMake (only runs if build directory doesn't exist or CMakeLists.txt changed)
 configure:
-	@if [ ! -d "$(BUILDDIR)" ]; then \
+	@if [ ! -d "$(BUILDDIR)" ] || [ ! -f "$(BUILDDIR)/Makefile" ]; then \
 		echo "Initializing Git submodules (GoogleTest)..."; \
 		git submodule update --init --recursive; \
 		echo "Configuring project with CMake..."; \
@@ -38,6 +38,31 @@ runTests: all
 demo: all
 	@echo "Running CPU demo..."
 	@$(BUILDDIR)/cpu_demo
+
+# Run Apple IO demo
+apple_io_demo: all
+	@echo "Running Apple IO demo..."
+	@$(BUILDDIR)/apple_io_demo
+
+# Run File Device demo
+file_device_demo: all
+	@echo "Running File Device demo..."
+	@$(BUILDDIR)/file_device_demo
+
+# Run Text Screen demo
+text_screen_demo: all
+	@echo "Running Text Screen demo..."
+	@$(BUILDDIR)/text_screen_demo
+
+# Run Audio demo
+audio_demo: all
+	@echo "Running Audio demo..."
+	@$(BUILDDIR)/audio_demo
+
+# Run TCP Serial demo
+tcp_serial_demo: all
+	@echo "Running TCP Serial demo..."
+	@$(BUILDDIR)/tcp_serial_demo
 
 # Clean build artifacts
 clean:
@@ -66,7 +91,12 @@ help:
 	@echo "  make              - Build all targets (library, demo, tests)"
 	@echo "  make test         - Build and run tests with CTest"
 	@echo "  make runTests     - Build and run tests directly"
-	@echo "  make demo         - Build and run demo program"
+	@echo "  make demo         - Build and run CPU demo program"
+	@echo "  make apple_io_demo    - Build and run Apple IO demo"
+	@echo "  make file_device_demo - Build and run File Device demo"
+	@echo "  make text_screen_demo - Build and run Text Screen demo"
+	@echo "  make audio_demo       - Build and run Audio demo"
+	@echo "  make tcp_serial_demo  - Build and run TCP Serial demo"
 	@echo "  make clean        - Remove all build artifacts"
 	@echo "  make rebuild      - Clean and build from scratch"
 	@echo "  make reconfigure  - Force CMake reconfiguration"
@@ -75,4 +105,4 @@ help:
 	@echo "Build artifacts will be in: $(BUILDDIR)/"
 
 # Declare phony targets
-.PHONY: all configure test runTests demo clean rebuild reconfigure install help
+.PHONY: all configure test runTests demo apple_io_demo file_device_demo text_screen_demo audio_demo tcp_serial_demo clean rebuild reconfigure install help

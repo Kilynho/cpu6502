@@ -25,40 +25,40 @@ void UpdateOverflowFlag(CPU& cpu, bool overflow) {
 
 // Load/Store Instructions
 void LDA(CPU& cpu, u32& cycles, Mem& memory, Word address) {
-    cpu.A = memory[address];
+    cpu.A = cpu.ReadMemory(address, memory);
     cpu.LogMemoryAccess(address, cpu.A, false);
     cycles--;
     UpdateZeroAndNegativeFlags(cpu, cpu.A);
 }
 
 void LDX(CPU& cpu, u32& cycles, Mem& memory, Word address) {
-    cpu.X = memory[address];
+    cpu.X = cpu.ReadMemory(address, memory);
     cpu.LogMemoryAccess(address, cpu.X, false);
     cycles--;
     UpdateZeroAndNegativeFlags(cpu, cpu.X);
 }
 
 void LDY(CPU& cpu, u32& cycles, Mem& memory, Word address) {
-    cpu.Y = memory[address];
+    cpu.Y = cpu.ReadMemory(address, memory);
     cpu.LogMemoryAccess(address, cpu.Y, false);
     cycles--;
     UpdateZeroAndNegativeFlags(cpu, cpu.Y);
 }
 
 void STA(CPU& cpu, u32& cycles, Mem& memory, Word address) {
-    memory[address] = cpu.A;
+    cpu.WriteMemory(address, cpu.A, memory);
     cpu.LogMemoryAccess(address, cpu.A, true);
     cycles--;
 }
 
 void STX(CPU& cpu, u32& cycles, Mem& memory, Word address) {
-    memory[address] = cpu.X;
+    cpu.WriteMemory(address, cpu.X, memory);
     cpu.LogMemoryAccess(address, cpu.X, true);
     cycles--;
 }
 
 void STY(CPU& cpu, u32& cycles, Mem& memory, Word address) {
-    memory[address] = cpu.Y;
+    cpu.WriteMemory(address, cpu.Y, memory);
     cpu.LogMemoryAccess(address, cpu.Y, true);
     cycles--;
 }
@@ -143,7 +143,7 @@ void PLP(CPU& cpu, u32& cycles, Mem& memory) {
 
 // Logical Instructions
 void AND(CPU& cpu, u32& cycles, Mem& memory, Word address) {
-    Byte value = memory[address];
+    Byte value = cpu.ReadMemory(address, memory);
     cpu.LogMemoryAccess(address, value, false);
     cycles--;
     cpu.A &= value;
@@ -151,7 +151,7 @@ void AND(CPU& cpu, u32& cycles, Mem& memory, Word address) {
 }
 
 void EOR(CPU& cpu, u32& cycles, Mem& memory, Word address) {
-    Byte value = memory[address];
+    Byte value = cpu.ReadMemory(address, memory);
     cpu.LogMemoryAccess(address, value, false);
     cycles--;
     cpu.A ^= value;
@@ -159,7 +159,7 @@ void EOR(CPU& cpu, u32& cycles, Mem& memory, Word address) {
 }
 
 void ORA(CPU& cpu, u32& cycles, Mem& memory, Word address) {
-    Byte value = memory[address];
+    Byte value = cpu.ReadMemory(address, memory);
     cpu.LogMemoryAccess(address, value, false);
     cycles--;
     cpu.A |= value;
@@ -167,7 +167,7 @@ void ORA(CPU& cpu, u32& cycles, Mem& memory, Word address) {
 }
 
 void BIT(CPU& cpu, u32& cycles, Mem& memory, Word address) {
-    Byte value = memory[address];
+    Byte value = cpu.ReadMemory(address, memory);
     cpu.LogMemoryAccess(address, value, false);
     cycles--;
     
@@ -178,7 +178,7 @@ void BIT(CPU& cpu, u32& cycles, Mem& memory, Word address) {
 
 // Arithmetic Instructions
 void ADC(CPU& cpu, u32& cycles, Mem& memory, Word address) {
-    Byte value = memory[address];
+    Byte value = cpu.ReadMemory(address, memory);
     cpu.LogMemoryAccess(address, value, false);
     cycles--;
     
@@ -197,7 +197,7 @@ void ADC(CPU& cpu, u32& cycles, Mem& memory, Word address) {
 }
 
 void SBC(CPU& cpu, u32& cycles, Mem& memory, Word address) {
-    Byte value = memory[address];
+    Byte value = cpu.ReadMemory(address, memory);
     cpu.LogMemoryAccess(address, value, false);
     cycles--;
     
@@ -216,7 +216,7 @@ void SBC(CPU& cpu, u32& cycles, Mem& memory, Word address) {
 }
 
 void CMP(CPU& cpu, u32& cycles, Mem& memory, Word address) {
-    Byte value = memory[address];
+    Byte value = cpu.ReadMemory(address, memory);
     cpu.LogMemoryAccess(address, value, false);
     cycles--;
     
@@ -226,7 +226,7 @@ void CMP(CPU& cpu, u32& cycles, Mem& memory, Word address) {
 }
 
 void CPX(CPU& cpu, u32& cycles, Mem& memory, Word address) {
-    Byte value = memory[address];
+    Byte value = cpu.ReadMemory(address, memory);
     cpu.LogMemoryAccess(address, value, false);
     cycles--;
     
@@ -236,7 +236,7 @@ void CPX(CPU& cpu, u32& cycles, Mem& memory, Word address) {
 }
 
 void CPY(CPU& cpu, u32& cycles, Mem& memory, Word address) {
-    Byte value = memory[address];
+    Byte value = cpu.ReadMemory(address, memory);
     cpu.LogMemoryAccess(address, value, false);
     cycles--;
     
@@ -247,12 +247,12 @@ void CPY(CPU& cpu, u32& cycles, Mem& memory, Word address) {
 
 // Inc/Dec Instructions
 void INC(CPU& cpu, u32& cycles, Mem& memory, Word address) {
-    Byte value = memory[address];
+    Byte value = cpu.ReadMemory(address, memory);
     cpu.LogMemoryAccess(address, value, false);
     cycles--;
     
     value++;
-    memory[address] = value;
+    cpu.WriteMemory(address, value, memory);
     cpu.LogMemoryAccess(address, value, true);
     cycles--;
     
@@ -272,12 +272,12 @@ void INY(CPU& cpu, u32& cycles, Mem& memory) {
 }
 
 void DEC(CPU& cpu, u32& cycles, Mem& memory, Word address) {
-    Byte value = memory[address];
+    Byte value = cpu.ReadMemory(address, memory);
     cpu.LogMemoryAccess(address, value, false);
     cycles--;
     
     value--;
-    memory[address] = value;
+    cpu.WriteMemory(address, value, memory);
     cpu.LogMemoryAccess(address, value, true);
     cycles--;
     
@@ -304,7 +304,7 @@ void ASL(CPU& cpu, u32& cycles, Mem& memory, Word address, bool accumulator) {
         value = cpu.A;
         cycles--;
     } else {
-        value = memory[address];
+        value = cpu.ReadMemory(address, memory);
         cpu.LogMemoryAccess(address, value, false);
         cycles--;
     }
@@ -315,7 +315,7 @@ void ASL(CPU& cpu, u32& cycles, Mem& memory, Word address, bool accumulator) {
     if (accumulator) {
         cpu.A = value;
     } else {
-        memory[address] = value;
+        cpu.WriteMemory(address, value, memory);
         cpu.LogMemoryAccess(address, value, true);
         cycles--;
     }
@@ -330,7 +330,7 @@ void LSR(CPU& cpu, u32& cycles, Mem& memory, Word address, bool accumulator) {
         value = cpu.A;
         cycles--;
     } else {
-        value = memory[address];
+        value = cpu.ReadMemory(address, memory);
         cpu.LogMemoryAccess(address, value, false);
         cycles--;
     }
@@ -341,7 +341,7 @@ void LSR(CPU& cpu, u32& cycles, Mem& memory, Word address, bool accumulator) {
     if (accumulator) {
         cpu.A = value;
     } else {
-        memory[address] = value;
+        cpu.WriteMemory(address, value, memory);
         cpu.LogMemoryAccess(address, value, true);
         cycles--;
     }
@@ -356,7 +356,7 @@ void ROL(CPU& cpu, u32& cycles, Mem& memory, Word address, bool accumulator) {
         value = cpu.A;
         cycles--;
     } else {
-        value = memory[address];
+        value = cpu.ReadMemory(address, memory);
         cpu.LogMemoryAccess(address, value, false);
         cycles--;
     }
@@ -368,7 +368,7 @@ void ROL(CPU& cpu, u32& cycles, Mem& memory, Word address, bool accumulator) {
     if (accumulator) {
         cpu.A = value;
     } else {
-        memory[address] = value;
+        cpu.WriteMemory(address, value, memory);
         cpu.LogMemoryAccess(address, value, true);
         cycles--;
     }
@@ -383,7 +383,7 @@ void ROR(CPU& cpu, u32& cycles, Mem& memory, Word address, bool accumulator) {
         value = cpu.A;
         cycles--;
     } else {
-        value = memory[address];
+        value = cpu.ReadMemory(address, memory);
         cpu.LogMemoryAccess(address, value, false);
         cycles--;
     }
@@ -395,7 +395,7 @@ void ROR(CPU& cpu, u32& cycles, Mem& memory, Word address, bool accumulator) {
     if (accumulator) {
         cpu.A = value;
     } else {
-        memory[address] = value;
+        cpu.WriteMemory(address, value, memory);
         cpu.LogMemoryAccess(address, value, true);
         cycles--;
     }

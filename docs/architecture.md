@@ -13,6 +13,11 @@ cpu6502/
 │   ├── cpu_addressing.hpp     # Addressing modes interface
 │   ├── cpu_instructions.hpp   # Instruction handlers interface
 │   ├── mem.hpp                # Memory interface
+│   ├── io_device.hpp          # IODevice base interface
+│   ├── storage_device.hpp     # StorageDevice interface
+│   ├── devices/
+│   │   ├── apple_io.hpp       # Apple II I/O device
+│   │   └── file_device.hpp    # File storage device
 │   └── util/
 │       └── logger.hpp         # Logging system
 ├── src/                       # Implementation files
@@ -22,16 +27,25 @@ cpu6502/
 │   │   └── instructions.cpp  # Instruction handlers implementation
 │   ├── mem/
 │   │   └── mem.cpp           # Memory implementation
+│   ├── devices/
+│   │   ├── apple_io.cpp      # Apple II I/O implementation
+│   │   └── file_device.cpp   # File storage implementation
 │   ├── util/
 │   │   └── logger.cpp        # Logger implementation
 │   └── main/
 │       └── cpu_demo.cpp      # Demo program
 ├── tests/                     # Test suite
 │   ├── test_main.cpp         # Original tests
-│   └── instruction_handlers_test.cpp  # New instruction tests
+│   ├── instruction_handlers_test.cpp  # Instruction tests
+│   ├── test_apple_io.cpp     # Apple I/O tests
+│   └── test_file_device.cpp  # File device tests
+├── examples/                   # Example programs
+│   ├── apple_io_demo.cpp     # Apple I/O demo
+│   └── file_device_demo.cpp  # File device demo
 ├── docs/                      # Documentation
 │   ├── instructions.md       # Instruction implementation guide
-│   └── architecture.md       # This file
+│   ├── architecture.md       # This file
+│   └── file_device.md        # File device documentation
 └── lib/
     └── googletest/           # Google Test framework
 ```
@@ -48,6 +62,48 @@ The main CPU class that emulates the 6502 processor.
 - Execute loop that fetches and executes instructions
 - Memory access logging
 - Stack operations
+- **IODevice integration**: Supports modular I/O devices that intercept memory reads/writes at specific addresses
+
+### IODevice Architecture (`io_device.hpp` / `apple_io.cpp/hpp` / `file_device.cpp/hpp`)
+
+The emulator now supports modular I/O devices through an abstract `IODevice` interface.
+
+**Key Features:**
+- Abstract interface for read/write interception at specific memory addresses
+- CPU queries registered IODevices before accessing memory
+- Devices can handle specific addresses (e.g., $FD0C/$FDED for Apple II keyboard/screen)
+- Register/unregister devices dynamically
+
+**Device Hierarchy:**
+```
+IODevice (base interface)
+    ├── AppleIO (Apple II keyboard/screen)
+    └── StorageDevice (storage interface)
+            └── FileDevice (file-based storage)
+```
+
+**Example Usage:**
+```cpp
+auto appleIO = std::make_shared<AppleIO>();
+cpu.registerIODevice(appleIO);
+// Now reads from $FD0C and writes to $FDED are handled by AppleIO
+
+auto fileDevice = std::make_shared<FileDevice>(&mem);
+cpu.registerIODevice(fileDevice);
+// File operations via $FE00-$FE4F
+```
+
+**AppleIO Implementation:**
+- Simulates Apple II keyboard input at $FD0C
+- Simulates Apple II screen output at $FDED
+- Buffers keyboard input for testing
+- Captures screen output for verification
+
+**FileDevice Implementation:**
+- Loads/saves binary files from/to host filesystem
+- Memory-mapped registers at $FE00-$FE4F for 6502 control
+- Direct C++ API for programmatic access
+- See `docs/file_device.md` for complete documentation
 
 **Public Interface:**
 ```cpp

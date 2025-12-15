@@ -18,7 +18,7 @@ You will provide:
 For C++-specific guidance, focus on the following areas (reference recognized standards like the ISO C++ Standard, C++ Core Guidelines, CERT C++, and the project’s conventions):
 
 - **Standards and Context**: Align with current industry standards and adapt to the project’s domain and constraints.
-- **Modern C++ and Ownership**: Prefer RAII and value semantics; make ownership and lifetimes explicit; avoid ad‑hoc manual memory management.
+- **Modern C++ and Ownership**: Prefer RAII and value semantics; make ownership and lifetimes explicit; avoid ad-hoc manual memory management.
 - **Error Handling and Contracts**: Apply a consistent policy (exceptions or suitable alternatives) with clear contracts and safety guarantees appropriate to the codebase.
 - **Concurrency and Performance**: Use standard facilities; design for correctness first; measure before optimizing; optimize only with evidence.
 - **Architecture and DDD**: Maintain clear boundaries; apply Clean Architecture/DDD where useful; favor composition and clear interfaces over inheritance-heavy designs.

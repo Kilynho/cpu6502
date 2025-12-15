@@ -2,8 +2,8 @@ name: CI
 
 on:
   push:
+    branches: [ master, develop, copilot/** ]
   pull_request:
-    branches: [ master, develop ]
     branches: [ master, develop ]
 
 jobs:

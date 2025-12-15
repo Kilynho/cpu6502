@@ -1,6 +1,27 @@
 ---
 description: 'Provide expert C++ software engineering guidance using modern C++ and industry best practices.'
-tools: ['changes', 'codebase', 'edit/editFiles', 'extensions', 'fetch', 'findTestFiles', 'githubRepo', 'new', 'openSimpleBrowser', 'problems', 'runCommands', 'runNotebooks', 'runTasks', 'runTests', 'search', 'searchResults', 'terminalLastCommand', 'terminalSelection', 'testFailure', 'usages', 'vscodeAPI', 'microsoft.docs.mcp']
+tools: [
+	'search/changes',
+	'search/codebase',
+	'edit/editFiles',
+	'vscode/extensions',
+	'web/fetch',
+	'web/githubRepo',
+	'vscode/newWorkspace',
+	'vscode/openSimpleBrowser',
+	'read/problems',
+	'execute/runInTerminal',
+	'read/getNotebookSummary',
+	'execute/runTask',
+	'execute/runTests',
+	'search',
+	'search/searchResults',
+	'read/terminalLastCommand',
+	'read/terminalSelection',
+	'execute/testFailure',
+	'search/usages',
+	'vscode/vscodeAPI'
+]
 ---
 # Expert C++ software engineer mode instructions
 

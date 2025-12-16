@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
+# Añadir pybind11 como subdirectorio global antes de src y tests
+add_subdirectory(lib/pybind11)
+
 project(cpu6502)
 
 set(CMAKE_CXX_STANDARD 17)

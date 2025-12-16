@@ -15,20 +15,25 @@ set(LIB_SOURCES
     gui/emulator_gui.cpp
 )
 
+
+
 # Crear la librería estática
 add_library(cpu6502_lib STATIC ${LIB_SOURCES})
 
 # Find SDL2 package
 find_package(SDL2 REQUIRED)
 
+
 # Especificar directorios de inclusión para la librería
 target_include_directories(cpu6502_lib PUBLIC
     ${PROJECT_SOURCE_DIR}/include
     ${SDL2_INCLUDE_DIRS}
+    ${PROJECT_SOURCE_DIR}/lib/pybind11/include
 )
 
-# Link SDL2 to the library
-target_link_libraries(cpu6502_lib PUBLIC ${SDL2_LIBRARIES})
+
+# Link SDL2 and pybind11 to the library
+target_link_libraries(cpu6502_lib PUBLIC ${SDL2_LIBRARIES} pybind11::module)
 
 # Crear el ejecutable de demostración
 add_executable(cpu_demo main/cpu_demo.cpp)

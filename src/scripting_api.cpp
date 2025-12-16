@@ -53,16 +53,28 @@ void ScriptingAPI::bind(pybind11::module_& m) {
     py::class_<ScriptingAPI>(m, "ScriptingAPI")
         .def(py::init<>())
         .def("on_start", [](ScriptingAPI& self, py::function f) {
-            self.on_start([f]() { f(); });
+            self.on_start([f]() {
+                py::gil_scoped_acquire acquire;
+                f();
+            });
         })
         .def("on_stop", [](ScriptingAPI& self, py::function f) {
-            self.on_stop([f]() { f(); });
+            self.on_stop([f]() {
+                py::gil_scoped_acquire acquire;
+                f();
+            });
         })
         .def("on_breakpoint", [](ScriptingAPI& self, py::function f) {
-            self.on_breakpoint([f](uint16_t addr) { f(addr); });
+            self.on_breakpoint([f](uint16_t addr) {
+                py::gil_scoped_acquire acquire;
+                f(addr);
+            });
         })
         .def("on_io", [](ScriptingAPI& self, py::function f) {
-            self.on_io([f](uint16_t addr, uint8_t val) { f(addr, val); });
+            self.on_io([f](uint16_t addr, uint8_t val) {
+                py::gil_scoped_acquire acquire;
+                f(addr, val);
+            });
         })
         .def("trigger_start", &ScriptingAPI::trigger_start)
         .def("trigger_stop", &ScriptingAPI::trigger_stop)

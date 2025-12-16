@@ -14,5 +14,5 @@ Esta guía explica cómo crear y registrar nuevos dispositivos periféricos (VIA
 ```cpp
 // Ejemplo de registro de un dispositivo
 std::shared_ptr<PeripheralDevice> via = std::make_shared<VIADevice>();
-// cpu.registerPeripheral(via, direccion_base);
+cpu.registerPeripheral(via, 0x9110); // 0x9110 es la dirección base de ejemplo
 ```

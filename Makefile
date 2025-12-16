@@ -97,6 +97,7 @@ help:
 	@echo "  make text_screen_demo - Build and run Text Screen demo"
 	@echo "  make audio_demo       - Build and run Audio demo"
 	@echo "  make tcp_serial_demo  - Build and run TCP Serial demo"
+	@echo "  make interrupt_demo   - Build and run Interrupt demo"
 	@echo "  make clean        - Remove all build artifacts"
 	@echo "  make rebuild      - Clean and build from scratch"
 	@echo "  make reconfigure  - Force CMake reconfiguration"
@@ -104,5 +105,11 @@ help:
 	@echo ""
 	@echo "Build artifacts will be in: $(BUILDDIR)/"
 
+
+# Run Interrupt demo
+interrupt_demo: all
+	@echo "Running Interrupt demo..."
+	@$(BUILDDIR)/interrupt_demo
+
 # Declare phony targets
-.PHONY: all configure test runTests demo apple_io_demo file_device_demo text_screen_demo audio_demo tcp_serial_demo clean rebuild reconfigure install help
+.PHONY: all configure test runTests demo apple_io_demo file_device_demo text_screen_demo audio_demo tcp_serial_demo interrupt_demo clean rebuild reconfigure install help

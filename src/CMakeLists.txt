@@ -11,6 +11,7 @@ set(LIB_SOURCES
     devices/basic_audio.cpp
     devices/tcp_serial.cpp
     devices/basic_timer.cpp
+    interrupt/interrupt_controller.cpp
     gui/emulator_gui.cpp
 )
 

@@ -11,6 +11,7 @@
 #include <memory>
 #include "mem.hpp"
 #include "io_device.hpp"
+#include "interrupt_controller.hpp"
 
 // Public API for CPU 6502 Emulator
 // This header provides the main interface for using the CPU emulator
@@ -90,6 +91,15 @@ public:
     void registerIODevice(std::shared_ptr<IODevice> device);
     void unregisterIODevice(std::shared_ptr<IODevice> device);
     
+    // --- Integración del Controlador de Interrupciones ---
+    void setInterruptController(InterruptController* controller);
+    InterruptController* getInterruptController() const;
+    
+    // --- Manejo de Interrupciones ---
+    void serviceIRQ(Mem& memory);
+    void serviceNMI(Mem& memory);
+    void checkAndHandleInterrupts(Mem& memory);
+    
     // Métodos para acceso a memoria con soporte de IODevice
     Byte ReadMemory(Word address, Mem& memory);
     void WriteMemory(Word address, Byte value, Mem& memory);
@@ -98,6 +108,7 @@ public:
     
 private:
     std::vector<std::shared_ptr<IODevice>> ioDevices; // Dispositivos de E/S registrados
+    InterruptController* interruptController; // Controlador de interrupciones (no owned)
 
     // Métodos auxiliares para IO
     IODevice* findIODeviceForRead(uint16_t address) const;

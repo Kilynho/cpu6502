@@ -177,6 +177,14 @@ void BasicTimer::clearIRQ() {
     irqPending = false;
 }
 
+bool BasicTimer::hasNMI() const {
+    return false;  // BasicTimer no genera NMI
+}
+
+void BasicTimer::clearNMI() {
+    // BasicTimer no genera NMI, no hay nada que limpiar
+}
+
 void BasicTimer::tick(uint32_t cycles) {
     if (!enabled.load()) {
         return;

@@ -1,5 +1,6 @@
 #pragma once
 #include "../timer_device.hpp"
+#include "../interrupt_controller.hpp"
 #include <cstdint>
 #include <atomic>
 #include <mutex>
@@ -57,7 +58,7 @@
  *   LDA #$04    ; IRQ Flag bit
  *   STA $FC08
  */
-class BasicTimer : public TimerDevice {
+class BasicTimer : public TimerDevice, public InterruptSource {
 public:
     BasicTimer();
     ~BasicTimer() override;
@@ -77,6 +78,8 @@ public:
     void setEnabled(bool enabled) override;
     bool hasIRQ() const override;
     void clearIRQ() override;
+    bool hasNMI() const override;
+    void clearNMI() override;
     void tick(uint32_t cycles) override;
     void cleanup() override;
     

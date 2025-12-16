@@ -1,0 +1,412 @@
+#include <gtest/gtest.h>
+#include "interrupt_controller.hpp"
+#include "cpu.hpp"
+#include "mem.hpp"
+#include "devices/basic_timer.hpp"
+#include <memory>
+
+// Mock interrupt source para pruebas
+class MockInterruptSource : public InterruptSource {
+public:
+    MockInterruptSource() : irqPending(false), nmiPending(false) {}
+    
+    bool hasIRQ() const override {
+        return irqPending;
+    }
+    
+    bool hasNMI() const override {
+        return nmiPending;
+    }
+    
+    void clearIRQ() override {
+        irqPending = false;
+    }
+    
+    void clearNMI() override {
+        nmiPending = false;
+    }
+    
+    void triggerIRQ() {
+        irqPending = true;
+    }
+    
+    void triggerNMI() {
+        nmiPending = true;
+    }
+    
+private:
+    bool irqPending;
+    bool nmiPending;
+};
+
+class InterruptControllerTest : public testing::Test {
+public:
+    InterruptController intCtrl;
+    std::shared_ptr<MockInterruptSource> mockSource1;
+    std::shared_ptr<MockInterruptSource> mockSource2;
+    
+    virtual void SetUp() {
+        mockSource1 = std::make_shared<MockInterruptSource>();
+        mockSource2 = std::make_shared<MockInterruptSource>();
+    }
+    
+    virtual void TearDown() {
+    }
+};
+
+// Test: Inicialización del controlador de interrupciones
+TEST_F(InterruptControllerTest, Initialization) {
+    EXPECT_EQ(intCtrl.getSourceCount(), 0);
+    EXPECT_FALSE(intCtrl.hasIRQ());
+    EXPECT_FALSE(intCtrl.hasNMI());
+}
+
+// Test: Registrar fuentes de interrupción
+TEST_F(InterruptControllerTest, RegisterSources) {
+    intCtrl.registerSource(mockSource1);
+    EXPECT_EQ(intCtrl.getSourceCount(), 1);
+    
+    intCtrl.registerSource(mockSource2);
+    EXPECT_EQ(intCtrl.getSourceCount(), 2);
+}
+
+// Test: Eliminar fuentes de interrupción
+TEST_F(InterruptControllerTest, UnregisterSources) {
+    intCtrl.registerSource(mockSource1);
+    intCtrl.registerSource(mockSource2);
+    EXPECT_EQ(intCtrl.getSourceCount(), 2);
+    
+    intCtrl.unregisterSource(mockSource1);
+    EXPECT_EQ(intCtrl.getSourceCount(), 1);
+    
+    intCtrl.unregisterSource(mockSource2);
+    EXPECT_EQ(intCtrl.getSourceCount(), 0);
+}
+
+// Test: Detectar IRQ pendiente
+TEST_F(InterruptControllerTest, DetectIRQ) {
+    intCtrl.registerSource(mockSource1);
+    
+    EXPECT_FALSE(intCtrl.hasIRQ());
+    
+    mockSource1->triggerIRQ();
+    EXPECT_TRUE(intCtrl.hasIRQ());
+}
+
+// Test: Detectar NMI pendiente
+TEST_F(InterruptControllerTest, DetectNMI) {
+    intCtrl.registerSource(mockSource1);
+    
+    EXPECT_FALSE(intCtrl.hasNMI());
+    
+    mockSource1->triggerNMI();
+    EXPECT_TRUE(intCtrl.hasNMI());
+}
+
+// Test: Reconocer IRQ
+TEST_F(InterruptControllerTest, AcknowledgeIRQ) {
+    intCtrl.registerSource(mockSource1);
+    mockSource1->triggerIRQ();
+    
+    EXPECT_TRUE(intCtrl.hasIRQ());
+    
+    intCtrl.acknowledgeIRQ();
+    EXPECT_FALSE(intCtrl.hasIRQ());
+}
+
+// Test: Reconocer NMI
+TEST_F(InterruptControllerTest, AcknowledgeNMI) {
+    intCtrl.registerSource(mockSource1);
+    mockSource1->triggerNMI();
+    
+    EXPECT_TRUE(intCtrl.hasNMI());
+    
+    intCtrl.acknowledgeNMI();
+    EXPECT_FALSE(intCtrl.hasNMI());
+}
+
+// Test: Múltiples fuentes de IRQ
+TEST_F(InterruptControllerTest, MultipleIRQSources) {
+    intCtrl.registerSource(mockSource1);
+    intCtrl.registerSource(mockSource2);
+    
+    mockSource1->triggerIRQ();
+    mockSource2->triggerIRQ();
+    
+    EXPECT_TRUE(intCtrl.hasIRQ());
+    
+    // Reconocer debe limpiar todas las fuentes
+    intCtrl.acknowledgeIRQ();
+    EXPECT_FALSE(intCtrl.hasIRQ());
+}
+
+// Test: Limpiar todas las interrupciones
+TEST_F(InterruptControllerTest, ClearAll) {
+    intCtrl.registerSource(mockSource1);
+    mockSource1->triggerIRQ();
+    mockSource1->triggerNMI();
+    
+    EXPECT_TRUE(intCtrl.hasIRQ());
+    EXPECT_TRUE(intCtrl.hasNMI());
+    
+    intCtrl.clearAll();
+    EXPECT_FALSE(intCtrl.hasIRQ());
+    EXPECT_FALSE(intCtrl.hasNMI());
+}
+
+// Test: Integración CPU - IRQ básica
+TEST_F(InterruptControllerTest, CPUIntegrationBasicIRQ) {
+    Mem mem;
+    CPU cpu;
+    
+    mem.Initialize();
+    cpu.Reset(mem);
+    
+    // Configurar vector de IRQ a 0x8000
+    mem[Mem::IRQ_VECTOR] = 0x00;
+    mem[Mem::IRQ_VECTOR + 1] = 0x80;
+    
+    // Configurar controlador de interrupciones
+    cpu.setInterruptController(&intCtrl);
+    intCtrl.registerSource(mockSource1);
+    
+    // Estado inicial de la CPU
+    Word initialPC = cpu.PC;
+    Byte initialSP = cpu.SP;
+    
+    // Disparar IRQ
+    mockSource1->triggerIRQ();
+    EXPECT_TRUE(intCtrl.hasIRQ());
+    
+    // Verificar que I está limpio (IRQ habilitado)
+    EXPECT_FALSE(cpu.I);
+    
+    // Manejar la interrupción
+    cpu.checkAndHandleInterrupts(mem);
+    
+    // Verificar que PC apunta al vector de IRQ
+    EXPECT_EQ(cpu.PC, 0x8000);
+    
+    // Verificar que I ahora está establecido
+    EXPECT_TRUE(cpu.I);
+    
+    // Verificar que SP decrementó (3 bytes: PCH, PCL, P)
+    EXPECT_EQ(cpu.SP, initialSP - 3);
+    
+    // Verificar que IRQ fue reconocida
+    EXPECT_FALSE(intCtrl.hasIRQ());
+}
+
+// Test: Integración CPU - NMI básica
+TEST_F(InterruptControllerTest, CPUIntegrationBasicNMI) {
+    Mem mem;
+    CPU cpu;
+    
+    mem.Initialize();
+    cpu.Reset(mem);
+    
+    // Configurar vector de NMI a 0x9000
+    mem[Mem::NMI_VECTOR] = 0x00;
+    mem[Mem::NMI_VECTOR + 1] = 0x90;
+    
+    // Configurar controlador de interrupciones
+    cpu.setInterruptController(&intCtrl);
+    intCtrl.registerSource(mockSource1);
+    
+    Word initialPC = cpu.PC;
+    Byte initialSP = cpu.SP;
+    
+    // Disparar NMI
+    mockSource1->triggerNMI();
+    EXPECT_TRUE(intCtrl.hasNMI());
+    
+    // Manejar la interrupción
+    cpu.checkAndHandleInterrupts(mem);
+    
+    // Verificar que PC apunta al vector de NMI
+    EXPECT_EQ(cpu.PC, 0x9000);
+    
+    // Verificar que I está establecido
+    EXPECT_TRUE(cpu.I);
+    
+    // Verificar que SP decrementó
+    EXPECT_EQ(cpu.SP, initialSP - 3);
+    
+    // Verificar que NMI fue reconocida
+    EXPECT_FALSE(intCtrl.hasNMI());
+}
+
+// Test: IRQ enmascarada por flag I
+TEST_F(InterruptControllerTest, IRQMaskedByIFlag) {
+    Mem mem;
+    CPU cpu;
+    
+    mem.Initialize();
+    cpu.Reset(mem);
+    
+    // Configurar vector de IRQ
+    mem[Mem::IRQ_VECTOR] = 0x00;
+    mem[Mem::IRQ_VECTOR + 1] = 0x80;
+    
+    cpu.setInterruptController(&intCtrl);
+    intCtrl.registerSource(mockSource1);
+    
+    // Establecer flag I (deshabilitar interrupciones)
+    cpu.I = 1;
+    
+    Word initialPC = cpu.PC;
+    
+    // Disparar IRQ
+    mockSource1->triggerIRQ();
+    EXPECT_TRUE(intCtrl.hasIRQ());
+    
+    // Intentar manejar la interrupción
+    cpu.checkAndHandleInterrupts(mem);
+    
+    // PC no debe cambiar porque IRQ está enmascarada
+    EXPECT_EQ(cpu.PC, initialPC);
+    
+    // IRQ sigue pendiente
+    EXPECT_TRUE(intCtrl.hasIRQ());
+}
+
+// Test: NMI no puede ser enmascarada
+TEST_F(InterruptControllerTest, NMINotMasked) {
+    Mem mem;
+    CPU cpu;
+    
+    mem.Initialize();
+    cpu.Reset(mem);
+    
+    // Configurar vector de NMI
+    mem[Mem::NMI_VECTOR] = 0x00;
+    mem[Mem::NMI_VECTOR + 1] = 0x90;
+    
+    cpu.setInterruptController(&intCtrl);
+    intCtrl.registerSource(mockSource1);
+    
+    // Establecer flag I (intentar deshabilitar interrupciones)
+    cpu.I = 1;
+    
+    Word initialPC = cpu.PC;
+    
+    // Disparar NMI
+    mockSource1->triggerNMI();
+    EXPECT_TRUE(intCtrl.hasNMI());
+    
+    // Manejar la interrupción
+    cpu.checkAndHandleInterrupts(mem);
+    
+    // PC debe cambiar porque NMI no puede ser enmascarada
+    EXPECT_EQ(cpu.PC, 0x9000);
+    
+    // NMI fue reconocida
+    EXPECT_FALSE(intCtrl.hasNMI());
+}
+
+// Test: Prioridad NMI sobre IRQ
+TEST_F(InterruptControllerTest, NMIPriority) {
+    Mem mem;
+    CPU cpu;
+    
+    mem.Initialize();
+    cpu.Reset(mem);
+    
+    // Configurar vectores
+    mem[Mem::IRQ_VECTOR] = 0x00;
+    mem[Mem::IRQ_VECTOR + 1] = 0x80;
+    mem[Mem::NMI_VECTOR] = 0x00;
+    mem[Mem::NMI_VECTOR + 1] = 0x90;
+    
+    cpu.setInterruptController(&intCtrl);
+    intCtrl.registerSource(mockSource1);
+    
+    // Disparar ambas interrupciones
+    mockSource1->triggerIRQ();
+    mockSource1->triggerNMI();
+    
+    EXPECT_TRUE(intCtrl.hasIRQ());
+    EXPECT_TRUE(intCtrl.hasNMI());
+    
+    // Manejar interrupciones
+    cpu.checkAndHandleInterrupts(mem);
+    
+    // NMI debe tener prioridad, así que PC apunta al vector de NMI
+    EXPECT_EQ(cpu.PC, 0x9000);
+    
+    // NMI fue reconocida, pero IRQ sigue pendiente
+    EXPECT_FALSE(intCtrl.hasNMI());
+    EXPECT_TRUE(intCtrl.hasIRQ());
+}
+
+// Test: Integración con BasicTimer
+TEST_F(InterruptControllerTest, BasicTimerIntegration) {
+    Mem mem;
+    CPU cpu;
+    InterruptController timerIntCtrl;
+    
+    mem.Initialize();
+    cpu.Reset(mem);
+    
+    // Configurar vector de IRQ
+    mem[Mem::IRQ_VECTOR] = 0x00;
+    mem[Mem::IRQ_VECTOR + 1] = 0x80;
+    
+    // Crear y configurar timer
+    auto timer = std::make_shared<BasicTimer>();
+    ASSERT_TRUE(timer->initialize());
+    
+    cpu.registerIODevice(timer);
+    cpu.setInterruptController(&timerIntCtrl);
+    timerIntCtrl.registerSource(timer);
+    
+    // Configurar timer para disparar IRQ después de 100 ciclos
+    timer->setLimit(100);
+    timer->write(0xFC08, 0x03);  // Enable | IRQ Enable
+    
+    EXPECT_TRUE(timer->isEnabled());
+    EXPECT_TRUE(timer->isIRQEnabled());
+    EXPECT_FALSE(timerIntCtrl.hasIRQ());
+    
+    // Ejecutar 50 ciclos - no debe generar IRQ aún
+    timer->tick(50);
+    EXPECT_FALSE(timerIntCtrl.hasIRQ());
+    
+    // Ejecutar 50 ciclos más - debe generar IRQ
+    timer->tick(50);
+    EXPECT_TRUE(timerIntCtrl.hasIRQ());
+    
+    Word initialPC = cpu.PC;
+    
+    // Manejar la interrupción
+    cpu.checkAndHandleInterrupts(mem);
+    
+    // Verificar que la CPU saltó al vector de IRQ
+    EXPECT_EQ(cpu.PC, 0x8000);
+    
+    // IRQ debe estar limpia
+    EXPECT_FALSE(timerIntCtrl.hasIRQ());
+    
+    // Limpiar
+    cpu.unregisterIODevice(timer);
+    timer->cleanup();
+}
+
+// Test: Sin controlador de interrupciones
+TEST_F(InterruptControllerTest, NoInterruptController) {
+    Mem mem;
+    CPU cpu;
+    
+    mem.Initialize();
+    cpu.Reset(mem);
+    
+    // No configurar controlador de interrupciones
+    EXPECT_EQ(cpu.getInterruptController(), nullptr);
+    
+    Word initialPC = cpu.PC;
+    
+    // Intentar manejar interrupciones - no debe hacer nada
+    cpu.checkAndHandleInterrupts(mem);
+    
+    EXPECT_EQ(cpu.PC, initialPC);
+}

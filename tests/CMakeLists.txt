@@ -27,6 +27,7 @@ set(TEST_SOURCES
     test_audio_device.cpp
     test_tcp_serial.cpp
     test_timer_device.cpp
+    test_interrupt_controller.cpp
 )
 
 # Crear ejecutable de test

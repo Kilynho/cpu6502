@@ -28,6 +28,11 @@ jobs:
         curl -I https://packages.microsoft.com || true
         sudo apt-get update
 
+    - name: Comprobar HTTPS a Copilot
+      run: |
+        set -eux
+        curl -vI https://api.githubcopilot.com || true
+
     - name: Install dependencies
       run: |
         set -eux

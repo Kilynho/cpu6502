@@ -34,12 +34,8 @@ Los scripts pueden suscribirse a los siguientes eventos (hooks):
 
 - `on_start()`: Se llama al iniciar la emulación.
 - `on_stop()`: Se llama al detener la emulación.
-- `on_reset()`: Se llama tras un reset de la CPU.
-- `on_instruction(address, opcode)`: Se llama antes de ejecutar cada instrucción 6502.
-- `on_memory_read(address, value)`: Se llama al leer memoria.
-- `on_memory_write(address, value)`: Se llama al escribir memoria.
-- `on_irq()`: Se llama al disparar una IRQ.
-- `on_nmi()`: Se llama al disparar una NMI.
+- `on_breakpoint(address)`: Se llama al alcanzar un breakpoint en la dirección dada.
+- `on_io(address, value)`: Se llama al realizar operaciones de E/S.
 
 Puedes definir cualquiera de estas funciones en tu script para interceptar el evento correspondiente.
 
@@ -47,32 +43,47 @@ Puedes definir cualquiera de estas funciones en tu script para interceptar el ev
 
 ## API de Scripting (Python)
 
-El entorno de scripting expone los siguientes objetos y funciones:
+El entorno de scripting actualmente expone la clase `ScriptingAPI` con los siguientes métodos:
 
-- `cpu`: Objeto CPU, permite leer/modificar registros (`A`, `X`, `Y`, `PC`, `SP`, `P`).
-- `mem`: Objeto Memoria, permite leer/escribir bytes (`mem[0x8000] = 0x42`).
-- `log(msg)`: Escribe un mensaje en el log del emulador.
-- `breakpoint(address)`: Inserta un breakpoint en la dirección dada.
-- `step(cycles)`: Ejecuta un número de ciclos de CPU.
-- `run_until(address)`: Ejecuta hasta alcanzar la dirección dada.
+- `on_start(callback)`: Registra un callback para el evento de inicio.
+- `on_stop(callback)`: Registra un callback para el evento de parada.
+- `on_breakpoint(callback)`: Registra un callback para eventos de breakpoint (recibe `address`).
+- `on_io(callback)`: Registra un callback para eventos de E/S (recibe `address` y `value`).
+
+Para pruebas y desarrollo, también están disponibles los métodos de disparo manual:
+- `trigger_start()`: Dispara manualmente el evento de inicio.
+- `trigger_stop()`: Dispara manualmente el evento de parada.
+- `trigger_breakpoint(address)`: Dispara manualmente un evento de breakpoint.
+- `trigger_io(address, value)`: Dispara manualmente un evento de E/S.
 
 ---
 
 ## Ejemplo de Script en Python
 
 ```python
-def on_start():
-    log("Script iniciado. PC=0x%04X" % cpu.PC)
-    breakpoint(0x9000)
+import cpu6502
 
-def on_instruction(address, opcode):
-    if address == 0x9000:
-        log("Llegó a 0x9000, valor de A: %02X" % cpu.A)
-        cpu.A = 0x42  # Modifica el registro A
+# Crear instancia de la API
+api = cpu6502.ScriptingAPI()
 
-def on_memory_write(address, value):
-    if address == 0xFFFC:
-        log("Escritura en vector de reset: %02X" % value)
+# Registrar callbacks
+def on_start_handler():
+    print("Emulación iniciada")
+
+def on_breakpoint_handler(address):
+    print(f"Breakpoint alcanzado en 0x{address:04X}")
+
+def on_io_handler(address, value):
+    print(f"Operación de E/S en 0x{address:04X}, valor: 0x{value:02X}")
+
+api.on_start(on_start_handler)
+api.on_breakpoint(on_breakpoint_handler)
+api.on_io(on_io_handler)
+
+# Disparar eventos para pruebas
+api.trigger_start()
+api.trigger_breakpoint(0x9000)
+api.trigger_io(0xFFFC, 0x42)
 ```
 
 ---
@@ -94,13 +105,26 @@ Puedes combinar varios hooks en un mismo script para monitorear y modificar el c
 
 ---
 
-## Ejemplo: Script para Parar en una Instrucción Específica
+## Ejemplo: Script para Monitorear Eventos
 
 ```python
-def on_instruction(address, opcode):
+import cpu6502
+
+api = cpu6502.ScriptingAPI()
+
+def on_start_handler():
+    print("Sistema iniciado, esperando eventos...")
+
+def on_breakpoint_handler(address):
     if address == 0xC000:
-        log("Breakpoint en 0xC000, deteniendo ejecución.")
-        step(0)  # Detiene la CPU
+        print("Breakpoint crítico en 0xC000 alcanzado")
+
+api.on_start(on_start_handler)
+api.on_breakpoint(on_breakpoint_handler)
+
+# Simular ejecución
+api.trigger_start()
+api.trigger_breakpoint(0xC000)
 ```
 
 ---

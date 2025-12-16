@@ -250,7 +250,7 @@ void CPU::Reset(Mem& memory) {
     C = Z = I = D = B = V = N = 0;
 }
 
-CPU::CPU() : PC(0), SP(0), A(0), X(0), Y(0), C(0), Z(0), I(0), D(0), B(0), V(0), N(0) {
+CPU::CPU() : PC(0), SP(0), A(0), X(0), Y(0), C(0), Z(0), I(0), D(0), B(0), V(0), N(0), interruptController(nullptr) {
     logFile.open("cpu_log.txt", std::ios_base::app);
 }
 
@@ -387,5 +387,89 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
                 util::LogWarn("Instrucción no manejada: 0x" + std::to_string(Ins));
             } break;
         }
+    }
+}
+// --- Integración del Controlador de Interrupciones ---
+
+void CPU::setInterruptController(InterruptController* controller) {
+    interruptController = controller;
+}
+
+InterruptController* CPU::getInterruptController() const {
+    return interruptController;
+}
+
+void CPU::serviceIRQ(Mem& memory) {
+    // Guardar PC en la pila (alto primero, luego bajo)
+    memory[0x0100 + SP] = static_cast<Byte>((PC >> 8) & 0xFF);
+    SP--;
+    memory[0x0100 + SP] = static_cast<Byte>(PC & 0xFF);
+    SP--;
+    
+    // Guardar el registro de estado (P) en la pila
+    Byte status = 0;
+    status |= (C ? 0x01 : 0);
+    status |= (Z ? 0x02 : 0);
+    status |= (I ? 0x04 : 0);
+    status |= (D ? 0x08 : 0);
+    status |= (B ? 0x10 : 0);
+    status |= 0x20;  // Bit 5 siempre está en 1
+    status |= (V ? 0x40 : 0);
+    status |= (N ? 0x80 : 0);
+    
+    memory[0x0100 + SP] = status;
+    SP--;
+    
+    // Establecer el flag I (Interrupt Disable)
+    I = 1;
+    
+    // Cargar el vector de IRQ en PC
+    PC = memory[Mem::IRQ_VECTOR] | (memory[Mem::IRQ_VECTOR + 1] << 8);
+}
+
+void CPU::serviceNMI(Mem& memory) {
+    // Guardar PC en la pila (alto primero, luego bajo)
+    memory[0x0100 + SP] = static_cast<Byte>((PC >> 8) & 0xFF);
+    SP--;
+    memory[0x0100 + SP] = static_cast<Byte>(PC & 0xFF);
+    SP--;
+    
+    // Guardar el registro de estado (P) en la pila
+    Byte status = 0;
+    status |= (C ? 0x01 : 0);
+    status |= (Z ? 0x02 : 0);
+    status |= (I ? 0x04 : 0);
+    status |= (D ? 0x08 : 0);
+    status |= (B ? 0x10 : 0);
+    status |= 0x20;  // Bit 5 siempre está en 1
+    status |= (V ? 0x40 : 0);
+    status |= (N ? 0x80 : 0);
+    
+    memory[0x0100 + SP] = status;
+    SP--;
+    
+    // Establecer el flag I (Interrupt Disable)
+    I = 1;
+    
+    // Cargar el vector de NMI en PC
+    PC = memory[Mem::NMI_VECTOR] | (memory[Mem::NMI_VECTOR + 1] << 8);
+}
+
+void CPU::checkAndHandleInterrupts(Mem& memory) {
+    if (!interruptController) {
+        return;
+    }
+    
+    // NMI tiene prioridad sobre IRQ
+    if (interruptController->hasNMI()) {
+        serviceNMI(memory);
+        interruptController->acknowledgeNMI();
+        return;
+    }
+    
+    // IRQ solo se atiende si el flag I está limpio
+    if (interruptController->hasIRQ() && !I) {
+        serviceIRQ(memory);
+        interruptController->acknowledgeIRQ();
     }
 }

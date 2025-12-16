@@ -11,6 +11,7 @@ set(LIB_SOURCES
     devices/basic_audio.cpp
     devices/tcp_serial.cpp
     devices/basic_timer.cpp
+    interrupt/interrupt_controller.cpp
     gui/emulator_gui.cpp
 )
 
@@ -137,3 +138,17 @@ target_include_directories(tcp_serial_demo PRIVATE
 
 # Establecer el nombre de salida del ejecutable
 set_target_properties(tcp_serial_demo PROPERTIES OUTPUT_NAME tcp_serial_demo)
+
+# Crear el ejecutable de Interrupt demo
+add_executable(interrupt_demo ${PROJECT_SOURCE_DIR}/examples/interrupt_demo.cpp)
+
+# Enlazar el ejecutable con la librería
+target_link_libraries(interrupt_demo cpu6502_lib)
+
+# Especificar directorios de inclusión para el demo
+target_include_directories(interrupt_demo PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+)
+
+# Establecer el nombre de salida del ejecutable
+set_target_properties(interrupt_demo PROPERTIES OUTPUT_NAME interrupt_demo)

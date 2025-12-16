@@ -47,6 +47,30 @@
 
 ### Soporte Gráfico: Pantalla de Texto (TextScreen)
 
+### Sistema de Interrupciones (IRQ/NMI)
+
+- Sistema centralizado de gestión de interrupciones mediante `InterruptController`.
+- Soporte completo para IRQ (enmascarable) y NMI (no enmascarable).
+- Los dispositivos pueden implementar la interfaz `InterruptSource` para disparar interrupciones.
+- Manejo automático de vectores de interrupción, pila y flags de la CPU.
+- Ejemplo de uso:
+  ```cpp
+  InterruptController intCtrl;
+  cpu.setInterruptController(&intCtrl);
+  
+  auto timer = std::make_shared<BasicTimer>();
+  intCtrl.registerSource(timer);
+  
+  // El timer dispara IRQ periódicamente
+  timer->setLimit(1000);
+  timer->write(0xFC08, 0x03);  // Enable | IRQ Enable
+  
+  // En el loop principal
+  cpu.checkAndHandleInterrupts(mem);
+  ```
+- Ver `docs/interrupt_system.md` para documentación completa y `examples/interrupt_demo.cpp` para ejemplos.
+### Soporte Gráfico: Pantalla de Texto (TextScreen)
+
 - Nuevo dispositivo `TextScreen` que simula una pantalla de texto de 40x24 caracteres.
 - Características principales:
   - **Buffer de video mapeado en memoria**: `$FC00-$FFFB` (960 bytes)

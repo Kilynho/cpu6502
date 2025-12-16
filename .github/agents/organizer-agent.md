@@ -13,6 +13,7 @@ tools: [
 	'search/codebase',
 	'search/usages',
 	'web/fetch',
+	'web/githubRepo',
 	'agent'
 ]
 ---

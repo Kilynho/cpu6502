@@ -1,4 +1,5 @@
 ---
+name: cpp-specialist
 description: 'Provide expert C++ software engineering guidance using modern C++ and industry best practices.'
 tools: [
 	'search/changes',

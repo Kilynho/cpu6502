@@ -3,6 +3,7 @@
 #include "cpu.hpp"
 #include "mem.hpp"
 #include "util/logger.hpp"
+#include "debugger.hpp"
 #include <bitset>
 #include <fstream>
 #include <iomanip>
@@ -72,6 +73,7 @@ void CPU::AssignCyclesAndBytes(Word &pc, u32 &cycles, Byte opcode) const {
 
 Byte CPU::FetchByte(u32& Cycles, Mem& memory) {
     Byte Data = memory[PC]; // Obtener el byte de la memoria en la dirección del contador de programa
+    if (debugger) debugger->notifyMemoryAccess(PC, Data, false);
     LogMemoryAccess(PC, Data, false); // Registrar el acceso de lectura a la memoria
     PC++; // Incrementar el contador de programa
     Cycles--; // Decrementar los ciclos restantes
@@ -80,9 +82,11 @@ Byte CPU::FetchByte(u32& Cycles, Mem& memory) {
 
 Word CPU::FetchWord(u32& Cycles, Mem& memory) {
     Word Data = memory[PC]; // Obtener el byte bajo de la palabra
+    if (debugger) debugger->notifyMemoryAccess(PC, Data, false);
     LogMemoryAccess(PC, Data, false); // Registrar el acceso de lectura a la memoria
     PC++; // Incrementar el contador de programa
     Data |= (memory[PC] << 8); // Obtener el byte alto de la palabra y combinarlo con el byte bajo
+    if (debugger) debugger->notifyMemoryAccess(PC, memory[PC], false);
     LogMemoryAccess(PC, memory[PC], false); // Registrar el acceso de lectura a la memoria
     PC++; // Incrementar el contador de programa
     Cycles -= 2; // Decrementar los ciclos restantes
@@ -100,11 +104,13 @@ Byte CPU::ReadByte(u32& Cycles, Byte Address, Mem& memory) {
     // Consultar IODevices primero
     if (IODevice* io = findIODeviceForRead(Address)) {
         Byte Data = io->read(Address);
+        if (debugger) debugger->notifyMemoryAccess(Address, Data, false);
         LogMemoryAccess(Address, Data, false);
         Cycles--;
         return Data;
     }
     Byte Data = memory[Address];
+    if (debugger) debugger->notifyMemoryAccess(Address, Data, false);
     LogMemoryAccess(Address, Data, false);
     Cycles--;
     return Data;
@@ -112,9 +118,11 @@ Byte CPU::ReadByte(u32& Cycles, Byte Address, Mem& memory) {
 
 Word CPU::ReadWord(u32& Cycles, Word Address, Mem& memory) {
     Word Data = memory[Address]; // Leer el byte bajo de la palabra
+    if (debugger) debugger->notifyMemoryAccess(Address, Data, false);
     LogMemoryAccess(Address, Data, false); // Registrar el acceso de lectura a la memoria
     Address++; // Incrementar la dirección
     Data |= (memory[Address] << 8); // Leer el byte alto de la palabra y combinarlo con el byte bajo
+    if (debugger) debugger->notifyMemoryAccess(Address, memory[Address], false);
     LogMemoryAccess(Address, memory[Address], false); // Registrar el acceso de lectura a la memoria
     Cycles--; // Decrementar los ciclos restantes
     return Data; // Devolver la palabra leída
@@ -125,11 +133,13 @@ void CPU::WriteByte(u32& Cycles, Byte Address, Byte Data, Mem& memory) {
     // Consultar IODevices primero
     if (IODevice* io = findIODeviceForWrite(Address)) {
         io->write(Address, Data);
+        if (debugger) debugger->notifyMemoryAccess(Address, Data, true);
         LogMemoryAccess(Address, Data, true);
         Cycles--;
         return;
     }
     memory[Address] = Data;
+    if (debugger) debugger->notifyMemoryAccess(Address, Data, true);
     LogMemoryAccess(Address, Data, true);
     Cycles--;
 }
@@ -161,6 +171,7 @@ Byte CPU::ReadMemory(Word address, Mem& memory) {
     if (IODevice* io = findIODeviceForRead(address)) {
         return io->read(address);
     }
+    if (debugger) debugger->notifyMemoryAccess(address, memory[address], false);
     return memory[address];
 }
 
@@ -170,13 +181,16 @@ void CPU::WriteMemory(Word address, Byte value, Mem& memory) {
         return;
     }
     memory[address] = value;
+    if (debugger) debugger->notifyMemoryAccess(address, value, true);
 }
 
 void CPU::WriteWord(u32& Cycles, Word Address, Word Data, Mem& memory) {
     memory[Address] = Data & 0x00FF; // Escribir el byte bajo de la palabra en la memoria
+    if (debugger) debugger->notifyMemoryAccess(Address, Data & 0x00FF, true);
     LogMemoryAccess(Address, Data & 0x00FF, true); // Registrar el acceso de escritura a la memoria
     Cycles--; // Decrementar los ciclos restantes
     memory[Address + 1] = (Data & 0xFF00) >> 8; // Escribir el byte alto de la palabra en la memoria
+    if (debugger) debugger->notifyMemoryAccess(Address + 1, (Data & 0xFF00) >> 8, true);
     LogMemoryAccess(Address + 1, (Data & 0xFF00) >> 8, true); // Registrar el acceso de escritura a la memoria
     Cycles--; // Decrementar los ciclos restantes
 }
@@ -250,7 +264,7 @@ void CPU::Reset(Mem& memory) {
     C = Z = I = D = B = V = N = 0;
 }
 
-CPU::CPU() : PC(0), SP(0), A(0), X(0), Y(0), C(0), Z(0), I(0), D(0), B(0), V(0), N(0), interruptController(nullptr) {
+CPU::CPU() : PC(0), SP(0), A(0), X(0), Y(0), C(0), Z(0), I(0), D(0), B(0), V(0), N(0), interruptController(nullptr), debugger(nullptr) {
     logFile.open("cpu_log.txt", std::ios_base::app);
 }
 
@@ -286,7 +300,13 @@ void CPU::LogMemoryAccess(Word address, Byte data, bool isWrite) const { // Logu
 
 void CPU::Execute(u32 Cycles, Mem& memory) {
     while (Cycles > 0) {
+        Word currentPC = PC;
+        if (debugger && debugger->shouldBreak(currentPC)) {
+            debugger->notifyBreakpoint(currentPC);
+            return;
+        }
         Byte Ins = FetchByte(Cycles, memory); // Obtener el opcode de la instrucción
+        if (debugger) debugger->traceInstruction(currentPC, Ins);
         switch (Ins) {
             case 0x00: { // BRK (Force Interrupt)
                 // Simula el comportamiento básico de BRK: detener la ejecución
@@ -397,6 +417,14 @@ void CPU::setInterruptController(InterruptController* controller) {
 
 InterruptController* CPU::getInterruptController() const {
     return interruptController;
+}
+
+void CPU::setDebugger(Debugger* debuggerInstance) {
+    debugger = debuggerInstance;
+}
+
+Debugger* CPU::getDebugger() const {
+    return debugger;
 }
 
 void CPU::serviceIRQ(Mem& memory) {

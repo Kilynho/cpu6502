@@ -24,7 +24,6 @@ jobs:
         nslookup api.githubcopilot.com || true
         curl -I https://api.githubcopilot.com || true
         curl -I https://github.com || true
-        curl -I https://azure.archive.ubuntu.com || true
         curl -I https://packages.microsoft.com || true
         sudo apt-get update
 

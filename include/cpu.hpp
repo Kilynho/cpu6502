@@ -13,6 +13,8 @@
 #include "io_device.hpp"
 #include "interrupt_controller.hpp"
 
+class Debugger;
+
 // Public API for CPU 6502 Emulator
 // This header provides the main interface for using the CPU emulator
 
@@ -94,6 +96,10 @@ public:
     // --- Integración del Controlador de Interrupciones ---
     void setInterruptController(InterruptController* controller);
     InterruptController* getInterruptController() const;
+
+    // --- Integración con debugger ---
+    void setDebugger(Debugger* debuggerInstance);
+    Debugger* getDebugger() const;
     
     // --- Manejo de Interrupciones ---
     void serviceIRQ(Mem& memory);
@@ -109,6 +115,7 @@ public:
 private:
     std::vector<std::shared_ptr<IODevice>> ioDevices; // Dispositivos de E/S registrados
     InterruptController* interruptController; // Controlador de interrupciones (no owned)
+    Debugger* debugger; // Depurador adjunto (no owned)
 
     // Métodos auxiliares para IO
     IODevice* findIODeviceForRead(uint16_t address) const;

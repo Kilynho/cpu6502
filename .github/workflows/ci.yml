@@ -17,11 +17,33 @@ jobs:
       with:
         submodules: recursive
 
+    - name: Preparar red para Copilot (DNS/HTTPS)
+      run: |
+        set -eux
+        echo "Verificando resolución DNS y salida HTTPS"
+        nslookup api.githubcopilot.com || true
+        curl -I https://api.githubcopilot.com || true
+        curl -I https://github.com || true
+        curl -I https://packages.microsoft.com || true
+        # Fast apt update with timeouts and limited retries
+        sudo apt-get -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 -o Acquire::Retries=3 update
+
+    - name: Comprobar HTTPS a Copilot
+      run: |
+        set -eux
+        curl -vI https://api.githubcopilot.com || true
+
     - name: Install dependencies
       run: |
         set -eux
         sudo apt-get update
-        sudo apt-get install -y cmake g++ libgtest-dev libsdl2-dev
+        # Fallback: ensure mirrors point to reliable Ubuntu endpoints if runner defaults misbehave
+        sudo sed -i 's|https\?://[^ ]*archive\.ubuntu\.com|http://archive.ubuntu.com|g' /etc/apt/sources.list || true
+        sudo sed -i 's|https\?://[^ ]*security\.ubuntu\.com|http://security.ubuntu.com|g' /etc/apt/sources.list || true
+        # Re-update after potential mirror rewrite
+        sudo apt-get -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 -o Acquire::Retries=3 update || true
+        # Install deps with timeouts and retries to avoid stalls
+        sudo apt-get -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 -o Acquire::Retries=3 install -y cmake g++ libgtest-dev libsdl2-dev
 
     - name: Install Google Test
       run: |

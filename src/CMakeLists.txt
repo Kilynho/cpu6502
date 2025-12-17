@@ -5,6 +5,7 @@ set(LIB_SOURCES
     cpu/instructions.cpp
     mem/mem.cpp
     util/logger.cpp
+    debugger.cpp
     devices/apple_io.cpp
     devices/file_device.cpp
     devices/text_screen.cpp

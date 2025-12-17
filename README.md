@@ -212,3 +212,8 @@
 - Ver `docs/emulator_gui.md` o `docs/emulator_gui_es.md` para documentación completa
 
 Consulta los archivos en `docs/` para detalles de arquitectura e instrucciones soportadas.
+
+### Depuración avanzada
+
+- Se añade un depurador con breakpoints, watchpoints, trazas e inspección de estado de CPU.
+- Ver [docs/debugger.md](docs/debugger.md) para la guía completa de uso.

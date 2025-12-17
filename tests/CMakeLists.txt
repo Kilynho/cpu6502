@@ -28,6 +28,7 @@ set(TEST_SOURCES
     test_tcp_serial.cpp
     test_timer_device.cpp
     test_interrupt_controller.cpp
+    test_debugger.cpp
 )
 
 # Crear ejecutable de test

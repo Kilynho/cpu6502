@@ -1,161 +1,161 @@
-# Guía de Contribución
+# Contribution Guide
 
-¡Gracias por tu interés en contribuir al proyecto CPU 6502 Emulator! Este documento proporciona pautas y mejores prácticas para contribuir al proyecto.
+Thank you for your interest in contributing to the CPU 6502 Emulator project! This document provides guidelines and best practices for contributing to the project.
 
-## 📋 Tabla de Contenidos
+## 📋 Table of Contents
 
-- [Código de Conducta](#código-de-conducta)
-- [¿Cómo puedo contribuir?](#cómo-puedo-contribuir)
-- [Proceso de Pull Request](#proceso-de-pull-request)
-- [Guía de Estilo](#guía-de-estilo)
-- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Code of Conduct](#code-of-conduct)
+- [How can I contribute?](#how-can-i-contribute)
+- [Pull Request Process](#pull-request-process)
+- [Style Guide](#style-guide)
+- [Project Structure](#project-structure)
 - [Testing](#testing)
 
-## 📜 Código de Conducta
+## 📜 Code of Conduct
 
-Este proyecto se adhiere a un código de conducta que esperamos que todos los participantes sigan. Al participar, te comprometes a mantener un ambiente respetuoso y acogedor para todos.
+This project adheres to a code of conduct that we expect all participants to follow. By participating, you are committing to maintaining a respectful and welcoming environment for all.
 
-### Nuestros Estándares
+### Our Standards
 
-**Ejemplos de comportamiento que contribuye a crear un ambiente positivo:**
-- Usar un lenguaje acogedor e inclusivo
-- Ser respetuoso con diferentes puntos de vista y experiencias
-- Aceptar críticas constructivas con gracia
-- Enfocarse en lo que es mejor para la comunidad
-- Mostrar empatía hacia otros miembros de la comunidad
+**Examples of behavior that contribute to a positive environment:**
+- Using welcoming and inclusive language
+- Being respectful of different viewpoints and experiences
+- Accepting constructive criticism gracefully
+- Focusing on what is best for the community
+- Showing empathy towards other community members
 
-**Ejemplos de comportamiento inaceptable:**
-- Uso de lenguaje o imágenes sexualizadas
-- Comentarios insultantes o despectivos (trolling)
-- Acoso público o privado
-- Publicar información privada de otros sin permiso explícito
-- Otra conducta que razonablemente podría considerarse inapropiada
+**Examples of unacceptable behavior:**
+- Use of sexualized language or images
+- Insulting or derogatory comments (trolling)
+- Public or private harassment
+- Posting other people's private information without explicit permission
+- Any other conduct that could reasonably be considered inappropriate
 
-## 🤝 ¿Cómo puedo contribuir?
+## 🤝 How can I contribute?
 
-### Reportar Bugs
+### Reporting Bugs
 
-Los bugs se rastrean como [GitHub Issues](https://github.com/Kilynho/cpu6502/issues). Antes de crear un nuevo issue:
+Bugs are tracked as [GitHub Issues](https://github.com/Kilynho/cpu6502/issues). Before creating a new issue:
 
-1. **Verifica** si el bug ya ha sido reportado
-2. **Usa la plantilla** de bug report
-3. **Proporciona detalles** específicos y reproducibles
+1. **Check** if the bug has already been reported
+2. **Use the template** for bug reports
+3. **Provide specific** and reproducible details
 
-#### Información necesaria para reportar un bug:
-- Descripción clara del problema
-- Pasos para reproducir el comportamiento
-- Comportamiento esperado vs. comportamiento actual
-- Capturas de pantalla si es aplicable
-- Versión del compilador y sistema operativo
-- Logs relevantes
+#### Information needed to report a bug:
+- Clear description of the problem
+- Steps to reproduce the behavior
+- Expected behavior vs. actual behavior
+- Screenshots if applicable
+- Compiler version and operating system
+- Relevant logs
 
-### Sugerir Mejoras
+### Suggesting Improvements
 
-Las mejoras también se rastrean como GitHub Issues. Para sugerir una mejora:
+Improvements are also tracked as GitHub Issues. To suggest an improvement:
 
-1. **Usa la plantilla** de feature request
-2. **Explica claramente** el problema que resuelve
-3. **Describe la solución** que te gustaría ver
-4. **Considera alternativas** que hayas evaluado
+1. **Use the template** for feature requests
+2. **Clearly explain** the problem it solves
+3. **Describe the solution** you would like to see
+4. **Consider alternatives** you have evaluated
 
-### Tu Primera Contribución de Código
+### Your First Code Contribution
 
-¿No estás seguro por dónde empezar? Puedes buscar issues etiquetados como:
+Not sure where to start? You can look for issues labeled as:
 
-- `good first issue` - Issues que deberían requerir solo unas pocas líneas de código
-- `help wanted` - Issues que pueden ser más complejos pero necesitan ayuda
+- `good first issue` - Issues that should require only a few lines of code
+- `help wanted` - Issues that may be more complex but need help
 
-### Implementar Nuevas Instrucciones
+### Implementing New Instructions
 
-Si deseas implementar nuevas instrucciones del 6502:
+If you want to implement new 6502 instructions:
 
-1. Consulta la [documentación oficial del 6502](http://www.6502.org/tutorials/6502opcodes.html)
-2. Sigue el patrón establecido en `cpu.cpp` para instrucciones existentes
-3. Define la instrucción en `cpu.hpp`
-4. Implementa la lógica en `cpu.cpp`
-5. Añade tests en `test.cpp`
-6. Actualiza la documentación en `README.md`
+1. Refer to the [official 6502 documentation](http://www.6502.org/tutorials/6502opcodes.html)
+2. Follow the pattern established in `cpu.cpp` for existing instructions
+3. Define the instruction in `cpu.hpp`
+4. Implement the logic in `cpu.cpp`
+5. Add tests in `test.cpp`
+6. Update the documentation in `README.md`
 
-## 🔄 Proceso de Pull Request
+## 🔄 Pull Request Process
 
-1. **Fork** el repositorio y crea tu rama desde `main`
+1. **Fork** the repository and create your branch from `main`
    ```bash
-   git checkout -b feature/nombre-descriptivo
+   git checkout -b feature/your-descriptive-name
    ```
 
-2. **Realiza tus cambios** siguiendo la guía de estilo
+2. **Make your changes** following the style guide
 
-3. **Añade tests** para tu código nuevo
+3. **Add tests** for your new code
 
-4. **Asegúrate** de que todos los tests pasen
+4. **Ensure** all tests pass
    ```bash
    make test
    ```
 
-5. **Compila** el proyecto sin errores ni warnings
+5. **Compile** the project with no errors or warnings
    ```bash
    make clean
    make
    ```
 
-6. **Documenta** tus cambios en el código y actualiza README si es necesario
+6. **Document** your changes in the code and update README if necessary
 
-7. **Commit** tus cambios con mensajes descriptivos
+7. **Commit** your changes with descriptive messages
    ```bash
-   git commit -m "feat: descripción breve del cambio"
+   git commit -m "feat: brief description of the change"
    ```
 
-8. **Push** a tu fork
+8. **Push** to your fork
    ```bash
-   git push origin feature/nombre-descriptivo
+   git push origin feature/your-descriptive-name
    ```
 
-9. **Abre un Pull Request** usando la plantilla proporcionada
+9. **Open a Pull Request** using the provided template
 
-### Formato de Mensajes de Commit
+### Commit Message Format
 
-Usamos el formato [Conventional Commits](https://www.conventionalcommits.org/):
+We use the [Conventional Commits](https://www.conventionalcommits.org/) format:
 
 ```
-<tipo>(<alcance>): <descripción>
+<type>(<scope>): <description>
 
-[cuerpo opcional]
+[optional body]
 
-[footer opcional]
+[optional footer]
 ```
 
-**Tipos:**
-- `feat`: Nueva característica
-- `fix`: Corrección de bug
-- `docs`: Cambios en documentación
-- `style`: Cambios de formato (no afectan el código)
-- `refactor`: Refactorización de código
-- `test`: Añadir o modificar tests
-- `chore`: Cambios en el proceso de build o herramientas
+**Types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Formatting changes (no code affect)
+- `refactor`: Code refactoring
+- `test`: Add or modify tests
+- `chore`: Changes to build process or tools
 
-**Ejemplos:**
+**Examples:**
 ```
-feat(cpu): añadir soporte para instrucción ADC
-fix(mem): corregir desbordamiento en lectura de memoria
-docs(readme): actualizar instrucciones de instalación
-test(cpu): añadir tests para instrucciones de branch
+feat(cpu): add support for ADC instruction
+fix(mem): fix overflow on memory read
+docs(readme): update installation instructions
+test(cpu): add tests for branch instructions
 ```
 
-## 🎨 Guía de Estilo
+## 🎨 Style Guide
 
-### Estilo de Código C++
+### C++ Code Style
 
-- **Indentación**: 4 espacios (no tabs)
-- **Llaves**: Estilo K&R (llave de apertura en la misma línea)
-- **Nombres de variables**: camelCase para variables locales, PascalCase para tipos
-- **Nombres de funciones**: PascalCase
-- **Constantes**: UPPER_SNAKE_CASE
-- **Longitud de línea**: Máximo 100 caracteres
+- **Indentation**: 4 spaces (no tabs)
+- **Braces**: K&R style (opening brace on the same line)
+- **Variable names**: camelCase for local variables, PascalCase for types
+- **Function names**: PascalCase
+- **Constants**: UPPER_SNAKE_CASE
+- **Line length**: Maximum 100 characters
 
-### Ejemplo:
+### Example:
 
 ```cpp
-// Correcto
+// Correct
 void CPU::ExecuteInstruction(Mem& mem) {
     const Byte opcode = FetchByte(mem);
     
@@ -166,7 +166,7 @@ void CPU::ExecuteInstruction(Mem& mem) {
     }
 }
 
-// Incorrecto
+// Incorrect
 void CPU::ExecuteInstruction(Mem& mem){
   byte opcode=FetchByte(mem);
   if(opcode==INS_LDA_IM.opcode){
@@ -177,132 +177,132 @@ void CPU::ExecuteInstruction(Mem& mem){
 }
 ```
 
-### Comentarios
+### Comments
 
-- Escribe comentarios en español o inglés consistentemente
-- Comenta el "por qué", no el "qué"
-- Usa comentarios de documentación para funciones públicas
+- Write comments in Spanish or English consistently
+- Comment on the "why," not the "what"
+- Use documentation comments for public functions
 
 ```cpp
-// Correcto
-// Ajusta el program counter cuando se cruza un límite de página
-// para emular el ciclo extra del hardware original
+// Correct
+// Adjust the program counter when crossing a page boundary
+// to emulate the extra cycle of the original hardware
 if (PageCrossed(oldPC, PC)) {
     cycles++;
 }
 
-// Incorrecto
+// Incorrect
 // Incrementa cycles si hay page cross
 if (PageCrossed(oldPC, PC)) {
     cycles++;  // suma 1 a cycles
 }
 ```
 
-## 🏗️ Estructura del Proyecto
+## 🏗️ Project Structure
 
-El proyecto sigue una arquitectura modular moderna:
+The project follows a modern modular architecture:
 
 ```
 cpu6502/
-├── .github/              # Templates y workflows de GitHub
-│   ├── ISSUE_TEMPLATE/   # Plantillas de issues
+├── .github/              # GitHub templates and workflows
+│   ├── ISSUE_TEMPLATE/   # Issue templates
 │   └── pull_request_template.md
-├── include/              # Headers públicos de la API
-│   ├── cpu.hpp          # Interfaz pública de la CPU
-│   ├── mem.hpp          # Interfaz pública de la memoria
+├── include/              # Public API headers
+│   ├── cpu.hpp          # Public interface of the CPU
+│   ├── mem.hpp          # Public interface of memory
 │   └── util/
-│       └── logger.hpp   # Sistema de logging
-├── src/                  # Implementaciones
-│   ├── cpu/             # Implementación de CPU
-│   ├── mem/             # Implementación de memoria
-│   ├── util/            # Utilidades (logger)
-│   ├── main/            # Ejecutable de demo
+│       └── logger.hpp   # Logging system
+├── src/                  # Implementations
+│   ├── cpu/             # CPU implementation
+│   ├── mem/             # Memory implementation
+│   ├── util/            # Utilities (logger)
+│   ├── main/            # Demo executable
 │   └── CMakeLists.txt
-├── tests/                # Suite de tests
+├── tests/                # Test suite
 │   ├── test_main.cpp
 │   └── CMakeLists.txt
-├── examples/             # Ejemplos y binarios de referencia
-├── lib/                  # Librerías externas (googletest)
-├── build/                # Archivos de build (ignorado en git)
-├── CMakeLists.txt        # Configuración CMake principal
-├── Makefile              # Wrapper de Make
-├── README.md             # Documentación principal
-├── CONTRIBUTING.md       # Esta guía
-├── CHANGELOG.md          # Historial de cambios
-├── LICENSE               # Licencia MIT
-└── SECURITY.md           # Política de seguridad
+├── examples/             # Examples and reference binaries
+├── lib/                  # External libraries (googletest)
+├── build/                # Build files (ignored in git)
+├── CMakeLists.txt        # Main CMake configuration
+├── Makefile              # Make wrapper
+├── README.md             # Main documentation
+├── CONTRIBUTING.md       # This guide
+├── CHANGELOG.md          # Change history
+├── LICENSE               # MIT License
+└── SECURITY.md           # Security policy
 ```
 
-### Directorio de Trabajo
+### Working Directory
 
-- **include/**: Headers públicos - modificar aquí para cambios en la API pública
-- **src/**: Implementaciones - código fuente de los componentes
-- **tests/**: Tests unitarios - siempre añade tests para nuevas funcionalidades
+- **include/**: Public headers - modify here for changes to the public API
+- **src/**: Implementations - source code of the components
+- **tests/**: Unit tests - always add tests for new features
 
 ## 🧪 Testing
 
-### Ejecutar Tests
+### Running Tests
 
-El proyecto proporciona múltiples formas de ejecutar tests:
+The project provides multiple ways to run tests:
 
-#### Opción 1: Make con CTest (Recomendado)
+#### Option 1: Make with CTest (Recommended)
 ```bash
 make test
 ```
 
-#### Opción 2: Ejecutar tests directamente con Make
+#### Option 2: Run tests directly with Make
 ```bash
 make runTests
 ```
 
-#### Opción 3: Con CMake manualmente
+#### Option 3: With CMake manually
 ```bash
 mkdir -p build
 cd build
 cmake ..
 make
-ctest --output-on-failure  # O ./runTests
+ctest --output-on-failure  # Or ./runTests
 ```
 
-### Comandos Útiles de Desarrollo
+### Useful Development Commands
 
 ```bash
-# Compilar todo
+# Build everything
 make
 
-# Ejecutar tests
+# Run tests
 make test
 
-# Ejecutar demo
+# Run demo
 make demo
 
-# Limpiar build
+# Clean build
 make clean
 
-# Recompilar desde cero
+# Rebuild from scratch
 make rebuild
 
-# Ver ayuda del Makefile
+# See Makefile help
 make help
 ```
 
-### Escribir Tests
+### Writing Tests
 
-Todos los tests están en el directorio `tests/`. Usamos Google Test como framework de testing.
+All tests are in the `tests/` directory. We use Google Test as the testing framework.
 
-**Ubicación de archivos de test:**
-- Tests principales: `tests/test_main.cpp`
-- Nuevos tests se pueden añadir al mismo archivo o crear nuevos archivos en `tests/`
+**Test file locations:**
+- Main tests: `tests/test_main.cpp`
+- New tests can be added to the same file or create new files in `tests/`
 
-Los tests deben:
-- Ser independientes entre sí
-- Tener nombres descriptivos que indiquen qué se está probando
-- Probar un solo comportamiento o escenario
-- Incluir casos límite (edge cases)
-- Validar el comportamiento de los flags cuando sea relevante
-- Seguir el patrón Arrange-Act-Assert
+Tests should:
+- Be independent of each other
+- Have descriptive names indicating what is being tested
+- Test a single behavior or scenario
+- Include edge cases
+- Validate flag behavior when relevant
+- Follow the Arrange-Act-Assert pattern
 
-Ejemplo usando Google Test:
+Example using Google Test:
 
 ```cpp
 TEST_F(M6502Test1, TestLDA_IM_Zero) {
@@ -320,79 +320,79 @@ TEST_F(M6502Test1, TestLDA_IM_Zero) {
 }
 ```
 
-**Actualizar CMakeLists.txt de tests:**
+**Update tests CMakeLists.txt:**
 
-Si añades nuevos archivos de test, actualiza `tests/CMakeLists.txt`:
+If you add new test files, update `tests/CMakeLists.txt`:
 
 ```cmake
 set(TEST_SOURCES
     test_main.cpp
-    test_nuevo.cpp  # Añadir aquí
+    test_nuevo.cpp  # Add here
 )
 ```
 
-### Categorías de Tests Requeridas
+### Required Test Categories
 
-Al añadir nuevas instrucciones, asegúrate de incluir tests para:
+When adding new instructions, ensure to include tests for:
 
-1. **Casos normales**: Comportamiento típico de la instrucción
-2. **Casos límite**: 
-   - Valores cero (0x00)
-   - Valores máximos (0xFF)
-   - Límites de memoria
-   - Wraparound en zero page
-3. **Comportamiento de flags**: Verificar que los flags Z, N, C, V se establezcan correctamente
-4. **Casos de error**: Comportamiento ante condiciones inusuales
+1. **Normal cases**: Typical behavior of the instruction
+2. **Edge cases**: 
+   - Zero values (0x00)
+   - Maximum values (0xFF)
+   - Memory boundaries
+   - Wraparound in zero page
+3. **Flag behavior**: Ensure Z, N, C, V flags are set correctly
+4. **Error cases**: Behavior under unusual conditions
 
-### Integración Continua (CI)
+### Continuous Integration (CI)
 
-El proyecto usa GitHub Actions para CI/CD. Cada push y pull request ejecuta automáticamente:
+The project uses GitHub Actions for CI/CD. Every push and pull request automatically runs:
 
-1. **Compilación**: Con CMake y Make
-2. **Tests**: Suite completa de tests unitarios
-3. **Validación**: Verificación de que el código compila sin warnings
+1. **Build**: With CMake and Make
+2. **Tests**: Full suite of unit tests
+3. **Validation**: Ensures code compiles with no warnings
 
-Los tests deben pasar en CI antes de que un PR pueda ser merged. Puedes ver el estado de CI en:
-- El badge en el README.md
-- La pestaña "Actions" en GitHub
-- Los checks en tu pull request
+Tests must pass in CI before a PR can be merged. You can check the CI status in:
+- The badge in the README.md
+- The "Actions" tab on GitHub
+- The checks in your pull request
 
-### Depuración de Fallos en CI
+### Debugging CI Failures
 
-Si los tests fallan en CI:
+If tests fail in CI:
 
-1. Revisa los logs en la pestaña "Actions" de GitHub
-2. Reproduce el fallo localmente:
+1. Check the logs in the "Actions" tab on GitHub
+2. Reproduce the failure locally:
    ```bash
    make clean
    make
    ./runTests
    ```
-3. Corrige el problema y push nuevamente
-4. CI ejecutará automáticamente los tests otra vez
+3. Fix the issue and push again
+4. CI will automatically run the tests again
 
-## 📝 Documentación
+## 📝 Documentation
 
-- Actualiza el README.md si añades nuevas características
-- Documenta funciones públicas con comentarios
-- Añade ejemplos de uso cuando sea apropiado
-- Mantén el CHANGELOG.md actualizado
+- Update README.md if you add new features
+- Document public functions with comments
+- Add usage examples when appropriate
+- Keep CHANGELOG.md updated
 
-## ❓ Preguntas
+## ❓ Questions
 
-Si tienes preguntas, puedes:
+If you have questions, you can:
 
-1. Revisar la [documentación existente](README.md)
-2. Buscar en [issues existentes](https://github.com/Kilynho/cpu6502/issues)
-3. Abrir un nuevo issue con la etiqueta `question`
+1. Review the [existing documentation](README.md)
+2. Search in [existing issues](https://github.com/Kilynho/cpu6502/issues)
+3. Open a new issue with the `question` label
 
-## 🎉 Reconocimientos
+## 🎉 Acknowledgments
 
-¡Todas las contribuciones son valoradas! Los contribuidores serán reconocidos en:
-- El archivo README.md
-- Las release notes
-- El CHANGELOG.md
+All contributions are valued! Contributors will be recognized in:
+- The README.md file
+- Release notes
+- CHANGELOG.md
 
 ---
 
-¡Gracias por contribuir al CPU 6502 Emulator! 🚀
+Thank you for contributing to the CPU 6502 Emulator! 🚀

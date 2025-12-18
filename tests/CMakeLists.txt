@@ -20,6 +20,15 @@ endif()
 set(TEST_SOURCES
     test_main.cpp
     instruction_handlers_test.cpp
+    test_apple_io.cpp
+    test_file_device.cpp
+    test_text_screen.cpp
+    test_emulator_gui.cpp
+    test_audio_device.cpp
+    test_tcp_serial.cpp
+    test_timer_device.cpp
+    test_interrupt_controller.cpp
+    test_debugger.cpp
 )
 
 # Crear ejecutable de test

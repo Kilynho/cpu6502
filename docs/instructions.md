@@ -1,78 +1,4 @@
-# 6502 Instructions Implementation Guide
-
-This guide provides comprehensive information about implementing and testing 6502 instructions in this emulator.
-
-## Table of Contents
-- [Architecture Overview](#architecture-overview)
-- [Instruction Categories](#instruction-categories)
-- [Adding New Instructions](#adding-new-instructions)
-- [Testing Instructions](#testing-instructions)
-- [Instruction Reference](#instruction-reference)
-
-## Architecture Overview
-
-The emulator uses a modular architecture with separate components:
-
-- **CPU Core** (`src/cpu/cpu.cpp`): Main CPU execution loop
-- **Addressing Modes** (`src/cpu/addressing.cpp`): Handles all addressing mode calculations
-- **Instruction Handlers** (`src/cpu/instructions.cpp`): Individual instruction implementations
-- **Instruction Table**: Array[256] lookup table for fast opcode dispatch
-
-## Instruction Categories
-
-### Load/Store Instructions
-Load and store data between registers and memory.
-
-**Instructions:** LDA, LDX, LDY, STA, STX, STY
-
-**Addressing Modes Supported:**
-- Immediate: `LDA #$42`
-- Zero Page: `LDA $42`
-- Zero Page,X: `LDA $42,X`
-- Zero Page,Y: `LDX $42,Y`
-- Absolute: `LDA $4400`
-- Absolute,X: `LDA $4400,X`
-- Absolute,Y: `LDA $4400,Y`
-- Indirect,X: `LDA ($42,X)`
-- Indirect,Y: `LDA ($42),Y`
-
-**Flags Affected:** Z, N
-
-### Transfer Instructions
-Transfer data between registers.
-
-**Instructions:** TAX, TAY, TXA, TYA, TSX, TXS
-
-**Flags Affected:** Z, N (except TXS)
-
-### Stack Instructions
-Push and pull data from the stack.
-
-**Instructions:** PHA, PHP, PLA, PLP
-
-**Flags Affected:** 
-- PLA: Z, N
-- PLP: All flags
-
-### Logical Instructions
-Perform bitwise logical operations.
-
-**Instructions:** AND, EOR, ORA, BIT
-
-**Addressing Modes:** Immediate, Zero Page, Zero Page,X, Absolute, Absolute,X, Absolute,Y, Indirect,X, Indirect,Y
-
-**Flags Affected:**
-- AND, EOR, ORA: Z, N
-- BIT: Z, N, V
-
-### Arithmetic Instructions
-Perform arithmetic operations with carry.
-
-**Instructions:** ADC, SBC
-
-**Addressing Modes:** All standard modes
-
-**Flags Affected:** Z, N, C, V
+# Instructions - Supported 6502 Instructions
 
 ## Best Practices
 
@@ -81,3 +7,59 @@ Perform arithmetic operations with carry.
 3. **Document cycle counts** - Include comments about timing
 4. **Use helper functions** - `UpdateZeroAndNegativeFlags`, etc.
 5. **Log memory access** - For debugging and tracing
+
+## Example Usage with External Binary
+
+```
+./cpu_demo file ../examples/demo_program.bin
+```
+
+## Supported Instructions
+
+- LDA (Immediate, Zero Page, Zero Page,X, Absolute, Absolute,X, Absolute,Y)
+- LDX (Immediate)
+- STA (Zero Page)
+- JSR, RTS
+
+Check the source code for implementation and logging details.
+
+## Integration with I/O Devices
+
+### Apple II I/O
+
+The emulator supports Apple II I/O simulation through the `AppleIO` class:
+
+- **Keyboard reading ($FD0C)**: Returns the next character from the input buffer, or 0 if there is no input.
+- **Screen writing ($FDED)**: Sends the character to the screen buffer and prints it to the console.
+
+### Example code
+
+```cpp
+#include "cpu.hpp"
+#include "mem.hpp"
+#include "devices/apple_io.hpp"
+
+CPU cpu;
+Mem mem;
+auto appleIO = std::make_shared<AppleIO>();
+
+cpu.Reset(mem);
+cpu.registerIODevice(appleIO);
+
+// Simulate keyboard input
+appleIO->pushInput('A');
+
+// Execute code that reads from $FD0C
+// mem[0x8000] = 0xAD; mem[0x8001] = 0x0C; mem[0x8002] = 0xFD; // LDA $FD0C
+// cpu.Execute(4, mem);
+// The accumulator now contains 'A'
+
+// Write to screen
+// mem[0x8003] = 0x8D; mem[0x8004] = 0xED; mem[0x8005] = 0xFD; // STA $FDED
+// cpu.Execute(4, mem);
+// The screen now shows 'A'
+```
+
+### Extensibility
+
+You can create your own I/O devices by implementing the `IODevice` interface and registering them with the CPU.

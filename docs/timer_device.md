@@ -1,22 +1,22 @@
-# TimerDevice - Documentación del Dispositivo de Temporización
+# TimerDevice - Timer Device Documentation
 
-## Descripción General
+## Overview
 
-El `TimerDevice` es una interfaz que define las operaciones básicas para dispositivos de temporización en el emulador 6502. La implementación `BasicTimer` proporciona un temporizador programable que cuenta ciclos de CPU y puede generar interrupciones IRQ periódicas, similar a los chips temporizadores de las computadoras clásicas de 8 bits (VIA 6522, CIA 6526, PIA 6821, etc.).
+`TimerDevice` is an interface that defines the basic operations for timer devices in the 6502 emulator. The `BasicTimer` implementation provides a programmable timer that counts CPU cycles and can generate periodic IRQ interrupts, similar to the timer chips of classic 8-bit computers (VIA 6522, CIA 6526, PIA 6821, etc.).
 
-## Características
+## Features
 
-- **Contador de 32 bits**: Capacidad para contar hasta 4,294,967,295 ciclos
-- **Límite configurable**: Define cuándo generar IRQ o detener el contador
-- **Generación de IRQ**: Interrupciones periódicas cuando el contador alcanza el límite
-- **Modo auto-reload**: Reinicio automático del contador para temporizadores periódicos
-- **Registros mapeados en memoria**: Acceso directo desde código 6502
-- **API C++**: Control programático desde el código del emulador
-- **Thread-safe**: Operaciones seguras para uso multi-hilo
+- **32-bit Counter**: Ability to count up to 4,294,967,295 cycles
+- **Configurable Limit**: Defines when to generate IRQ or stop the counter
+- **IRQ Generation**: Periodic interrupts when the counter reaches the limit
+- **Auto-reload Mode**: Automatic restart of the counter for periodic timers
+- **Memory-mapped Registers**: Direct access from 6502 code
+- **C++ API**: Programmatic control from emulator code
+- **Thread-safe**: Safe operations for multi-threaded use
 
-## Arquitectura
+## Architecture
 
-### Interfaz TimerDevice
+### TimerDevice Interface
 
 ```cpp
 class TimerDevice : public IODevice {
@@ -34,94 +34,94 @@ public:
 };
 ```
 
-### Implementación BasicTimer
+### BasicTimer Implementation
 
-`BasicTimer` implementa la interfaz `TimerDevice` con un contador de 32 bits que se incrementa con cada ciclo de CPU ejecutado.
+`BasicTimer` implements the `TimerDevice` interface with a 32-bit counter that increments with each executed CPU cycle.
 
-## Mapa de Memoria
+## Memory Map
 
-Los registros del timer están mapeados en las siguientes direcciones:
+The timer registers are mapped to the following addresses:
 
-| Dirección | Nombre | Descripción |
+| Address | Name | Description |
 |-----------|--------|-------------|
-| `$FC00` | COUNTER_LOW | Byte bajo del contador (bits 0-7) |
-| `$FC01` | COUNTER_MID1 | Byte medio 1 del contador (bits 8-15) |
-| `$FC02` | COUNTER_MID2 | Byte medio 2 del contador (bits 16-23) |
-| `$FC03` | COUNTER_HIGH | Byte alto del contador (bits 24-31) |
-| `$FC04` | LIMIT_LOW | Byte bajo del límite (bits 0-7) |
-| `$FC05` | LIMIT_MID1 | Byte medio 1 del límite (bits 8-15) |
-| `$FC06` | LIMIT_MID2 | Byte medio 2 del límite (bits 16-23) |
-| `$FC07` | LIMIT_HIGH | Byte alto del límite (bits 24-31) |
-| `$FC08` | CONTROL | Control y configuración |
-| `$FC09` | STATUS | Estado (solo lectura) |
+| `$FC00` | COUNTER_LOW | Low byte of the counter (bits 0-7) |
+| `$FC01` | COUNTER_MID1 | Middle byte 1 of the counter (bits 8-15) |
+| `$FC02` | COUNTER_MID2 | Middle byte 2 of the counter (bits 16-23) |
+| `$FC03` | COUNTER_HIGH | High byte of the counter (bits 24-31) |
+| `$FC04` | LIMIT_LOW | Low byte of the limit (bits 0-7) |
+| `$FC05` | LIMIT_MID1 | Middle byte 1 of the limit (bits 8-15) |
+| `$FC06` | LIMIT_MID2 | Middle byte 2 of the limit (bits 16-23) |
+| `$FC07` | LIMIT_HIGH | High byte of the limit (bits 24-31) |
+| `$FC08` | CONTROL | Control and configuration |
+| `$FC09` | STATUS | Status (read-only) |
 
-### Registro de Control ($FC08)
+### Control Register ($FC08)
 
-| Bit | Nombre | Descripción |
+| Bit | Name | Description |
 |-----|--------|-------------|
-| 0 | ENABLE | 1=Timer habilitado, 0=Deshabilitado |
-| 1 | IRQ_ENABLE | 1=Generar IRQ al alcanzar límite, 0=No generar |
-| 2 | IRQ_FLAG | Escritura: 1=Limpiar IRQ pendiente |
-| 3 | RESET | Escritura: 1=Reiniciar contador a 0 |
-| 4 | AUTO_RELOAD | 1=Reiniciar automáticamente, 0=Detener al límite |
-| 5-7 | - | Reservado |
+| 0 | ENABLE | 1=Timer enabled, 0=Disabled |
+| 1 | IRQ_ENABLE | 1=Generate IRQ on limit reached, 0=Do not generate |
+| 2 | IRQ_FLAG | Write: 1=Clear pending IRQ |
+| 3 | RESET | Write: 1=Reset counter to 0 |
+| 4 | AUTO_RELOAD | 1=Auto-restart, 0=Stop at limit |
+| 5-7 | - | Reserved |
 
-### Registro de Status ($FC09)
+### Status Register ($FC09)
 
-| Bit | Nombre | Descripción |
+| Bit | Name | Description |
 |-----|--------|-------------|
-| 0 | ENABLED | 1=Timer habilitado, 0=Deshabilitado |
-| 1 | IRQ_PENDING | 1=IRQ pendiente, 0=Sin IRQ |
-| 2 | LIMIT_REACHED | 1=Contador alcanzó el límite, 0=No alcanzado |
-| 3-7 | - | Reservado |
+| 0 | ENABLED | 1=Timer enabled, 0=Disabled |
+| 1 | IRQ_PENDING | 1=IRQ pending, 0=No IRQ |
+| 2 | LIMIT_REACHED | 1=Counter reached the limit, 0=Not reached |
+| 3-7 | - | Reserved |
 
-## Uso desde Código 6502
+## Usage from 6502 Code
 
-### Ejemplo 1: Leer el Tiempo Transcurrido
+### Example 1: Read Elapsed Time
 
 ```assembly
-; Leer el contador actual (32 bits)
-LDA $FC00       ; Byte bajo
+; Read the current counter (32 bits)
+LDA $FC00       ; Low byte
 STA TIME        
-LDA $FC01       ; Byte medio 1
+LDA $FC01       ; Middle byte 1
 STA TIME+1      
-LDA $FC02       ; Byte medio 2
+LDA $FC02       ; Middle byte 2
 STA TIME+2      
-LDA $FC03       ; Byte alto
+LDA $FC03       ; High byte
 STA TIME+3      
 
-; Ahora TIME contiene los ciclos transcurridos
+; Now TIME contains the elapsed cycles
 ```
 
-### Ejemplo 2: Configurar IRQ Periódica
+### Example 2: Configure Periodic IRQ
 
 ```assembly
-; Configurar límite: 1,000,000 ciclos (0x000F4240)
-LDA #$40        ; Byte bajo
+; Set limit: 1,000,000 cycles (0x000F4240)
+LDA #$40        ; Low byte
 STA $FC04       
-LDA #$42        ; Byte medio 1
+LDA #$42        ; Middle byte 1
 STA $FC05       
-LDA #$0F        ; Byte medio 2
+LDA #$0F        ; Middle byte 2
 STA $FC06       
-LDA #$00        ; Byte alto
+LDA #$00        ; High byte
 STA $FC07       
 
-; Habilitar timer con IRQ y auto-reload
+; Enable timer with IRQ and auto-reload
 LDA #$13        ; Enable | IRQ Enable | Auto-reload
 STA $FC08       
 
-; El timer ahora generará una IRQ cada 1,000,000 ciclos
+; The timer will now generate an IRQ every 1,000,000 cycles
 ```
 
-### Ejemplo 3: Manejador de Interrupciones
+### Example 3: Interrupt Handler
 
 ```assembly
-; Configurar vector de IRQ
-; En 6502, el vector IRQ está en $FFFE/$FFFF
+; Set IRQ vector
+; On 6502, the IRQ vector is at $FFFE/$FFFF
     .org $8000
     
 INIT:
-    ; Configurar límite para IRQ cada 100,000 ciclos
+    ; Set limit for IRQ every 100,000 cycles
     LDA #$A0        ; 100000 & 0xFF
     STA $FC04
     LDA #$86        ; (100000 >> 8) & 0xFF
@@ -131,36 +131,36 @@ INIT:
     LDA #$00        ; 100000 >> 24
     STA $FC07
     
-    ; Habilitar timer con IRQ y auto-reload
+    ; Enable timer with IRQ and auto-reload
     LDA #$13
     STA $FC08
     
-    ; Habilitar interrupciones
+    ; Enable interrupts
     CLI             ; Clear Interrupt Disable
     
 LOOP:
-    ; Programa principal
+    ; Main program
     JMP LOOP
 
-; Manejador de IRQ
+; IRQ Handler
 IRQ_HANDLER:
-    PHA             ; Guardar registros
+    PHA             ; Save registers
     TXA
     PHA
     TYA
     PHA
     
-    ; Limpiar IRQ del timer
+    ; Clear timer IRQ
     LDA #$04        ; IRQ_FLAG bit
     STA $FC08
     
-    ; Incrementar contador de ticks
+    ; Increment tick counter
     INC TICK_COUNT
     
-    ; Hacer algo cada tick...
-    ; (tu código aquí)
+    ; Do something every tick...
+    ; (your code here)
     
-    PLA             ; Restaurar registros
+    PLA             ; Restore registers
     TAY
     PLA
     TAX
@@ -170,64 +170,64 @@ IRQ_HANDLER:
 TICK_COUNT:
     .byte 0
 
-    ; Configurar vector de IRQ
+    ; Set IRQ vector
     .org $FFFE
     .word IRQ_HANDLER
 ```
 
-### Ejemplo 4: Espera Temporizada (Delay)
+### Example 4: Timed Wait (Delay)
 
 ```assembly
-; Delay de aproximadamente 10,000 ciclos
+; Delay of approximately 10,000 cycles
 DELAY_10K:
-    ; Reiniciar y configurar timer
+    ; Restart and configure timer
     LDA #$08        ; Reset bit
     STA $FC08
     
-    ; Configurar límite a 10,000 (0x00002710)
-    LDA #$10        ; Byte bajo
+    ; Set limit to 10,000 (0x00002710)
+    LDA #$10        ; Low byte
     STA $FC04
-    LDA #$27        ; Byte medio 1
+    LDA #$27        ; Middle byte 1
     STA $FC05
-    LDA #$00        ; Byte medio 2
+    LDA #$00        ; Middle byte 2
     STA $FC06
-    LDA #$00        ; Byte alto
+    LDA #$00        ; High byte
     STA $FC07
     
-    ; Habilitar timer sin IRQ ni auto-reload
-    LDA #$01        ; Solo Enable
+    ; Enable timer without IRQ or auto-reload
+    LDA #$01        ; Only Enable
     STA $FC08
     
 WAIT_LOOP:
-    ; Leer status
+    ; Read status
     LDA $FC09
-    AND #$04        ; Verificar LIMIT_REACHED
-    BEQ WAIT_LOOP   ; Si no se alcanzó, seguir esperando
+    AND #$04        ; Check LIMIT_REACHED
+    BEQ WAIT_LOOP   ; If not reached, keep waiting
     
     RTS
 ```
 
-### Ejemplo 5: Medir Duración de Ejecución
+### Example 5: Measure Execution Duration
 
 ```assembly
-; Medir cuántos ciclos toma ejecutar una rutina
+; Measure how many cycles it takes to execute a routine
 MEASURE_ROUTINE:
-    ; Reiniciar timer
+    ; Restart timer
     LDA #$08
     STA $FC08
     
-    ; Habilitar timer
+    ; Enable timer
     LDA #$01
     STA $FC08
     
-    ; Ejecutar rutina a medir
+    ; Execute routine to measure
     JSR MY_ROUTINE
     
-    ; Deshabilitar timer
+    ; Disable timer
     LDA #$00
     STA $FC08
     
-    ; Leer contador
+    ; Read counter
     LDA $FC00
     STA CYCLES
     LDA $FC01
@@ -240,94 +240,94 @@ MEASURE_ROUTINE:
     RTS
 
 MY_ROUTINE:
-    ; Rutina a medir
+    ; Routine to measure
     NOP
     NOP
     NOP
     RTS
 
 CYCLES:
-    .word 0, 0      ; 32 bits para almacenar el resultado
+    .word 0, 0      ; 32 bits to store the result
 ```
 
-## Uso desde C++
+## Usage from C++
 
-### Inicialización
+### Initialization
 
 ```cpp
 #include "devices/basic_timer.hpp"
 
-// Crear dispositivo de timer
+// Create timer device
 auto timer = std::make_shared<BasicTimer>();
 
-// Inicializar
+// Initialize
 if (!timer->initialize()) {
-    std::cerr << "Error: No se pudo inicializar el timer" << std::endl;
+    std::cerr << "Error: Could not initialize timer" << std::endl;
     return 1;
 }
 
-// Registrar con la CPU
+// Register with CPU
 cpu.registerIODevice(timer);
 ```
 
-### Configurar Timer Periódico
+### Configure Periodic Timer
 
 ```cpp
-// Configurar límite a 1,000,000 ciclos
+// Set limit to 1,000,000 cycles
 timer->setLimit(1000000);
 
-// Habilitar timer con IRQ y auto-reload
+// Enable timer with IRQ and auto-reload
 timer->setEnabled(true);
 timer->write(0xFC08, 0x13);  // Enable | IRQ Enable | Auto-reload
 
-// En el loop principal
+// In the main loop
 while (running) {
-    // Ejecutar CPU
+    // Execute CPU
     cpu.Execute(1000, mem);
     
-    // Actualizar timer
+    // Update timer
     timer->tick(1000);
     
-    // Verificar si hay IRQ
+    // Check for IRQ
     if (timer->hasIRQ()) {
-        // Manejar IRQ
+        // Handle IRQ
         handleTimerInterrupt();
         
-        // Limpiar IRQ
+        // Clear IRQ
         timer->clearIRQ();
     }
 }
 ```
 
-### Leer Tiempo Transcurrido
+### Read Elapsed Time
 
 ```cpp
-// Obtener valor actual del contador
+// Get current counter value
 uint32_t cycles = timer->getCounter();
-std::cout << "Ciclos transcurridos: " << cycles << std::endl;
+std::cout << "Elapsed cycles: " << cycles << std::endl;
 ```
 
-### Reiniciar Timer
+### Restart Timer
 
 ```cpp
-// Reiniciar contador a cero
+// Reset counter to zero
 timer->reset();
 
-// O usando el registro de control
+// Or using the control register
 timer->write(0xFC08, 0x08);  // RESET bit
 ```
 
-### Limpiar
+### Cleanup
 
 ```cpp
-// Antes de salir del programa
+// Before exiting the program
 timer->cleanup();
 cpu.unregisterIODevice(timer);
 ```
 
-## Integración con el Sistema de Interrupciones
+## Integration with the Interrupt System
 
-El `BasicTimer` puede generar interrupciones IRQ que la CPU debe manejar. Aquí hay un ejemplo completo:
+The `BasicTimer` can generate IRQ interrupts that the CPU must handle. Here is a complete example:
 
 ```cpp
 #include "cpu.hpp"
@@ -338,37 +338,37 @@ int main() {
     Mem mem;
     CPU cpu;
     
-    // Inicializar memoria
+    // Initialize memory
     mem.Initialize();
     cpu.Reset(mem);
     
-    // Crear y configurar timer
+    // Create and configure timer
     auto timer = std::make_shared<BasicTimer>();
     timer->initialize();
     cpu.registerIODevice(timer);
     
-    // Configurar límite a 50,000 ciclos (aproximadamente 50ms a 1 MHz)
+    // Set limit to 50,000 cycles (approximately 50ms at 1 MHz)
     timer->setLimit(50000);
     
-    // Habilitar con IRQ y auto-reload
+    // Enable with IRQ and auto-reload
     timer->write(0xFC08, 0x13);
     
-    // Cargar programa que maneja IRQ
-    // ... (cargar código 6502 con manejador de IRQ)
+    // Load program that handles IRQ
+    // ... (load 6502 code with IRQ handler)
     
-    // Loop principal
+    // Main loop
     bool running = true;
     while (running) {
-        // Ejecutar 1000 ciclos de CPU
+        // Execute 1000 CPU cycles
         cpu.Execute(1000, mem);
         
-        // Actualizar timer
+        // Update timer
         timer->tick(1000);
         
-        // Verificar IRQ
+        // Check IRQ
         if (timer->hasIRQ() && !cpu.I) {  // I = Interrupt Disable flag
-            // Generar IRQ en la CPU
-            // 1. Guardar PC y flags en pila
+            // Generate IRQ on the CPU
+            // 1. Save PC and flags on stack
             cpu.PushPCToStack(cycles, mem);
             cpu.WriteByte(cycles, cpu.SPToAddress(), 
                          (cpu.N << 7) | (cpu.V << 6) | (cpu.B << 4) | 
@@ -376,13 +376,13 @@ int main() {
                          mem);
             cpu.SP--;
             
-            // 2. Establecer I flag
+            // 2. Set I flag
             cpu.I = 1;
             
-            // 3. Saltar a vector IRQ
+            // 3. Jump to IRQ vector
             cpu.PC = mem.ReadWord(Mem::IRQ_VECTOR);
             
-            // Limpiar IRQ del timer
+            // Clear timer IRQ
             timer->clearIRQ();
         }
     }
@@ -392,16 +392,16 @@ int main() {
 }
 ```
 
-## Casos de Uso
+## Use Cases
 
-### 1. Reloj en Tiempo Real (RTC)
+### 1. Real-Time Clock (RTC)
 
 ```cpp
-// Configurar timer para incrementar cada segundo a 1 MHz
-timer->setLimit(1000000);  // 1 millón de ciclos = 1 segundo a 1 MHz
-timer->write(0xFC08, 0x13); // Auto-reload con IRQ
+// Configure timer to increment every second at 1 MHz
+timer->setLimit(1000000);  // 1 million cycles = 1 second at 1 MHz
+timer->write(0xFC08, 0x13); // Auto-reload with IRQ
 
-// En el manejador de IRQ, incrementar segundos
+// In the IRQ handler, increment seconds
 uint32_t seconds = 0;
 if (timer->hasIRQ()) {
     seconds++;
@@ -409,15 +409,15 @@ if (timer->hasIRQ()) {
 }
 ```
 
-### 2. Frame Timing para Juegos
+### 2. Frame Timing for Games
 
 ```cpp
-// 60 FPS = 16.67ms por frame
-// A 1 MHz, 16.67ms = ~16,670 ciclos
+// 60 FPS = 16.67ms per frame
+// At 1 MHz, 16.67ms = ~16,670 cycles
 timer->setLimit(16670);
 timer->write(0xFC08, 0x13);
 
-// En el loop del juego
+// In the game loop
 if (timer->hasIRQ()) {
     updateGame();
     renderFrame();
@@ -425,25 +425,25 @@ if (timer->hasIRQ()) {
 }
 ```
 
-### 3. Profiling de Código
+### 3. Code Profiling
 
 ```cpp
-// Medir rendimiento de una función
+// Measure performance of a function
 timer->reset();
 timer->setEnabled(true);
 
-// Ejecutar código a medir
+// Execute code to measure
 functionToProfile();
 
-// Leer ciclos
+// Read cycles
 uint32_t cycles = timer->getCounter();
-std::cout << "Función tomó " << cycles << " ciclos" << std::endl;
+std::cout << "Function took " << cycles << " cycles" << std::endl;
 ```
 
-### 4. Generación de Eventos Periódicos
+### 4. Periodic Event Generation
 
 ```cpp
-// Actualizar sensores cada 100,000 ciclos
+// Update sensors every 100,000 cycles
 timer->setLimit(100000);
 timer->write(0xFC08, 0x13);
 
@@ -454,25 +454,25 @@ if (timer->hasIRQ()) {
 }
 ```
 
-## Limitaciones
+## Limitations
 
-- **Precisión**: El timer cuenta ciclos de CPU, no tiempo real
-- **Resolución**: Un ciclo de CPU (a 1 MHz = 1 microsegundo)
-- **Rango máximo**: 4,294,967,295 ciclos (~71.6 minutos a 1 MHz)
-- **IRQ manual**: El emulador debe llamar a `tick()` y manejar IRQ manualmente
+- **Precision**: The timer counts CPU cycles, not real time
+- **Resolution**: One CPU cycle (at 1 MHz = 1 microsecond)
+- **Maximum range**: 4,294,967,295 cycles (~71.6 minutes at 1 MHz)
+- **Manual IRQ**: The emulator must call `tick()` and handle IRQ manually
 
-## Consideraciones de Rendimiento
+## Performance Considerations
 
-- El timer usa operaciones atómicas para thread-safety
-- Las operaciones de lectura/escritura son O(1)
-- El método `tick()` es muy eficiente y puede llamarse frecuentemente
-- El mutex solo se bloquea durante operaciones críticas
+- The timer uses atomic operations for thread-safety
+- Read/write operations are O(1)
+- The `tick()` method is very efficient and can be called frequently
+- The mutex only blocks during critical operations
 
-## Ejemplos de Temporización
+## Timing Examples
 
-A una velocidad de CPU de 1 MHz (1,000,000 ciclos/segundo):
+At a CPU speed of 1 MHz (1,000,000 cycles/second):
 
-| Límite | Tiempo Aproximado |
+| Limit | Approximate Time |
 |--------|-------------------|
 | 1,000 | 1 ms |
 | 10,000 | 10 ms |
@@ -480,107 +480,107 @@ A una velocidad de CPU de 1 MHz (1,000,000 ciclos/segundo):
 | 20,000 | 20 ms (50 Hz) |
 | 50,000 | 50 ms |
 | 100,000 | 100 ms |
-| 1,000,000 | 1 segundo |
-| 60,000,000 | 1 minuto |
+| 1,000,000 | 1 second |
+| 60,000,000 | 1 minute |
 
-## Pruebas
+## Testing
 
-El timer incluye 14 tests exhaustivos que verifican:
+The timer includes 14 exhaustive tests that verify:
 
-1. Inicialización correcta
-2. Lectura/escritura de registros de 32 bits
-3. Habilitación/deshabilitación
-4. Conteo de ciclos
-5. Generación de IRQ
-6. Limpieza de IRQ
-7. Modo auto-reload
-8. Detención al alcanzar límite
-9. Reset del contador
-10. Lectura desde CPU
-11. IRQ periódica
-12. Bits de control
-13. Comportamiento sin IRQ habilitado
+1. Correct initialization
+2. 32-bit register read/write
+3. Enable/disable functionality
+4. Cycle counting
+5. IRQ generation
+6. IRQ clearing
+7. Auto-reload mode
+8. Stop at limit
+9. Counter reset
+10. CPU reading
+11. Periodic IRQ
+12. Control bits
+13. Behavior with IRQ disabled
 
-Ejecuta las pruebas con:
+Run the tests with:
 
 ```bash
 cd build
 ./runTests --gtest_filter="BasicTimerTest.*"
 ```
 
-## Integración con Otros Dispositivos
+## Integration with Other Devices
 
-El timer puede coordinarse con otros dispositivos:
+The timer can be coordinated with other devices:
 
 ```cpp
-// Sincronizar audio con timer
-if (timer->getCounter() % 44100 == 0) {  // Cada segundo a 44.1 kHz
+// Synchronize audio with timer
+if (timer->getCounter() % 44100 == 0) {  // Every second at 44.1 kHz
     audio->playTone(440, 100, 128);
 }
 
-// Actualizar pantalla en intervalos regulares
+// Update screen at regular intervals
 if (timer->hasIRQ()) {
     textScreen->refresh();
     timer->clearIRQ();
 }
 ```
 
-## Referencia de API
+## API Reference
 
 ### BasicTimer::initialize()
-Inicializa el timer y todos sus registros.
-- **Retorna**: `true` si se inicializó correctamente
+Initializes the timer and all its registers.
+- **Returns**: `true` if initialized successfully
 
 ### BasicTimer::tick(cycles)
-Incrementa el contador y verifica límites.
-- **cycles**: Número de ciclos a añadir al contador
+Increments the counter and checks limits.
+- **cycles**: Number of cycles to add to the counter
 
 ### BasicTimer::getCounter()
-Obtiene el valor actual del contador.
-- **Retorna**: Valor del contador (0-4294967295)
+Gets the current value of the counter.
+- **Returns**: Counter value (0-4294967295)
 
 ### BasicTimer::setCounter(value)
-Establece el valor del contador.
-- **value**: Nuevo valor del contador
+Sets the value of the counter.
+- **value**: New counter value
 
 ### BasicTimer::getLimit()
-Obtiene el límite configurado.
-- **Retorna**: Valor del límite
+Gets the configured limit.
+- **Returns**: Limit value
 
 ### BasicTimer::setLimit(value)
-Establece el límite para IRQ.
-- **value**: Nuevo valor del límite
+Sets the limit for IRQ.
+- **value**: New limit value
 
 ### BasicTimer::reset()
-Reinicia el contador a 0 y limpia IRQ.
+Resets the counter to 0 and clears IRQ.
 
 ### BasicTimer::isEnabled()
-Verifica si el timer está habilitado.
-- **Retorna**: `true` si está habilitado
+Checks if the timer is enabled.
+- **Returns**: `true` if enabled
 
 ### BasicTimer::setEnabled(enabled)
-Habilita o deshabilita el timer.
-- **enabled**: `true` para habilitar, `false` para deshabilitar
+Enables or disables the timer.
+- **enabled**: `true` to enable, `false` to disable
 
 ### BasicTimer::hasIRQ()
-Verifica si hay IRQ pendiente.
-- **Retorna**: `true` si hay IRQ pendiente y habilitada
+Checks if there is a pending IRQ.
+- **Returns**: `true` if there is a pending and enabled IRQ
 
 ### BasicTimer::clearIRQ()
-Limpia la bandera de IRQ.
+Clears the IRQ flag.
 
 ### BasicTimer::isIRQEnabled()
-Verifica si la generación de IRQ está habilitada.
-- **Retorna**: `true` si IRQ está habilitada
+Checks if IRQ generation is enabled.
+- **Returns**: `true` if IRQ is enabled
 
 ### BasicTimer::isAutoReload()
-Verifica si el modo auto-reload está habilitado.
-- **Retorna**: `true` si auto-reload está habilitado
+Checks if auto-reload mode is enabled.
+- **Returns**: `true` if auto-reload is enabled
 
 ### BasicTimer::cleanup()
-Libera recursos y deshabilita el timer.
+Frees resources and disables the timer.
 
-## Ver También
+## See Also
 
 - [Audio Device Documentation](audio_device.md)
 - [Serial Device Documentation](serial_device.md)

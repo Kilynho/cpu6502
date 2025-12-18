@@ -7,17 +7,17 @@
 #include <vector>
 
 /**
- * Ejemplo de uso de FileDevice para cargar y guardar binarios
- * 
- * Este programa demuestra cómo:
- * 1. Crear y usar un FileDevice
- * 2. Cargar un binario desde un archivo usando la API directa
- * 3. Ejecutar el código cargado
- * 4. Guardar datos de memoria a un archivo
- * 5. Usar los registros mapeados en memoria para operaciones de E/S
+ * Example usage of FileDevice for loading and saving binaries
+ *
+ * This program demonstrates how to:
+ * 1. Create and use a FileDevice
+ * 2. Load a binary from a file using the direct API
+ * 3. Execute the loaded code
+ * 4. Save memory data to a file
+ * 5. Use memory-mapped registers for I/O operations
  */
 
-// Función auxiliar para crear un programa de ejemplo
+// Helper function to create a sample program
 void createSampleProgram(const std::string& filename) {
     std::vector<uint8_t> program = {
         0xA9, 0x48,        // LDA #$48 ('H')
@@ -36,18 +36,18 @@ void createSampleProgram(const std::string& filename) {
     if (file.is_open()) {
         file.write(reinterpret_cast<const char*>(program.data()), program.size());
         file.close();
-        std::cout << "Programa de ejemplo creado: " << filename << "\n";
+        std::cout << "Sample program created: " << filename << "\n";
     } else {
-        std::cerr << "Error al crear el archivo de ejemplo\n";
+        std::cerr << "Error creating sample file\n";
     }
 }
 
-// Función para mostrar el contenido de memoria como texto
+// Function to display memory content as text
 void displayMemoryAsText(const Mem& mem, uint16_t start, uint16_t length) {
-    std::cout << "Contenido de memoria en 0x" << std::hex << start << ": ";
+    std::cout << "Memory content at 0x" << std::hex << start << ": ";
     for (uint16_t i = 0; i < length; ++i) {
         char c = static_cast<char>(mem[start + i]);
-        if (c >= 32 && c <= 126) {  // Caracteres imprimibles
+        if (c >= 32 && c <= 126) {  // Printable characters
             std::cout << c;
         } else {
             std::cout << '.';
@@ -57,9 +57,9 @@ void displayMemoryAsText(const Mem& mem, uint16_t start, uint16_t length) {
 }
 
 int main() {
-    std::cout << "=== Demo de FileDevice para CPU 6502 ===\n\n";
+    std::cout << "=== FileDevice Demo for 6502 CPU ===\n\n";
     
-    // Configuración
+    // Setup
     Mem mem;
     CPU cpu;
     auto fileDevice = std::make_shared<FileDevice>(&mem);
@@ -70,135 +70,135 @@ int main() {
     const std::string programFile = "/tmp/sample_program.bin";
     const std::string outputFile = "/tmp/output_data.bin";
     
-    // ===== PARTE 1: Crear y cargar un programa =====
-    std::cout << "PARTE 1: Cargar y ejecutar un programa\n";
-    std::cout << "---------------------------------------\n";
+    // ===== PART 1: Create and load a program =====
+    std::cout << "PART 1: Load and execute a program\n";
+    std::cout << "-----------------------------------\n";
     
-    // Crear un programa de ejemplo
+    // Create a sample program
     createSampleProgram(programFile);
     
-    // Método 1: Cargar usando la API directa
-    std::cout << "\nCargando programa usando API directa...\n";
+    // Method 1: Load using the direct API
+    std::cout << "\nLoading program using direct API...\n";
     if (fileDevice->loadBinary(programFile, 0x8000)) {
-        std::cout << "Programa cargado exitosamente en 0x8000\n";
+        std::cout << "Program successfully loaded at 0x8000\n";
     } else {
-        std::cerr << "Error al cargar el programa\n";
+        std::cerr << "Error loading program\n";
         return 1;
     }
     
-    // Ejecutar el programa
-    std::cout << "\nEjecutando programa...\n";
+    // Execute the program
+    std::cout << "\nExecuting program...\n";
     cpu.PC = 0x8000;
     cpu.Execute(100, mem);
     
-    // Mostrar el resultado
+    // Display the result
     displayMemoryAsText(mem, 0x0200, 5);
     
-    // ===== PARTE 2: Guardar datos de memoria =====
-    std::cout << "\nPARTE 2: Guardar datos de memoria a un archivo\n";
-    std::cout << "-----------------------------------------------\n";
+    // ===== PART 2: Save memory data to a file =====
+    std::cout << "\nPART 2: Save memory data to a file\n";
+    std::cout << "-----------------------------------\n";
     
-    // Guardar los datos usando la API directa
-    std::cout << "\nGuardando datos usando API directa...\n";
+    // Save data using the direct API
+    std::cout << "\nSaving data using direct API...\n";
     if (fileDevice->saveBinary(outputFile, 0x0200, 5)) {
-        std::cout << "Datos guardados exitosamente en " << outputFile << "\n";
+        std::cout << "Data successfully saved to " << outputFile << "\n";
     } else {
-        std::cerr << "Error al guardar datos\n";
+        std::cerr << "Error saving data\n";
     }
     
-    // ===== PARTE 3: Uso de registros mapeados en memoria =====
-    std::cout << "\nPARTE 3: Uso de registros mapeados en memoria\n";
-    std::cout << "----------------------------------------------\n";
+    // ===== PART 3: Using memory-mapped registers =====
+    std::cout << "\nPART 3: Using memory-mapped registers\n";
+    std::cout << "-------------------------------------\n";
     
-    // Limpiar memoria para demostración
+    // Clear memory for demonstration
     for (uint16_t i = 0; i < 5; ++i) {
         mem[0x9000 + i] = 0;
     }
     
-    // Configurar nombre de archivo en el buffer (0xFE10-0xFE4F)
-    std::cout << "\nConfigurando nombre de archivo en registros...\n";
+    // Set up file name in buffer (0xFE10-0xFE4F)
+    std::cout << "\nSetting up file name in registers...\n";
     const std::string filename = outputFile;
     for (size_t i = 0; i < filename.length() && i < 64; ++i) {
         fileDevice->write(0xFE10 + i, filename[i]);
     }
     fileDevice->write(0xFE10 + filename.length(), 0);  // Null terminator
     
-    // Configurar dirección de inicio (0x9000)
-    fileDevice->write(0xFE01, 0x00);  // Byte bajo
-    fileDevice->write(0xFE02, 0x90);  // Byte alto
+    // Set up start address (0x9000)
+    fileDevice->write(0xFE01, 0x00);  // Low byte
+    fileDevice->write(0xFE02, 0x90);  // High byte
     
-    // Configurar longitud (5 bytes)
-    fileDevice->write(0xFE03, 0x05);  // Byte bajo
-    fileDevice->write(0xFE04, 0x00);  // Byte alto
+    // Set up length (5 bytes)
+    fileDevice->write(0xFE03, 0x05);  // Low byte
+    fileDevice->write(0xFE04, 0x00);  // High byte
     
-    // Ejecutar operación LOAD (escribir 1 en registro de control)
-    std::cout << "Ejecutando operación LOAD mediante registro de control...\n";
+    // Execute LOAD operation (write 1 to control register)
+    std::cout << "Executing LOAD operation via control register...\n";
     fileDevice->write(0xFE00, 1);  // 1 = LOAD
     
-    // Verificar estado
+    // Check status
     uint8_t status = fileDevice->read(0xFE05);
     if (status == 0) {
-        std::cout << "Operación LOAD exitosa\n";
+        std::cout << "LOAD operation successful\n";
         displayMemoryAsText(mem, 0x9000, 5);
     } else {
-        std::cout << "Error en operación LOAD (status = " << static_cast<int>(status) << ")\n";
+        std::cout << "Error in LOAD operation (status = " << static_cast<int>(status) << ")\n";
     }
     
-    // ===== PARTE 4: Demostración de SAVE usando registros =====
-    std::cout << "\nPARTE 4: Guardar usando registros mapeados\n";
-    std::cout << "-------------------------------------------\n";
+    // ===== PART 4: Demonstration of SAVE using registers =====
+    std::cout << "\nPART 4: Save using memory-mapped registers\n";
+    std::cout << "------------------------------------------\n";
     
-    // Escribir datos nuevos en memoria
+    // Write new data to memory
     const char* message = "6502!";
     for (int i = 0; i < 5; ++i) {
         mem[0xA000 + i] = message[i];
     }
     
-    std::cout << "\nDatos en memoria a guardar: ";
+    std::cout << "\nData in memory to be saved: ";
     displayMemoryAsText(mem, 0xA000, 5);
     
-    // Configurar registros para guardar
+    // Set up registers for saving
     const std::string saveFile = "/tmp/saved_message.bin";
     for (size_t i = 0; i < saveFile.length() && i < 64; ++i) {
         fileDevice->write(0xFE10 + i, saveFile[i]);
     }
     fileDevice->write(0xFE10 + saveFile.length(), 0);
     
-    // Configurar dirección de inicio (0xA000)
+    // Set up start address (0xA000)
     fileDevice->write(0xFE01, 0x00);
     fileDevice->write(0xFE02, 0xA0);
     
-    // Configurar longitud (5 bytes)
+    // Set up length (5 bytes)
     fileDevice->write(0xFE03, 0x05);
     fileDevice->write(0xFE04, 0x00);
     
-    // Ejecutar operación SAVE (escribir 2 en registro de control)
-    std::cout << "Ejecutando operación SAVE mediante registro de control...\n";
+    // Execute SAVE operation (write 2 to control register)
+    std::cout << "Executing SAVE operation via control register...\n";
     fileDevice->write(0xFE00, 2);  // 2 = SAVE
     
-    // Verificar estado
+    // Check status
     status = fileDevice->read(0xFE05);
     if (status == 0) {
-        std::cout << "Operación SAVE exitosa\n";
-        std::cout << "Archivo guardado: " << saveFile << "\n";
+        std::cout << "SAVE operation successful\n";
+        std::cout << "File saved: " << saveFile << "\n";
     } else {
-        std::cout << "Error en operación SAVE (status = " << static_cast<int>(status) << ")\n";
+        std::cout << "Error in SAVE operation (status = " << static_cast<int>(status) << ")\n";
     }
     
-    // ===== RESUMEN =====
-    std::cout << "\n=== RESUMEN ===\n";
-    std::cout << "FileDevice permite:\n";
-    std::cout << "  1. Cargar binarios desde archivos del host\n";
-    std::cout << "  2. Guardar bloques de memoria a archivos\n";
-    std::cout << "  3. Control mediante API directa o registros mapeados\n";
-    std::cout << "\nRegistros mapeados:\n";
-    std::cout << "  0xFE00:      Control (0=nada, 1=cargar, 2=guardar)\n";
-    std::cout << "  0xFE01-0xFE02: Dirección de inicio (little-endian)\n";
-    std::cout << "  0xFE03-0xFE04: Longitud (little-endian)\n";
-    std::cout << "  0xFE05:      Estado (0=éxito, 1=error)\n";
-    std::cout << "  0xFE10-0xFE4F: Nombre de archivo (max 64 bytes)\n";
+    // ===== SUMMARY =====
+    std::cout << "\n=== SUMMARY ===\n";
+    std::cout << "FileDevice allows:\n";
+    std::cout << "  1. Load binaries from host files\n";
+    std::cout << "  2. Save memory blocks to files\n";
+    std::cout << "  3. Control via direct API or memory-mapped registers\n";
+    std::cout << "\nMemory-mapped registers:\n";
+    std::cout << "  0xFE00:      Control (0=nothing, 1=load, 2=save)\n";
+    std::cout << "  0xFE01-0xFE02: Start address (little-endian)\n";
+    std::cout << "  0xFE03-0xFE04: Length (little-endian)\n";
+    std::cout << "  0xFE05:      Status (0=success, 1=error)\n";
+    std::cout << "  0xFE10-0xFE4F: File name (max 64 bytes)\n";
     
-    std::cout << "\n=== Fin del demo ===\n";
+    std::cout << "\n=== End of demo ===\n";
     
     return 0;
 }

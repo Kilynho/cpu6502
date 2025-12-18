@@ -1,79 +1,79 @@
-# Video Device - Documentación
+# Video Device - Documentation
 
-## Introducción
+## Overview
 
-El módulo de video del emulador CPU 6502 proporciona capacidades de pantalla de texto mediante la clase `TextScreen`, que simula una pantalla clásica de 40 columnas x 24 líneas similar a las computadoras de 8 bits de los años 80 (Apple II, Commodore 64, etc.).
+The video module of the CPU 6502 emulator provides text screen capabilities through the `TextScreen` class, which simulates a classic 40-column x 24-line text display similar to 8-bit computers from the 1980s (Apple II, Commodore 64, etc.).
 
-## Arquitectura
+## Architecture
 
-### Jerarquía de Clases
+### Class Hierarchy
 
 ```
-IODevice (interfaz base)
-    └── VideoDevice (interfaz para dispositivos de video)
-            └── TextScreen (implementación de pantalla de texto)
+IODevice (base interface)
+    └── VideoDevice (interface for video devices)
+            └── TextScreen (text screen implementation)
 ```
 
-### Interfaz VideoDevice
+### VideoDevice Interface
 
-La interfaz `VideoDevice` define los métodos básicos que todo dispositivo de video debe implementar:
+The `VideoDevice` interface defines the basic methods that every video device must implement:
 
 ```cpp
 class VideoDevice : public IODevice {
 public:
-    virtual void refresh() = 0;                    // Refresca la pantalla
-    virtual void clear() = 0;                      // Limpia la pantalla
-    virtual std::string getBuffer() const = 0;     // Obtiene el buffer para debugging
-    virtual uint16_t getWidth() const = 0;         // Ancho en caracteres/píxeles
-    virtual uint16_t getHeight() const = 0;        // Alto en caracteres/píxeles
+    virtual void refresh() = 0;                    // Refresh the screen
+    virtual void clear() = 0;                      // Clear the screen
+    virtual std::string getBuffer() const = 0;     // Get the buffer for debugging
+    virtual uint16_t getWidth() const = 0;         // Width in characters/pixels
+    virtual uint16_t getHeight() const = 0;        // Height in characters/pixels
 };
 ```
 
-## TextScreen - Pantalla de Texto
+## TextScreen - Text Screen
 
-### Especificaciones
+### Specifications
 
-- **Dimensiones:** 40 columnas × 24 líneas (960 caracteres)
-- **Conjunto de caracteres:** ASCII imprimible (0x20-0x7E)
-- **Características especiales:**
-  - Auto-scroll cuando se llena la pantalla
-  - Control de posición del cursor
-  - Soporte para caracteres de control (\\n, \\r, \\t, \\b)
+- **Dimensions:** 40 columns × 24 lines (960 characters)
+- **Character set:** Printable ASCII (0x20-0x7E)
+- **Special features:**
+  - Auto-scroll when the screen is full
+  - Cursor position control
+  - Support for control characters (\\n, \\r, \\t, \\b)
 
-### Mapa de Memoria
+### Memory Map
 
-La TextScreen se mapea en las siguientes direcciones de memoria:
+The TextScreen is mapped to the following memory addresses:
 
-| Dirección | Descripción | Tipo | Rango |
+| Address | Description | Type | Range |
 |-----------|-------------|------|-------|
-| `$FC00-$FFFB` | Buffer de video (960 bytes) | R/W | 0x00-0xFF |
-| `$FFFC` | Columna del cursor | R/W | 0-39 |
-| `$FFFD` | Fila del cursor | R/W | 0-23 |
-| `$FFFE` | Registro de control | R/W | Ver bits abajo |
-| `$FFFF` | Puerto de salida de caracteres | W | 0x00-0xFF |
+| `$FC00-$FFFB` | Video buffer (960 bytes) | R/W | 0x00-0xFF |
+| `$FFFC` | Cursor column | R/W | 0-39 |
+| `$FFFD` | Cursor row | R/W | 0-23 |
+| `$FFFE` | Control register | R/W | See bits below |
+| `$FFFF` | Character output port | W | 0x00-0xFF |
 
-#### Organización del Buffer de Video
+#### Organization of the Video Buffer
 
-El buffer de video está organizado en filas:
-- Fila 0: `$FC00-$FC27` (bytes 0-39)
-- Fila 1: `$FC28-$FC4F` (bytes 40-79)
+The video buffer is organized in rows:
+- Row 0: `$FC00-$FC27` (bytes 0-39)
+- Row 1: `$FC28-$FC4F` (bytes 40-79)
 - ...
-- Fila 23: `$FFD8-$FFFB` (bytes 920-959)
+- Row 23: `$FFD8-$FFFB` (bytes 920-959)
 
-**Fórmula de dirección:** `dirección = $FC00 + (fila × 40) + columna`
+**Address formula:** `address = $FC00 + (row × 40) + column`
 
-#### Registro de Control ($FFFE)
+#### Control Register ($FFFE)
 
-| Bit | Nombre | Descripción |
+| Bit | Name | Description |
 |-----|--------|-------------|
-| 0 | AUTO_SCROLL | 1 = auto-scroll habilitado, 0 = deshabilitado |
-| 1 | CLEAR_SCREEN | Escribir 1 limpia la pantalla (se resetea automáticamente) |
-| 2-6 | Reservado | No utilizado |
-| 7 | CURSOR_VISIBLE | 1 = cursor visible, 0 = invisible (para uso futuro con GUI) |
+| 0 | AUTO_SCROLL | 1 = auto-scroll enabled, 0 = disabled |
+| 1 | CLEAR_SCREEN | Writing 1 clears the screen (automatically resets) |
+| 2-6 | Reserved | Not used |
+| 7 | CURSOR_VISIBLE | 1 = cursor visible, 0 = invisible (for future GUI use) |
 
-## Uso desde C++
+## Usage from C++
 
-### Inicialización
+### Initialization
 
 ```cpp
 #include "cpu.hpp"
@@ -86,46 +86,46 @@ int main() {
     CPU cpu;
     auto textScreen = std::make_shared<TextScreen>();
     
-    // Reiniciar CPU y registrar el dispositivo
+    // Reset CPU and register the device
     cpu.Reset(mem);
     cpu.registerIODevice(textScreen);
     
-    // Ahora la CPU puede acceder a la pantalla mediante memoria mapeada
+    // Now the CPU can access the screen through mapped memory
 }
 ```
 
-### API C++ Directa
+### Direct C++ API
 
-La clase `TextScreen` proporciona métodos C++ para control directo:
+The `TextScreen` class provides C++ methods for direct control:
 
 ```cpp
-// Escribir caracteres
+// Write characters
 textScreen->writeCharAtCursor('H');
 textScreen->writeCharAtCursor('i');
 
-// Control del cursor
-textScreen->setCursorPosition(10, 5);  // Columna 10, fila 5
+// Cursor control
+textScreen->setCursorPosition(10, 5);  // Column 10, row 5
 uint8_t col, row;
 textScreen->getCursorPosition(col, row);
 
-// Limpieza
+// Clearing
 textScreen->clear();
 
 // Auto-scroll
 textScreen->setAutoScroll(true);
 bool enabled = textScreen->getAutoScroll();
 
-// Obtener contenido (para debugging/testing)
+// Get content (for debugging/testing)
 std::string buffer = textScreen->getBuffer();
 std::cout << buffer << std::endl;
 ```
 
-## Uso desde Código 6502
+## Usage from 6502 Code
 
-### Ejemplo 1: Escribir "Hello, World!"
+### Example 1: Write "Hello, World!"
 
 ```asm
-        ; Escribir mediante el puerto de caracteres ($FFFF)
+        ; Write through the character port ($FFFF)
         LDA #'H'
         STA $FFFF
         LDA #'e'
@@ -138,41 +138,41 @@ std::cout << buffer << std::endl;
         STA $FFFF
 ```
 
-### Ejemplo 2: Posicionar Cursor y Escribir
+### Example 2: Position Cursor and Write
 
 ```asm
-        ; Posicionar cursor en columna 10, fila 5
+        ; Position cursor at column 10, row 5
         LDA #10
-        STA $FFFC      ; Columna
+        STA $FFFC      ; Column
         LDA #5
-        STA $FFFD      ; Fila
+        STA $FFFD      ; Row
         
-        ; Escribir 'X' en esa posición
+        ; Write 'X' at that position
         LDA #'X'
         STA $FFFF
 ```
 
-### Ejemplo 3: Escritura Directa en Buffer de Video
+### Example 3: Direct Write to Video Buffer
 
 ```asm
-        ; Escribir 'A' en fila 2, columna 15
-        ; Dirección = $FC00 + (2 × 40) + 15 = $FC00 + 80 + 15 = $FC4F
+        ; Write 'A' at row 2, column 15
+        ; Address = $FC00 + (2 × 40) + 15 = $FC00 + 80 + 15 = $FC4F
         LDA #'A'
         STA $FC4F
 ```
 
-### Ejemplo 4: Limpiar Pantalla
+### Example 4: Clear Screen
 
 ```asm
-        ; Limpiar pantalla mediante registro de control
+        ; Clear screen through control register
         LDA #$02       ; Bit 1 = CLEAR_SCREEN
         STA $FFFE
 ```
 
-### Ejemplo 5: Escribir Línea de Texto con Salto
+### Example 5: Write Text Line with Newline
 
 ```asm
-        ; Escribir "Line 1" seguido de nueva línea
+        ; Write "Line 1" followed by newline
         LDA #'L'
         STA $FFFF
         LDA #'i'
@@ -189,41 +189,41 @@ std::cout << buffer << std::endl;
         STA $FFFF
 ```
 
-## Caracteres de Control
+## Control Characters
 
-La TextScreen soporta los siguientes caracteres de control:
+The TextScreen supports the following control characters:
 
-| Carácter | Código | Descripción |
+| Character | Code | Description |
 |----------|--------|-------------|
-| `\n` | 0x0A | Nueva línea: mueve el cursor al inicio de la siguiente línea |
-| `\r` | 0x0D | Retorno de carro: mueve el cursor al inicio de la línea actual |
-| `\t` | 0x09 | Tabulación: avanza a la siguiente posición múltiplo de 8 |
-| `\b` | 0x08 | Backspace: retrocede el cursor una posición (sin borrar) |
+| `\n` | 0x0A | New line: moves the cursor to the start of the next line |
+| `\r` | 0x0D | Carriage return: moves the cursor to the start of the current line |
+| `\t` | 0x09 | Tab: advances to the next multiple of 8 position |
+| `\b` | 0x08 | Backspace: moves the cursor back one position (without erasing) |
 
 ## Auto-Scroll
 
-Cuando el auto-scroll está habilitado (bit 0 de `$FFFE` = 1):
-- Al escribir más allá de la última línea, todo el contenido se desplaza una línea hacia arriba
-- La primera línea se pierde
-- La última línea queda vacía y lista para nueva escritura
-- El cursor se posiciona al inicio de la última línea
+When auto-scroll is enabled (bit 0 of `$FFFE` = 1):
+- Writing beyond the last line, all content scrolls up one line
+- The first line is lost
+- The last line is empty and ready for new writing
+- The cursor is positioned at the start of the last line
 
-Cuando está deshabilitado:
-- Al escribir más allá de la última línea, el cursor vuelve al inicio (0,0)
+When disabled:
+- Writing beyond the last line, the cursor returns to the start (0,0)
 
-## Integración con Sistemas Futuros
+## Integration with Future Systems
 
-### Preparación para GUI (SDL/OpenGL)
+### Preparation for GUI (SDL/OpenGL)
 
-La arquitectura de `VideoDevice` está diseñada para permitir futuras extensiones:
+The `VideoDevice` architecture is designed to allow future extensions:
 
-1. **Método refresh():** Actualmente no hace nada, pero en una implementación con GUI real actualizaría la ventana SDL/OpenGL.
+1. **refresh() Method:** Currently does nothing, but in a real GUI implementation, it would update the SDL/OpenGL window.
 
-2. **Bit CURSOR_VISIBLE:** Permite controlar la visibilidad del cursor en implementaciones gráficas.
+2. **CURSOR_VISIBLE Bit:** Allows controlling the cursor's visibility in graphical implementations.
 
-3. **Separación de lógica y presentación:** El buffer de video está completamente separado de su visualización, facilitando añadir backends gráficos.
+3. **Separation of logic and presentation:** The video buffer is completely separate from its visualization, making it easy to add graphical backends.
 
-### Ejemplo de Integración Futura
+### Example of Future Integration
 
 ```cpp
 class GraphicalTextScreen : public TextScreen {
@@ -233,55 +233,55 @@ protected:
     
 public:
     void refresh() override {
-        // Actualizar ventana SDL con el contenido del buffer
+        // Update SDL window with the buffer content
         renderTextToSDL();
         SDL_RenderPresent(renderer);
     }
 };
 ```
 
-## Rendimiento
+## Performance
 
-### Escritura mediante Puerto de Caracteres
+### Writing through Character Port
 
-- **Ventaja:** Simplifica el código 6502 (solo necesita escribir a `$FFFF`)
-- **Desventaja:** Más lenta (procesa caracteres de control, mueve cursor, etc.)
-- **Uso recomendado:** Salida de texto secuencial, mensajes de consola
+- **Advantage:** Simplifies 6502 code (just write to `$FFFF`)
+- **Disadvantage:** Slower (processes control characters, moves cursor, etc.)
+- **Recommended use:** Sequential text output, console messages
 
-### Escritura Directa en Buffer
+### Direct Write to Buffer
 
-- **Ventaja:** Máxima velocidad (acceso directo a memoria)
-- **Desventaja:** El programador debe calcular direcciones y gestionar el cursor manualmente
-- **Uso recomendado:** Gráficos de texto, interfaces de usuario, animaciones
+- **Advantage:** Maximum speed (direct memory access)
+- **Disadvantage:** The programmer must calculate addresses and manage the cursor manually
+- **Recommended use:** Text graphics, user interfaces, animations
 
-## Ejemplos Completos
+## Complete Examples
 
-Ver los siguientes archivos para ejemplos completos:
+See the following files for complete examples:
 
-- **examples/text_screen_demo.cpp:** Demostración completa de todas las características
-- **tests/test_text_screen.cpp:** Casos de prueba que muestran todos los modos de uso
+- **examples/text_screen_demo.cpp:** Full demonstration of all features
+- **tests/test_text_screen.cpp:** Test cases showing all usage modes
 
-## Solución de Problemas
+## Troubleshooting
 
-### El texto no aparece
+### Text not appearing
 
-- Verificar que el dispositivo está registrado: `cpu.registerIODevice(textScreen)`
-- Verificar que se está escribiendo en las direcciones correctas
-- Verificar que se están usando caracteres ASCII imprimibles (0x20-0x7E)
+- Check that the device is registered: `cpu.registerIODevice(textScreen)`
+- Check that you are writing to the correct addresses
+- Ensure printable ASCII characters are being used (0x20-0x7E)
 
-### El scroll no funciona
+### Scroll not working
 
-- Verificar que el auto-scroll está habilitado: escribir `0x01` en `$FFFE`
-- Asegurarse de que se está escribiendo mediante el puerto de caracteres (`$FFFF`)
+- Check that auto-scroll is enabled: write `0x01` to `$FFFE`
+- Ensure writing is done through the character port (`$FFFF`)
 
-### Los caracteres aparecen en posiciones incorrectas
+### Characters appearing in incorrect positions
 
-- Verificar el cálculo de direcciones: `dirección = $FC00 + (fila × 40) + columna`
-- Recordar que las filas y columnas son base 0 (0-23 y 0-39)
+- Check address calculation: `address = $FC00 + (row × 40) + column`
+- Remember that rows and columns are base 0 (0-23 and 0-39)
 
-## API Completa de TextScreen
+## Complete TextScreen API
 
-### Métodos Públicos
+### Public Methods
 
 ```cpp
 // Constructor
@@ -308,6 +308,6 @@ void setAutoScroll(bool enabled);
 bool getAutoScroll() const;
 ```
 
-## Conclusión
+## Conclusion
 
-El sistema de video TextScreen proporciona una forma sencilla y potente de añadir capacidades de salida visual al emulador CPU 6502. Su diseño modular permite futuras extensiones (gráficos, color, múltiples modos de video) mientras mantiene la simplicidad y compatibilidad con sistemas clásicos de 8 bits.
+The TextScreen video system provides a simple yet powerful way to add visual output capabilities to the CPU 6502 emulator. Its modular design allows for future extensions (graphics, color, multiple video modes) while maintaining simplicity and compatibility with classic 8-bit systems.

@@ -13,13 +13,20 @@
  * Este controlador permite a los dispositivos registrar y disparar interrupciones
  * de forma centralizada, facilitando la integración entre la CPU y los periféricos.
  */
+/**
+ * @file interrupt_controller.hpp
+ * @brief Centralized interrupt management system (IRQ/NMI)
+ *
+ * This controller allows devices to register and trigger interrupts
+ * in a centralized way, facilitating integration between the CPU and peripherals.
+ */
 
 /**
  * @brief Tipos de interrupciones soportadas
  */
 enum class InterruptType {
-    IRQ,  ///< Interrupción estándar enmascarable (Interrupt Request)
-    NMI   ///< Interrupción no enmascarable (Non-Maskable Interrupt)
+    IRQ,  ///< Standard maskable interrupt (Interrupt Request)
+    NMI   ///< Non-maskable interrupt (Non-Maskable Interrupt)
 };
 
 /**
@@ -27,6 +34,12 @@ enum class InterruptType {
  * 
  * Los dispositivos que implementen esta interfaz podrán registrarse en el
  * controlador de interrupciones y reportar cuando tienen una interrupción pendiente.
+ */
+/**
+ * @brief Interface for devices that can generate interrupts
+ *
+ * Devices implementing this interface can register with the
+ * interrupt controller and report when they have a pending interrupt.
  */
 class InterruptSource {
 public:
@@ -82,7 +95,34 @@ public:
  *     intCtrl.acknowledgeIRQ();
  * }
  * @endcode
+ * @brief Centralized interrupt controller for the 6502 system
+ *
+ * The InterruptController manages all interrupt sources in the system,
+ * allowing multiple devices to generate IRQ or NMI in an organized way.
+ *
+ * Features:
+ * - Support for multiple interrupt sources
+ * - Separate management of IRQ and NMI
+ * - Priority: NMI has higher priority than IRQ
+ * - IRQ respects the CPU's I (Interrupt Disable) flag
+ * - NMI cannot be masked
+ *
+ * Usage example:
+ * @code
+ * InterruptController intCtrl;
+ * auto timer = std::make_shared<BasicTimer>();
+ *
+ * // Register the timer as an interrupt source
+ * intCtrl.registerSource(timer);
+ *
+ * // In the main CPU loop
+ * if (intCtrl.hasIRQ() && !cpu.I) {
+ *     cpu.serviceIRQ(memory);
+ *     intCtrl.acknowledgeIRQ();
+ * }
+ * @endcode
  */
+
 class InterruptController {
 public:
     InterruptController();
@@ -140,7 +180,7 @@ public:
     size_t getSourceCount() const;
     
 private:
-    std::vector<std::shared_ptr<InterruptSource>> sources; ///< Fuentes de interrupción registradas
+    std::vector<std::shared_ptr<InterruptSource>> sources; ///< Registered interrupt sources
 };
 
 #endif // INTERRUPT_CONTROLLER_HPP

@@ -8,17 +8,17 @@
 class Mem;
 
 /**
- * @brief Implementación de dispositivo de almacenamiento basado en archivos del host
- * 
- * FileDevice permite cargar y guardar binarios desde/hacia archivos del sistema host.
- * Se mapea a direcciones de memoria específicas para controlar operaciones de E/S.
- * 
- * Direcciones mapeadas:
- * - 0xFE00: Control de operación (0=nada, 1=cargar, 2=guardar)
- * - 0xFE01-0xFE02: Dirección de inicio (little-endian)
- * - 0xFE03-0xFE04: Longitud de datos (little-endian)
- * - 0xFE05: Estado (0=éxito, 1=error)
- * - 0xFE10-0xFE4F: Nombre de archivo (hasta 64 bytes, null-terminated)
+ * @brief Implementation of a storage device based on host files
+ *
+ * FileDevice allows loading and saving binaries from/to host system files.
+ * It is mapped to specific memory addresses to control I/O operations.
+ *
+ * Mapped addresses:
+ * - 0xFE00: Operation control (0=none, 1=load, 2=save)
+ * - 0xFE01-0xFE02: Start address (little-endian)
+ * - 0xFE03-0xFE04: Data length (little-endian)
+ * - 0xFE05: Status (0=success, 1=error)
+ * - 0xFE10-0xFE4F: Filename (up to 64 bytes, null-terminated)
  */
 class FileDevice : public StorageDevice {
 public:

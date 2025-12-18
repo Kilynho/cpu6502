@@ -1,9 +1,9 @@
 /**
  * @file interrupt_demo.cpp
- * @brief Demostración del sistema de interrupciones IRQ/NMI
- * 
- * Este ejemplo muestra cómo configurar y utilizar el sistema de interrupciones
- * con un timer que dispara IRQs periódicamente.
+ * @brief Demonstration of the IRQ/NMI interrupt system
+ *
+ * This example shows how to set up and use the interrupt system
+ * with a timer that triggers IRQs periodically.
  */
 
 #include <iostream>

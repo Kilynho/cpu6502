@@ -1,21 +1,18 @@
-# AudioDevice - Documentación del Dispositivo de Audio
+# AudioDevice - Audio Device Documentation
 
-## Descripción General
+## General Description
+`AudioDevice` is an interface that defines the basic operations for audio devices in the 6502 emulator. The `BasicAudio` implementation provides a simple tone generator that can produce square waves at different frequencies, similar to the sound chips of classic 8-bit computers (Apple II, Commodore 64, Atari 2600, etc.).
 
-El `AudioDevice` es una interfaz que define las operaciones básicas para dispositivos de audio en el emulador 6502. La implementación `BasicAudio` proporciona un generador de tonos simple que puede producir ondas cuadradas a diferentes frecuencias, similar a los chips de sonido de las computadoras clásicas de 8 bits (Apple II, Commodore 64, Atari 2600, etc.).
+## Features
+- **Tone generation**: Square waves with frequencies from 20 Hz to 20 kHz
+- **Duration control**: From 1 ms to 10 seconds
+- **Volume control**: Levels from 0 to 255
+- **Memory-mapped registers**: Direct access from 6502 code
+- **C++ API**: Programmatic control from emulator code
+- **SDL2-based**: Real-time audio playback
+## Architecture
 
-## Características
-
-- **Generación de tonos**: Ondas cuadradas con frecuencias de 20 Hz a 20 kHz
-- **Control de duración**: De 1 ms a 10 segundos
-- **Control de volumen**: Niveles de 0 a 255
-- **Registros mapeados en memoria**: Acceso directo desde código 6502
-- **API C++**: Control programático desde el código del emulador
-- **Basado en SDL2**: Reproducción de audio en tiempo real
-
-## Arquitectura
-
-### Interfaz AudioDevice
+### AudioDevice Interface
 
 ```cpp
 class AudioDevice : public IODevice {
@@ -28,62 +25,62 @@ public:
 };
 ```
 
-### Implementación BasicAudio
+### BasicAudio Implementation
 
-`BasicAudio` implementa la interfaz `AudioDevice` usando SDL2 Audio para generar ondas cuadradas en tiempo real.
+`BasicAudio` implements the `AudioDevice` interface using SDL2 Audio to generate square waves in real-time.
 
-## Mapa de Memoria
+## Memory Map
 
-Los registros de audio están mapeados en las siguientes direcciones:
+The audio registers are mapped to the following addresses:
 
-| Dirección | Nombre | Descripción |
+| Address | Name | Description |
 |-----------|--------|-------------|
-| `$FB00` | FREQ_LOW | Byte bajo de la frecuencia (0-255) |
-| `$FB01` | FREQ_HIGH | Byte alto de la frecuencia (0-255) |
-| `$FB02` | DUR_LOW | Byte bajo de la duración en ms (0-255) |
-| `$FB03` | DUR_HIGH | Byte alto de la duración en ms (0-255) |
-| `$FB04` | VOLUME | Volumen (0-255) |
-| `$FB05` | CONTROL | Control y estado |
+| `$FB00` | FREQ_LOW | Low byte of the frequency (0-255) |
+| `$FB01` | FREQ_HIGH | High byte of the frequency (0-255) |
+| `$FB02` | DUR_LOW | Low byte of the duration in ms (0-255) |
+| `$FB03` | DUR_HIGH | High byte of the duration in ms (0-255) |
+| `$FB04` | VOLUME | Volume (0-255) |
+| `$FB05` | CONTROL | Control and status |
 
-### Registro de Control ($FB05)
+### Control Register ($FB05)
 
-| Bit | Nombre | Lectura | Escritura |
+| Bit | Name | Read | Write |
 |-----|--------|---------|-----------|
-| 0 | PLAY | - | 1=Reproducir tono, 0=Detener |
-| 1 | STATUS | 1=Reproduciéndose, 0=Silencio | - |
-| 2-7 | - | Reservado | Reservado |
+| 0 | PLAY | - | 1=Play tone, 0=Stop |
+| 1 | STATUS | 1=Playing, 0=Silence | - |
+| 2-7 | - | Reserved | Reserved |
 
-## Uso desde Código 6502
+## Usage from 6502 Code
 
-### Ejemplo 1: Reproducir un Tono de 440 Hz (La)
+### Example 1: Play a 440 Hz (A) Tone
 
 ```assembly
-; Configurar frecuencia: 440 Hz
+; Set frequency: 440 Hz
 LDA #$B8        ; 440 & 0xFF = 184
-STA $FB00       ; Frecuencia baja
+STA $FB00       ; Low frequency byte
 LDA #$01        ; 440 >> 8 = 1
-STA $FB01       ; Frecuencia alta
+STA $FB01       ; High frequency byte
 
-; Configurar duración: 500 ms
+; Set duration: 500 ms
 LDA #$F4        ; 500 & 0xFF = 244
-STA $FB02       ; Duración baja
+STA $FB02       ; Low duration byte
 LDA #$01        ; 500 >> 8 = 1
-STA $FB03       ; Duración alta
+STA $FB03       ; High duration byte
 
-; Configurar volumen: medio
-LDA #$80        ; 128 = volumen medio
-STA $FB04       ; Volumen
+; Set volume: medium
+LDA #$80        ; 128 = medium volume
+STA $FB04       ; Volume
 
-; Reproducir
+; Play
 LDA #$01        ; Bit 0 = 1 (play)
 STA $FB05       ; Control
 ```
 
-### Ejemplo 2: Reproducir la Escala Musical
+### Example 2: Play the Musical Scale
 
 ```assembly
-; Datos de la escala musical (Do-Re-Mi-Fa-Sol-La-Si-Do)
-; Frecuencias en Hz (octava 4)
+; Musical scale data (Do-Re-Mi-Fa-Sol-La-Si-Do)
+; Frequencies in Hz (octave 4)
 SCALE_FREQS:
     .word 262   ; Do (C4)
     .word 294   ; Re (D4)
@@ -94,56 +91,56 @@ SCALE_FREQS:
     .word 494   ; Si (B4)
     .word 523   ; Do (C5)
 
-; Reproducir escala
-    LDX #$00        ; Índice de nota
+; Play scale
+    LDX #$00        ; Note index
 PLAY_SCALE:
-    ; Cargar frecuencia baja
+    ; Load low frequency byte
     LDA SCALE_FREQS,X
     STA $FB00
     
-    ; Cargar frecuencia alta
+    ; Load high frequency byte
     INX
     LDA SCALE_FREQS,X
     STA $FB01
     INX
     
-    ; Configurar duración (500 ms)
+    ; Set duration (500 ms)
     LDA #$F4
     STA $FB02
     LDA #$01
     STA $FB03
     
-    ; Configurar volumen
+    ; Set volume
     LDA #$C8        ; 200
     STA $FB04
     
-    ; Reproducir
+    ; Play
     LDA #$01
     STA $FB05
     
-    ; Esperar a que termine
+    ; Wait for it to finish
 WAIT_PLAY:
-    LDA $FB05       ; Leer registro de control
-    AND #$02        ; Verificar bit de status
-    BNE WAIT_PLAY   ; Si está reproduciéndose, esperar
+    LDA $FB05       ; Read control register
+    AND #$02        ; Check status bit
+    BNE WAIT_PLAY   ; If playing, wait
     
-    ; Pausa entre notas (polling delay)
+    ; Pause between notes (polling delay)
     LDY #$FF
 DELAY:
     DEY
     BNE DELAY
     
-    ; Siguiente nota
-    CPX #$10        ; 8 notas * 2 bytes = 16
+    ; Next note
+    CPX #$10        ; 8 notes * 2 bytes = 16
     BNE PLAY_SCALE
     
     RTS
 ```
 
-### Ejemplo 3: Verificar Estado de Reproducción
+### Example 3: Check Playback Status
 
 ```assembly
-; Iniciar un tono
+; Start a tone
 LDA #$B8
 STA $FB00
 LDA #$01
@@ -157,72 +154,72 @@ STA $FB04
 LDA #$01
 STA $FB05
 
-; Verificar si está reproduciéndose
+; Check if it's playing
 CHECK_STATUS:
-    LDA $FB05       ; Leer control
-    AND #$02        ; Aislar bit de status
-    BNE PLAYING     ; Si != 0, está reproduciéndose
-    ; No está reproduciéndose
+    LDA $FB05       ; Read control
+    AND #$02        ; Isolate status bit
+    BNE PLAYING     ; If != 0, it's playing
+    ; Not playing
     JMP NOT_PLAYING
 PLAYING:
-    ; Está reproduciéndose
+    ; Is playing
     ; ...
 NOT_PLAYING:
     ; ...
 ```
 
-## Uso desde C++
+## Usage from C++
 
-### Inicialización
+### Initialization
 
 ```cpp
 #include "devices/basic_audio.hpp"
 
-// Crear dispositivo de audio
+// Create audio device
 auto audio = std::make_shared<BasicAudio>();
 
-// Inicializar
+// Initialize
 if (!audio->initialize()) {
-    std::cerr << "Error: No se pudo inicializar el audio" << std::endl;
+    std::cerr << "Error: Could not initialize audio" << std::endl;
     return 1;
 }
 
-// Registrar con la CPU
+// Register with CPU
 cpu.registerIODevice(audio);
 ```
 
-### Reproducir un Tono
+### Play a Tone
 
 ```cpp
-// Reproducir La (440 Hz) durante 500 ms con volumen 200
+// Play La (440 Hz) for 500 ms with volume 200
 audio->playTone(440, 500, 200);
 
-// Esperar a que termine
+// Wait for it to finish
 while (audio->isPlaying()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 ```
 
-### Detener Reproducción
+### Stop Playback
 
 ```cpp
-// Detener el audio actual
+// Stop current audio
 audio->stop();
 ```
 
-### Limpiar
+### Cleanup
 
 ```cpp
-// Antes de salir del programa
+// Before exiting the program
 audio->cleanup();
 cpu.unregisterIODevice(audio);
 ```
 
-## Notas de la Escala Musical
+## Musical Scale Notes
 
-Frecuencias estándar para la octava 4 (temperamento igual):
+Standard frequencies for octave 4 (equal temperament):
 
-| Nota | Frecuencia (Hz) | Valor Hex |
+| Note | Frequency (Hz) | Hex Value |
 |------|----------------|-----------|
 | Do (C4) | 262 | $0106 |
 | Re (D4) | 294 | $0126 |
@@ -233,66 +230,66 @@ Frecuencias estándar para la octava 4 (temperamento igual):
 | Si (B4) | 494 | $01EE |
 | Do (C5) | 523 | $020B |
 
-## Limitaciones
+## Limitations
 
-- **Forma de onda**: Solo se soportan ondas cuadradas (no seno, triangular, etc.)
-- **Polifonía**: Solo se puede reproducir un tono a la vez
-- **Duración máxima**: 10 segundos por tono
-- **Rango de frecuencia**: 20 Hz - 20 kHz
-- **Latencia**: Pequeña latencia inherente al sistema de audio SDL2
+- **Waveform**: Only square waves are supported (no sine, triangle, etc.)
+- **Polyphony**: Only one tone can be played at a time
+- **Maximum duration**: 10 seconds per tone
+- **Frequency range**: 20 Hz - 20 kHz
+- **Latency**: Small inherent latency due to SDL2 audio system
 
 ## Demo
 
-Ejecuta el demo de audio para escuchar la escala musical:
+Run the audio demo to hear the musical scale:
 
 ```bash
 cd build
 ./audio_demo
 ```
 
-El demo reproduce la escala musical completa de dos formas:
-1. Usando la API de C++ directamente
-2. Generando código 6502 que controla los registros de audio
+The demo plays the complete musical scale in two ways:
+1. Using the C++ API directly
+2. Generating 6502 code that controls the audio registers
 
-## Aplicaciones
+## Applications
 
-- **Juegos retro**: Efectos de sonido y música simple
-- **Sintetizadores**: Generadores de tonos programables
-- **Educación**: Aprender sobre síntesis de audio y programación de sonido
-- **Música procedural**: Generar melodías desde código
-- **Alarmas y notificaciones**: Tonos de alerta
+- **Retro games**: Sound effects and simple music
+- **Synthesizers**: Programmable tone generators
+- **Education**: Learn about audio synthesis and sound programming
+- **Procedural music**: Generate melodies from code
+- **Alarms and notifications**: Alert tones
 
-## Compatibilidad
+## Compatibility
 
-El dispositivo de audio requiere:
-- SDL2 instalado en el sistema
-- Dispositivo de audio disponible (altavoces/auriculares)
+The audio device requires:
+- SDL2 installed on the system
+- Available audio device (speakers/headphones)
 
-En entornos sin audio (como CI/CD), el dispositivo se inicializa en modo "silencioso" permitiendo que las pruebas se ejecuten sin errores.
+In audio-less environments (like CI/CD), the device initializes in "silent" mode allowing tests to run without errors.
 
-## Referencia de API
+## API Reference
 
 ### BasicAudio::initialize()
-Inicializa el sistema de audio SDL2.
-- **Retorna**: `true` si se inicializó correctamente, `false` en caso contrario
+Initializes the SDL2 audio system.
+- **Returns**: `true` if initialized successfully, `false` otherwise
 
 ### BasicAudio::playTone(frequency, duration, volume)
-Reproduce un tono con los parámetros especificados.
-- **frequency**: Frecuencia en Hz (20-20000)
-- **duration**: Duración en milisegundos (1-10000)
-- **volume**: Volumen (0-255)
+Plays a tone with the specified parameters.
+- **frequency**: Frequency in Hz (20-20000)
+- **duration**: Duration in milliseconds (1-10000)
+- **volume**: Volume (0-255)
 
 ### BasicAudio::stop()
-Detiene la reproducción actual inmediatamente.
+Immediately stops current playback.
 
 ### BasicAudio::isPlaying()
-Verifica si hay audio reproduciéndose.
-- **Retorna**: `true` si está reproduciéndose, `false` en caso contrario
+Checks if audio is playing.
+- **Returns**: `true` if playing, `false` otherwise
 
 ### BasicAudio::cleanup()
-Libera recursos de audio y cierra SDL2.
+Frees audio resources and closes SDL2.
 
-## Ver También
+## See Also
 
 - [Video Device Documentation](video_device.md)
 - [File Device Documentation](file_device.md)

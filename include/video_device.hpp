@@ -5,40 +5,40 @@
 #include <vector>
 
 /**
- * @brief Interfaz base para dispositivos de video
- * 
- * Esta interfaz define las operaciones básicas que deben implementar
- * los dispositivos de video (pantalla de texto, framebuffer gráfico, etc.)
+ * @brief Base interface for video devices
+ *
+ * This interface defines the basic operations that video devices must implement
+ * (text screen, graphic framebuffer, etc.)
  */
 class VideoDevice : public IODevice {
 public:
     virtual ~VideoDevice() = default;
     
     /**
-     * @brief Refresca la pantalla con el contenido actual del buffer de video
+     * @brief Refreshes the screen with the current video buffer content
      */
     virtual void refresh() = 0;
     
     /**
-     * @brief Limpia la pantalla
+     * @brief Clears the screen
      */
     virtual void clear() = 0;
     
     /**
-     * @brief Obtiene el buffer de video actual como string (para debugging/testing)
-     * @return String con el contenido del buffer de video
+     * @brief Gets the current video buffer as a string (for debugging/testing)
+     * @return String with the video buffer content
      */
     virtual std::string getBuffer() const = 0;
     
     /**
-     * @brief Obtiene el ancho de la pantalla en caracteres/píxeles
-     * @return Ancho de la pantalla
+     * @brief Gets the width of the screen in characters/pixels
+     * @return Screen width
      */
     virtual uint16_t getWidth() const = 0;
     
     /**
-     * @brief Obtiene el alto de la pantalla en caracteres/píxeles
-     * @return Alto de la pantalla
+     * @brief Gets the height of the screen in characters/pixels
+     * @return Screen height
      */
     virtual uint16_t getHeight() const = 0;
 };

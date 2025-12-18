@@ -1,59 +1,57 @@
 # cpu6502
 
-## Cambios recientes (diciembre 2025)
+## Recent Changes (December 2025)
 
-- Ahora `cpu_demo` permite cargar binarios externos usando:
+- `cpu_demo` now allows loading external binaries using:
   ```
   ./cpu_demo file ../examples/demo_program.bin
   ```
-- Si no se especifica un binario, ejecuta un programa de prueba clásico en memoria.
-- Se añadió logging detallado de accesos a memoria en `cpu_log.txt`.
-- Argumentos de línea de comandos:
-  - `file <ruta>`: carga un binario externo en 0x8000.
-  - `infinite`: ejecuta ciclos infinitos.
-- Mejoras en la documentación inline y comentarios del código.
+- If no binary is specified, it runs a classic test program in memory.
+- Detailed logging of memory accesses has been added to `cpu_log.txt`.
+- Command line arguments:
+  - `file <path>`: loads an external binary at 0x8000.
+  - `infinite`: runs infinite cycles.
+- Improvements to inline documentation and code comments.
 
-### Integración de E/S Apple II
+### Apple II I/O Integration
 
-- La CPU ahora soporta dispositivos de E/S modulares mediante la interfaz `IODevice`.
-- Se incluye `AppleIO` para simular el teclado ($FD0C) y pantalla ($FDED) de Apple II.
-- Registrar dispositivos IO:
+- The CPU now supports modular I/O devices via the `IODevice` interface.
+- `AppleIO` is included to simulate the keyboard ($FD0C) and screen ($FDED) of the Apple II.
+- Registering I/O devices:
   ```cpp
   auto appleIO = std::make_shared<AppleIO>();
   cpu.registerIODevice(appleIO);
   ```
-- Los dispositivos IO interceptan accesos a memoria antes de la lectura/escritura estándar.
-- Ideal para extender el emulador con periféricos, timers, gráficos, etc.
+- I/O devices intercept memory accesses before standard read/write.
+- Ideal for extending the emulator with peripherals, timers, graphics, etc.
 
-### Soporte para Almacenamiento de Archivos (FileDevice)
+### File Storage Support (FileDevice)
 
-- Nuevo dispositivo `FileDevice` que permite cargar y guardar binarios desde/hacia archivos del host.
-- Dos modos de operación:
-  - **API directa en C++**: Métodos `loadBinary()` y `saveBinary()`
-  - **Registros mapeados en memoria**: Control desde código 6502 en direcciones `$FE00-$FE4F`
-- Perfecto para desarrollo, pruebas y persistencia de datos.
-- Ejemplo de uso:
+- New `FileDevice` that allows loading and saving binaries to/from host files.
+- Two modes of operation:
+  - **Direct C++ API**: `loadBinary()` and `saveBinary()` methods
+  - **Memory-mapped registers**: Control from 6502 code at `$FE00-$FE4F`
+- Perfect for development, testing, and data persistence.
+- Example usage:
   ```cpp
   auto fileDevice = std::make_shared<FileDevice>(&mem);
   cpu.registerIODevice(fileDevice);
   
-  // Cargar programa desde archivo
-  fileDevice->loadBinary("programa.bin", 0x8000);
+  // Load program from file
+  fileDevice->loadBinary("program.bin", 0x8000);
   
-  // Guardar datos de memoria
-  fileDevice->saveBinary("datos.bin", 0x0200, 256);
+  // Save memory data
+  fileDevice->saveBinary("data.bin", 0x0200, 256);
   ```
-- Ver `docs/file_device.md` para documentación completa y `examples/file_device_demo.cpp` para ejemplos.
+- See [docs/file_device.md](docs/file_device.md) for complete documentation and [examples/file_device_demo.cpp](examples/file_device_demo.cpp) for examples.
 
-### Soporte Gráfico: Pantalla de Texto (TextScreen)
+### Interrupt System Support (IRQ/NMI)
 
-### Sistema de Interrupciones (IRQ/NMI)
-
-- Sistema centralizado de gestión de interrupciones mediante `InterruptController`.
-- Soporte completo para IRQ (enmascarable) y NMI (no enmascarable).
-- Los dispositivos pueden implementar la interfaz `InterruptSource` para disparar interrupciones.
-- Manejo automático de vectores de interrupción, pila y flags de la CPU.
-- Ejemplo de uso:
+- Centralized interrupt management system via `InterruptController`.
+- Full support for IRQ (maskable) and NMI (non-maskable).
+- Devices can implement the `InterruptSource` interface to trigger interrupts.
+- Automatic handling of interrupt vectors, stack, and CPU flags.
+- Example usage:
   ```cpp
   InterruptController intCtrl;
   cpu.setInterruptController(&intCtrl);
@@ -61,140 +59,140 @@
   auto timer = std::make_shared<BasicTimer>();
   intCtrl.registerSource(timer);
   
-  // El timer dispara IRQ periódicamente
+  // Timer triggers IRQ periodically
   timer->setLimit(1000);
   timer->write(0xFC08, 0x03);  // Enable | IRQ Enable
   
-  // En el loop principal
+  // In the main loop
   cpu.checkAndHandleInterrupts(mem);
   ```
-- Ver `docs/interrupt_system.md` para documentación completa y `examples/interrupt_demo.cpp` para ejemplos.
-### Soporte Gráfico: Pantalla de Texto (TextScreen)
+- See [docs/interrupt_system.md](docs/interrupt_system.md) for complete documentation and [examples/interrupt_demo.cpp](examples/interrupt_demo.cpp) for examples.
+### Text Screen Graphics Support
 
-- Nuevo dispositivo `TextScreen` que simula una pantalla de texto de 40x24 caracteres.
-- Características principales:
-  - **Buffer de video mapeado en memoria**: `$FC00-$FFFB` (960 bytes)
-  - **Puerto de caracteres**: `$FFFF` - escribir caracteres directamente
-  - **Control de cursor**: `$FFFC` (columna) y `$FFFD` (fila)
-  - **Registro de control**: `$FFFE` (auto-scroll, limpiar pantalla, etc.)
-  - **Soporte para caracteres de control**: `\n`, `\r`, `\t`, `\b`
-  - **Auto-scroll automático** cuando se llena la pantalla
-- Ejemplo de uso:
+- New `TextScreen` device simulating a 40x24 character text screen.
+- Main features:
+  - **Video buffer mapped in memory**: `$FC00-$FFFB` (960 bytes)
+  - **Character port**: `$FFFF` - write characters directly
+  - **Cursor control**: `$FFFC` (column) and `$FFFD` (row)
+  - **Control register**: `$FFFE` (auto-scroll, clear screen, etc.)
+  - **Support for control characters**: `\n`, `\r`, `\t`, `\b`
+  - **Automatic auto-scroll** when the screen is full
+- Example usage:
   ```cpp
   auto textScreen = std::make_shared<TextScreen>();
   cpu.registerIODevice(textScreen);
   
-  // Escribir desde código 6502 mediante puerto de caracteres
+  // Write from 6502 code via character port
   mem[0x8000] = 0xA9;  // LDA #'H'
   mem[0x8001] = 'H';
   mem[0x8002] = 0x8D;  // STA $FFFF
   mem[0x8003] = 0xFF;
   mem[0x8004] = 0xFF;
   
-  // O usar la API C++ directamente
+  // Or use the C++ API directly
   textScreen->writeCharAtCursor('H');
   textScreen->writeCharAtCursor('i');
   std::cout << textScreen->getBuffer();
   ```
-- Ver `docs/video_device.md` para documentación completa y `examples/text_screen_demo.cpp` para ejemplos.
+- See [docs/video_device.md](docs/video_device.md) for complete documentation and [examples/text_screen_demo.cpp](examples/text_screen_demo.cpp) for examples.
 
-### Soporte de Audio: Generador de Tonos (BasicAudio)
+### Audio Support: Tone Generator (BasicAudio)
 
-- Nuevo dispositivo `BasicAudio` que simula un generador de tonos simple para reproducir audio.
-- Características principales:
-  - **Generación de ondas cuadradas** con frecuencias de 20 Hz a 20 kHz
-  - **Registros mapeados en memoria**: `$FB00-$FB05` para control completo desde 6502
-  - **Control de frecuencia, duración y volumen** programable
-  - **Reproducción en tiempo real** usando SDL2 Audio
-  - **Ideal para música retro y efectos de sonido** como los chips de las computadoras clásicas
-- Ejemplo de uso:
+- New `BasicAudio` device simulating a simple tone generator for audio playback.
+- Main features:
+  - **Square wave generation** with frequencies from 20 Hz to 20 kHz
+  - **Memory-mapped registers**: `$FB00-$FB05` for full control from 6502
+  - **Programmable frequency, duration, and volume**
+  - **Real-time playback** using SDL2 Audio
+  - **Ideal for retro music and sound effects** like classic computer chips
+- Example usage:
   ```cpp
   auto audio = std::make_shared<BasicAudio>();
   audio->initialize();
   cpu.registerIODevice(audio);
   
-  // Reproducir La (440 Hz) durante 500 ms
+  // Play A (440 Hz) for 500 ms
   audio->playTone(440, 500, 200);
   
-  // O desde código 6502:
-  // LDA #$B8 : STA $FB00  ; Frecuencia baja
-  // LDA #$01 : STA $FB01  ; Frecuencia alta
-  // LDA #$F4 : STA $FB02  ; Duración baja (500 ms)
-  // LDA #$01 : STA $FB03  ; Duración alta
-  // LDA #$C8 : STA $FB04  ; Volumen (200)
-  // LDA #$01 : STA $FB05  ; Reproducir
+  // Or from 6502 code:
+  // LDA #$B8 : STA $FB00  ; Low frequency
+  // LDA #$01 : STA $FB01  ; High frequency
+  // LDA #$F4 : STA $FB02  ; Low duration (500 ms)
+  // LDA #$01 : STA $FB03  ; High duration
+  // LDA #$C8 : STA $FB04  ; Volume (200)
+  // LDA #$01 : STA $FB05  ; Play
   ```
-- Ejecutar la demo (¡escucha la escala musical!):
+- Run the demo (listen to the musical scale!):
   ```bash
   cd build
   ./audio_demo
   ```
-- Ver `docs/audio_device.md` para documentación completa y `examples/audio_demo.cpp` para ejemplos.
+- See [docs/audio_device.md](docs/audio_device.md) for complete documentation and [examples/audio_demo.cpp](examples/audio_demo.cpp) for examples.
 
-### Comunicación Serial sobre TCP (TcpSerial)
+### Serial Communication over TCP (TcpSerial)
 
-- Nuevo dispositivo `TcpSerial` que simula un puerto serial ACIA 6551 utilizando TCP/IP
-- Características principales:
-  - **Compatible con ACIA 6551**: Registros estándar `$FA00-$FA03` para código 6502 clásico
-  - **Extensiones TCP**: Configuración de red mediante registros adicionales
-  - **Modo cliente**: Conectar a servidores TCP remotos
-  - **Modo servidor**: Escuchar conexiones entrantes en un puerto
-  - **Comunicación bidireccional** en tiempo real
-  - **Integración con herramientas modernas**: netcat, telnet, Python, etc.
-- Ejemplo de uso:
+- New `TcpSerial` device simulating an ACIA 6551 serial port using TCP/IP
+- Main features:
+  - **ACIA 6551 compatible**: Standard registers `$FA00-$FA03` for classic 6502
+  - **TCP extensions**: Network configuration via additional registers
+  - **Client mode**: Connect to remote TCP servers
+  - **Server mode**: Listen for incoming connections on a port
+  - **Bidirectional communication** in real-time
+  - **Integration with modern tools**: netcat, telnet, Python, etc.
+- Example usage:
   ```cpp
   auto tcpSerial = std::make_shared<TcpSerial>();
   tcpSerial->initialize();
   cpu.registerIODevice(tcpSerial);
   
-  // Escuchar conexiones en puerto 12345
+  // Listen for connections on port 12345
   tcpSerial->listen(12345);
   
-  // Enviar/recibir datos
+  // Send/receive data
   while (tcpSerial->dataAvailable()) {
       uint8_t byte = tcpSerial->receiveByte();
       tcpSerial->transmitByte(byte);  // Echo
   }
   
-  // O desde código 6502:
-  // LDA #$39 : STA $FA04  ; Puerto bajo (12345)
-  // LDA #$30 : STA $FA05  ; Puerto alto
-  // LDA #$02 : STA $FA06  ; Activar modo escucha
+  // Or from 6502 code:
+  // LDA #$39 : STA $FA04  ; Low port (12345)
+  // LDA #$30 : STA $FA05  ; High port
+  // LDA #$02 : STA $FA06  ; Activate listen mode
   // ; Loop: LDA $FA01 : AND #$01 : BEQ Loop
-  // LDA $FA00             ; Leer dato
-  // STA $FA00             ; Enviar (echo)
+  // LDA $FA00             ; Read data
+  // STA $FA00             ; Send (echo)
   ```
-- Ejecutar la demo (¡conéctate con `nc localhost 12345`!):
+- Run the demo (connect with `nc localhost 12345`!):
   ```bash
   cd build
   ./tcp_serial_demo
   ```
-- Ver `docs/serial_device.md` para documentación completa y `examples/tcp_serial_demo.cpp` para ejemplos.
+- See [docs/serial_device.md](docs/serial_device.md) for complete documentation and [examples/tcp_serial_demo.cpp](examples/tcp_serial_demo.cpp) for examples.
 
-### Interfaz Gráfica Retro (EmulatorGUI)
+### Retro GUI Interface (EmulatorGUI)
 
-- **Nueva GUI con estilo retro de los años 80** inspirada en Apple II, Commodore 64 y MSX
-- Características principales:
-  - **Pantalla de 40x24 caracteres** con aspecto vintage auténtico
-  - **Paleta de 16 colores** estilo Apple II/Commodore 64
-  - **Cursor de bloque parpadeante** como las terminales clásicas
-  - **Renderizado con SDL2** para rendimiento fluido
-  - **Entrada de teclado completa** con caracteres especiales
-  - **Integración perfecta con TextScreen**
-- Ejemplo de uso:
+- **New retro-style GUI from the 80s** inspired by Apple II, Commodore 64, and MSX
+- Main features:
+  - **40x24 character screen** with authentic vintage look
+  - **16 color palette** like Apple II/Commodore 64
+  - **Blinking block cursor** like classic terminals
+  - **Rendered with SDL2** for smooth performance
+  - **Full keyboard input** with special characters
+  - **Seamless integration with TextScreen**
+- Example usage:
   ```cpp
   #include "gui/emulator_gui.hpp"
   #include "devices/text_screen.hpp"
   
-  // Crear GUI con caracteres de 16x16 píxeles
+  // Create GUI with 16x16 pixel characters
   EmulatorGUI gui("6502 Retro Terminal", 16, 16);
   gui.initialize();
   
-  // Conectar con TextScreen
+  // Connect with TextScreen
   auto textScreen = std::make_shared<TextScreen>();
   gui.attachTextScreen(textScreen);
   
-  // Bucle principal
+  // Main loop
   while (gui.isInitialized()) {
       if (gui.hasKey()) {
           char key = gui.getLastKey();
@@ -204,16 +202,16 @@
       SDL_Delay(16);
   }
   ```
-- Ejecutar la demo:
+- Run the demo:
   ```bash
   cd build
   ./gui_demo
   ```
-- Ver `docs/emulator_gui.md` o `docs/emulator_gui_es.md` para documentación completa
+- See [docs/emulator_gui.md](docs/emulator_gui.md) for complete documentation.
 
-Consulta los archivos en `docs/` para detalles de arquitectura e instrucciones soportadas.
+Check the files in [docs/](docs/) for architecture details and supported instructions.
 
-### Depuración avanzada
+### Advanced Debugging
 
-- Se añade un depurador con breakpoints, watchpoints, trazas e inspección de estado de CPU.
-- Ver [docs/debugger.md](docs/debugger.md) para la guía completa de uso.
+- A debugger has been added with breakpoints, watchpoints, tracing, and CPU state inspection.
+- See [docs/debugger.md](docs/debugger.md) for the complete usage guide.

@@ -1,3 +1,5 @@
+# Instructions - Supported 6502 Instructions
+
 ## Best Practices
 
 1. **Always update flags correctly** - This is critical for program correctness
@@ -6,31 +8,31 @@
 4. **Use helper functions** - `UpdateZeroAndNegativeFlags`, etc.
 5. **Log memory access** - For debugging and tracing
 
-## Ejemplo de uso con binario externo
+## Example Usage with External Binary
 
 ```
 ./cpu_demo file ../examples/demo_program.bin
 ```
 
-## Instrucciones soportadas
+## Supported Instructions
 
 - LDA (Immediate, Zero Page, Zero Page,X, Absolute, Absolute,X, Absolute,Y)
 - LDX (Immediate)
 - STA (Zero Page)
 - JSR, RTS
 
-Consulta el código fuente para detalles de implementación y logging.
+Check the source code for implementation and logging details.
 
-## Integración con dispositivos de E/S
+## Integration with I/O Devices
 
 ### Apple II I/O
 
-El emulador soporta la simulación de E/S Apple II mediante la clase `AppleIO`:
+The emulator supports Apple II I/O simulation through the `AppleIO` class:
 
-- **Lectura de teclado ($FD0C)**: Devuelve el siguiente carácter del buffer de entrada, o 0 si no hay entrada.
-- **Escritura en pantalla ($FDED)**: Envía el carácter al buffer de pantalla y lo imprime en la consola.
+- **Keyboard reading ($FD0C)**: Returns the next character from the input buffer, or 0 if there is no input.
+- **Screen writing ($FDED)**: Sends the character to the screen buffer and prints it to the console.
 
-### Ejemplo de código
+### Example code
 
 ```cpp
 #include "cpu.hpp"
@@ -44,20 +46,20 @@ auto appleIO = std::make_shared<AppleIO>();
 cpu.Reset(mem);
 cpu.registerIODevice(appleIO);
 
-// Simular entrada de teclado
+// Simulate keyboard input
 appleIO->pushInput('A');
 
-// Ejecutar código que lea de $FD0C
+// Execute code that reads from $FD0C
 // mem[0x8000] = 0xAD; mem[0x8001] = 0x0C; mem[0x8002] = 0xFD; // LDA $FD0C
 // cpu.Execute(4, mem);
-// El acumulador ahora contiene 'A'
+// The accumulator now contains 'A'
 
-// Escribir en pantalla
+// Write to screen
 // mem[0x8003] = 0x8D; mem[0x8004] = 0xED; mem[0x8005] = 0xFD; // STA $FDED
 // cpu.Execute(4, mem);
-// La pantalla ahora muestra 'A'
+// The screen now shows 'A'
 ```
 
-### Extensibilidad
+### Extensibility
 
-Puedes crear tus propios dispositivos de E/S implementando la interfaz `IODevice` y registrándolos en la CPU.
+You can create your own I/O devices by implementing the `IODevice` interface and registering them with the CPU.

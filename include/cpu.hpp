@@ -18,12 +18,12 @@ class Debugger;
 // Public API for CPU 6502 Emulator
 // This header provides the main interface for using the CPU emulator
 
-// Definición de tipos para mayor claridad
-using Byte = uint8_t;  // Un byte (8 bits)
-using Word = uint16_t; // Una palabra (16 bits)
-using u32 = uint32_t;  // Un entero de 32 bits
+// Type definitions for clarity
+using Byte = uint8_t;  // A byte (8 bits)
+using Word = uint16_t; // A word (16 bits)
+using u32 = uint32_t;  // A 32-bit integer
 
-// Estructura que representa una instrucción con su opcode, ciclos, bytes y nombre
+// Structure representing an instruction with its opcode, cycles, bytes, and name
 struct Instruction {
     uint8_t opcode;
     uint8_t cycles;
@@ -31,10 +31,10 @@ struct Instruction {
     std::string name;
 };
 
-// Clase que representa la CPU del sistema
+// Class representing the system CPU
 class CPU {
 public:
-    // Definición de instrucciones con sus opcodes, ciclos, bytes y nombres
+    // Instruction definitions with their opcodes, cycles, bytes, and names
     static const Instruction INS_LDA_IM; // Instrucción LDA Immediate
     static const Instruction INS_LDA_ZP; // Instrucción LDA Zero Page
     static const Instruction INS_LDA_ZPX; // Instrucción LDA Zero Page,X
@@ -46,15 +46,15 @@ public:
     static const Instruction INS_LDA_ABSX; // Instrucción LDA Absolute,X
     static const Instruction INS_LDA_ABSY; // Instrucción LDA Absolute,Y
 
-    // Métodos públicos
-    void Reset(Mem& memory); // Reinicia la CPU y la memoria
-    void Execute(u32 Cycles, Mem& memory); // Ejecuta las instrucciones
-    void PrintCPUState() const; // Imprime el estado de la CPU
-    u32 CalculateCycles(const Mem& mem) const; // Calcula los ciclos necesarios para ejecutar el programa de prueba
-    Word FetchWordFromMemory(const Mem& memory, Word address) const; // Obtiene una palabra de la memoria
-    void LogMemoryAccess(Word address, Byte data, bool isWrite) const; // Registra el acceso a la memoria
-    void AssignCyclesAndBytes(Word &pc, u32 &cycles, Byte opcode) const; // Asigna ciclos y bytes según el opcode
-    void PushPCToStack(u32& cycles, Mem& memory); // Guarda el contador de programa en la pila
+    // Public methods
+    void Reset(Mem& memory); // Resets the CPU and memory
+    void Execute(u32 Cycles, Mem& memory); // Executes instructions
+    void PrintCPUState() const; // Prints the CPU state
+    u32 CalculateCycles(const Mem& mem) const; // Calculates the cycles needed to run the test program
+    Word FetchWordFromMemory(const Mem& memory, Word address) const; // Gets a word from memory
+    void LogMemoryAccess(Word address, Byte data, bool isWrite) const; // Logs memory access
+    void AssignCyclesAndBytes(Word &pc, u32 &cycles, Byte opcode) const; // Assigns cycles and bytes according to the opcode
+    void PushPCToStack(u32& cycles, Mem& memory); // Saves the program counter to the stack
     void PullPCFromStack(u32& cycles, Mem& memory); // Recupera el contador de programa de la pila
     Word PopWordFromStack(u32& cycles, Mem& memory); // Recupera el contador de programa de la pila
     Byte FetchByte(u32& Cycles, Mem& memory); // Obtiene un byte de la memoria
@@ -63,61 +63,61 @@ public:
     Word ReadWord(u32& Cycles, Word Address, Mem& memory); // Lee una palabra de la memoria
     void WriteByte(u32& Cycles, Byte Address, Byte Value, Mem& memory); // Escribe un byte en la memoria
     void WriteWord(u32& Cycles, Word Address, Word Value, Mem& memory); // Escribe una palabra en la memoria
-    void LDASetStatus(); // Establece el estado de la instrucción LDA
-    void LDXSetStatus(); // Establece el estado de la instrucción LDX
-    std::string ByteToBinaryString(Byte byte) const; // Convierte un byte a una cadena binaria
-    std::string WordToBinaryString(Word word) const; // Convierte una palabra a una cadena binaria
-    Word SPToAddress() const; // Convierte el puntero de pila en una dirección de memoria
+    void LDASetStatus(); // Sets the status for the LDA instruction
+    void LDXSetStatus(); // Sets the status for the LDX instruction
+    std::string ByteToBinaryString(Byte byte) const; // Converts a byte to a binary string
+    std::string WordToBinaryString(Word word) const; // Converts a word to a binary string
+    Word SPToAddress() const; // Converts the stack pointer to a memory address
     
     // Helper functions for new instruction system (public for instruction handlers)
-    void UpdateZeroAndNegativeFlags(Byte value); // Actualiza los flags Z y N
-    void UpdateCarryFlag(bool carry); // Actualiza el flag C
-    void UpdateOverflowFlag(bool overflow); // Actualiza el flag V
+    void UpdateZeroAndNegativeFlags(Byte value); // Updates the Z and N flags
+    void UpdateCarryFlag(bool carry); // Updates the C flag
+    void UpdateOverflowFlag(bool overflow); // Updates the V flag
    
-   // Registros de la CPU
-    Word PC;    // Program Counter (Contador de Programa)
+    // CPU registers
+     Word PC;    // Program Counter
     Byte SP;    // Stack Pointer (Puntero de Pila)
     Byte A, X, Y; // Registros A, X, Y
-    Byte C : 1; // Carry Flag (Bandera de Acarreo)
-    Byte Z : 1; // Zero Flag (Bandera de Cero)
-    Byte I : 1; // Interrupt Disable (Deshabilitar Interrupciones)
-    Byte D : 1; // Decimal Mode (Modo Decimal)
-    Byte B : 1; // Break Command (Comando de Interrupción)
-    Byte V : 1; // Overflow Flag (Bandera de Desbordamiento)
-    Byte N : 1; // Negative Flag (Bandera de Negativo)
+    Byte C : 1; // Carry Flag
+    Byte Z : 1; // Zero Flag
+    Byte I : 1; // Interrupt Disable
+    Byte D : 1; // Decimal Mode
+    Byte B : 1; // Break Command
+    Byte V : 1; // Overflow Flag
+    Byte N : 1; // Negative Flag
     
-    mutable std::ofstream logFile; // Archivo de registro de la CPU
+    mutable std::ofstream logFile; // CPU log file
 
-    CPU();  // Constructor de la CPU
-    // --- Integración de IODevices ---
+    CPU();  // CPU constructor
+    // --- IODevice integration ---
     void registerIODevice(std::shared_ptr<IODevice> device);
     void unregisterIODevice(std::shared_ptr<IODevice> device);
     
-    // --- Integración del Controlador de Interrupciones ---
+    // --- Interrupt Controller integration ---
     void setInterruptController(InterruptController* controller);
     InterruptController* getInterruptController() const;
 
-    // --- Integración con debugger ---
+    // --- Debugger integration ---
     void setDebugger(Debugger* debuggerInstance);
     Debugger* getDebugger() const;
     
-    // --- Manejo de Interrupciones ---
+    // --- Interrupt handling ---
     void serviceIRQ(Mem& memory);
     void serviceNMI(Mem& memory);
     void checkAndHandleInterrupts(Mem& memory);
     
-    // Métodos para acceso a memoria con soporte de IODevice
+    // Methods for memory access with IODevice support
     Byte ReadMemory(Word address, Mem& memory);
     void WriteMemory(Word address, Byte value, Mem& memory);
     
-    ~CPU(); // Destructor de la CPU
+    ~CPU(); // CPU destructor
     
 private:
-    std::vector<std::shared_ptr<IODevice>> ioDevices; // Dispositivos de E/S registrados
-    InterruptController* interruptController; // Controlador de interrupciones (no owned)
-    Debugger* debugger; // Depurador adjunto (no owned)
+    std::vector<std::shared_ptr<IODevice>> ioDevices; // Registered I/O devices
+    InterruptController* interruptController; // Interrupt controller (not owned)
+    Debugger* debugger; // Attached debugger (not owned)
 
-    // Métodos auxiliares para IO
+    // Auxiliary methods for IO
     IODevice* findIODeviceForRead(uint16_t address) const;
     IODevice* findIODeviceForWrite(uint16_t address) const;
 };

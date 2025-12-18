@@ -3,10 +3,10 @@
 #include <cstring>
 
 TextScreen::TextScreen() 
-    : videoBuffer(BUFFER_SIZE, ' '),  // Inicializar con espacios
+    : videoBuffer(BUFFER_SIZE, ' '),  // Initialize with spaces
       cursorCol(0),
       cursorRow(0),
-      controlReg(CTRL_AUTO_SCROLL) {  // Auto-scroll habilitado por defecto
+      controlReg(CTRL_AUTO_SCROLL) {  // Auto-scroll enabled by default
 }
 
 bool TextScreen::handlesRead(uint16_t address) const {
@@ -18,14 +18,14 @@ bool TextScreen::handlesWrite(uint16_t address) const {
 }
 
 uint8_t TextScreen::read(uint16_t address) {
-    // Lectura del buffer de video
+    // Reading from the video buffer
     if (address >= VIDEO_RAM_START && address <= VIDEO_RAM_END) {
         uint16_t offset = address - VIDEO_RAM_START;
         if (offset < BUFFER_SIZE) {
             return videoBuffer[offset];
         }
     }
-    // Lectura de registros de control
+    // Reading control registers
     else if (address == CURSOR_COL_ADDR) {
         return cursorCol;
     }
@@ -36,7 +36,7 @@ uint8_t TextScreen::read(uint16_t address) {
         return controlReg;
     }
     else if (address == CHAR_OUT_ADDR) {
-        // Lectura del puerto de caracteres no hace nada, devuelve 0
+        // Reading from the character port does nothing, returns 0
         return 0;
     }
     
@@ -44,39 +44,39 @@ uint8_t TextScreen::read(uint16_t address) {
 }
 
 void TextScreen::write(uint16_t address, uint8_t value) {
-    // Escritura en el buffer de video
+    // Writing to the video buffer
     if (address >= VIDEO_RAM_START && address <= VIDEO_RAM_END) {
         uint16_t offset = address - VIDEO_RAM_START;
         if (offset < BUFFER_SIZE) {
             videoBuffer[offset] = value;
         }
     }
-    // Escritura en registros de control
+    // Writing to control registers
     else if (address == CURSOR_COL_ADDR) {
-        cursorCol = value % WIDTH;  // Asegurar que está en rango
+        cursorCol = value % WIDTH;  // Ensure it's in range
     }
     else if (address == CURSOR_ROW_ADDR) {
-        cursorRow = value % HEIGHT;  // Asegurar que está en rango
+        cursorRow = value % HEIGHT;  // Ensure it's in range
     }
     else if (address == CONTROL_ADDR) {
-        // Verificar si se solicita limpiar la pantalla
+        // Check if screen clear is requested
         if (value & CTRL_CLEAR_SCREEN) {
             clear();
-            // Limpiar el bit de clear después de ejecutar
+            // Clear the bit after execution
             controlReg = value & ~CTRL_CLEAR_SCREEN;
         } else {
             controlReg = value;
         }
     }
     else if (address == CHAR_OUT_ADDR) {
-        // Escritura en el puerto de caracteres
+        // Writing to the character port
         writeCharAtCursor(value);
     }
 }
 
 void TextScreen::refresh() {
-    // En una implementación real con GUI (SDL/OpenGL), aquí se actualizaría la ventana
-    // Por ahora, esta función no hace nada (la pantalla está siempre "sincronizada")
+    // In a real implementation with GUI (SDL/OpenGL), the window would be updated here
+    // For now, this function does nothing (the screen is always "synchronized")
 }
 
 void TextScreen::clear() {
@@ -87,13 +87,13 @@ void TextScreen::clear() {
 
 std::string TextScreen::getBuffer() const {
     std::string result;
-    result.reserve(BUFFER_SIZE + HEIGHT);  // Espacio para caracteres + saltos de línea
+    result.reserve(BUFFER_SIZE + HEIGHT);  // Space for characters + newlines
     
     for (uint16_t row = 0; row < HEIGHT; ++row) {
         for (uint16_t col = 0; col < WIDTH; ++col) {
             uint16_t offset = row * WIDTH + col;
             char c = videoBuffer[offset];
-            // Convertir caracteres no imprimibles a espacios
+            // Convert non-printable characters to spaces
             if (c < 0x20 || c > 0x7E) {
                 result += ' ';
             } else {
@@ -143,7 +143,7 @@ bool TextScreen::getAutoScroll() const {
 }
 
 void TextScreen::scrollUp() {
-    // Mover todas las líneas una posición hacia arriba
+    // Move all lines up by one
     for (uint16_t row = 0; row < HEIGHT - 1; ++row) {
         for (uint16_t col = 0; col < WIDTH; ++col) {
             uint16_t dstOffset = row * WIDTH + col;
@@ -152,13 +152,13 @@ void TextScreen::scrollUp() {
         }
     }
     
-    // Limpiar la última línea
+    // Clear the last line
     uint16_t lastLineOffset = (HEIGHT - 1) * WIDTH;
     std::fill(videoBuffer.begin() + lastLineOffset, 
               videoBuffer.begin() + lastLineOffset + WIDTH, 
               ' ');
     
-    // Mover cursor al inicio de la última línea
+    // Move cursor to the start of the last line
     cursorCol = 0;
     cursorRow = HEIGHT - 1;
 }
@@ -172,7 +172,7 @@ void TextScreen::advanceCursor() {
             if (controlReg & CTRL_AUTO_SCROLL) {
                 scrollUp();
             } else {
-                // Si no hay auto-scroll, volver al inicio
+                // If no auto-scroll, go back to the start
                 cursorRow = 0;
             }
         }
@@ -180,9 +180,9 @@ void TextScreen::advanceCursor() {
 }
 
 void TextScreen::processCharacter(char c) {
-    // Procesar caracteres especiales
+    // Process special characters
     if (c == '\n') {
-        // Nueva línea: ir al inicio de la siguiente línea
+        // New line: go to the start of the next line
         cursorCol = 0;
         cursorRow++;
         if (cursorRow >= HEIGHT) {
@@ -194,11 +194,11 @@ void TextScreen::processCharacter(char c) {
         }
         return;
     } else if (c == '\r') {
-        // Retorno de carro: ir al inicio de la línea actual
+        // Carriage return: go to the start of the current line
         cursorCol = 0;
         return;
     } else if (c == '\t') {
-        // Tab: avanzar a la siguiente posición múltiplo de 8
+        // Tab: advance to the next multiple of 8
         uint8_t nextTab = ((cursorCol / 8) + 1) * 8;
         while (cursorCol < nextTab && cursorCol < WIDTH) {
             uint16_t offset = getBufferOffset(cursorCol, cursorRow);
@@ -207,7 +207,7 @@ void TextScreen::processCharacter(char c) {
         }
         return;
     } else if (c == '\b') {
-        // Backspace: retroceder una posición (sin borrar)
+        // Backspace: move back one position (without erasing)
         if (cursorCol > 0) {
             cursorCol--;
         } else if (cursorRow > 0) {
@@ -217,13 +217,13 @@ void TextScreen::processCharacter(char c) {
         return;
     }
     
-    // Escribir carácter imprimible en la posición del cursor
+    // Write printable character at the cursor position
     if (c >= 0x20 && c <= 0x7E) {
         uint16_t offset = getBufferOffset(cursorCol, cursorRow);
         videoBuffer[offset] = c;
         advanceCursor();
     }
-    // Ignorar caracteres no imprimibles (excepto los ya procesados)
+    // Ignore non-printable characters (except for those already processed)
 }
 
 uint16_t TextScreen::getBufferOffset(uint8_t col, uint8_t row) const {

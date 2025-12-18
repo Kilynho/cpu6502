@@ -3,10 +3,10 @@
 #include <cstdint>
 
 /**
- * @brief Interfaz base para dispositivos de temporización
- * 
- * Esta interfaz define las operaciones básicas que deben implementar
- * los dispositivos de temporización (timers, RTC, etc.)
+ * @brief Base interface for timing devices
+ *
+ * This interface defines the basic operations that timing devices must implement
+ * (timers, RTC, etc.)
  */
 class TimerDevice : public IODevice {
 public:

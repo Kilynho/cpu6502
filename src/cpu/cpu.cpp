@@ -9,7 +9,7 @@
 #include <iomanip>
 #include <sstream>
 
-// Definición de las instrucciones con sus opcodes, ciclos, bytes y nombres
+// Definition of instructions with their opcodes, cycles, bytes, and names
 const Instruction CPU::INS_LDA_IM = {0xA9, 2, 2, "LDA_IM"}; // LDA Immediate
 const Instruction CPU::INS_LDA_ZP = {0xA5, 3, 2, "LDA_ZP"}; // LDA Zero Page
 const Instruction CPU::INS_LDA_ZPX = {0xB5, 4, 2, "LDA_ZPX"}; // LDA Zero Page,X
@@ -23,15 +23,13 @@ const Instruction CPU::INS_LDA_ABSY = {0xB9, 4, 3, "LDA_ABSY"}; // LDA Absolute,
 
 u32 CPU::CalculateCycles(const Mem& mem) const {
     u32 cycles = 0;
-    Word pc = Mem::ROM_START; // Inicio del programa en la memoria ROM
+    Word pc = Mem::ROM_START; // Start of the program in ROM memory
 
-    while (true) { // Bucle infinito
+    while (true) { // Infinite loop
         Byte opcode = mem[pc];
-        AssignCyclesAndBytes(pc, cycles, opcode); // Asignar ciclos y bytes según el opcode
-        // Detener si se alcanza el final de la memoria
-        if (pc == Mem::ROM_END) {   // Si se alcanza el final de la memoria
-            break;                // Salir del bucle
-        }
+        AssignCyclesAndBytes(pc, cycles, opcode); // Assign cycles and bytes according to the opcode
+        // Stop if the end of memory is reached
+        if (pc == Mem::ROM_END) { break; }
     }
     return cycles;
 }
@@ -39,7 +37,7 @@ u32 CPU::CalculateCycles(const Mem& mem) const {
 void CPU::AssignCyclesAndBytes(Word &pc, u32 &cycles, Byte opcode) const {
     const Instruction* instruction = nullptr;
 
-    // Asignar la instrucción correspondiente según el opcode
+    // Assign the corresponding instruction according to the opcode
     if (opcode == INS_JSR.opcode) {
         instruction = &INS_JSR;
     } else if (opcode == INS_LDA_IM.opcode) {
@@ -62,7 +60,7 @@ void CPU::AssignCyclesAndBytes(Word &pc, u32 &cycles, Byte opcode) const {
         instruction = &INS_LDA_ABSY;
     }
 
-    // Si se encontró una instrucción válida, asignar ciclos y bytes
+    // If a valid instruction was found, assign cycles and bytes
     if (instruction) {
         cycles += instruction->cycles;
         pc += instruction->bytes;
@@ -72,36 +70,37 @@ void CPU::AssignCyclesAndBytes(Word &pc, u32 &cycles, Byte opcode) const {
 }
 
 Byte CPU::FetchByte(u32& Cycles, Mem& memory) {
-    Byte Data = memory[PC]; // Obtener el byte de la memoria en la dirección del contador de programa
+    Byte Data = memory[PC]; // Get the byte from memory at the program counter address
     if (debugger) debugger->notifyMemoryAccess(PC, Data, false);
-    LogMemoryAccess(PC, Data, false); // Registrar el acceso de lectura a la memoria
-    PC++; // Incrementar el contador de programa
-    Cycles--; // Decrementar los ciclos restantes
-    return Data; // Devolver el byte obtenido
+    LogMemoryAccess(PC, Data, false); // Log the memory read access
+    PC++; // Increment the program counter
+    Cycles--; // Decrement remaining cycles
+    return Data; // Return the obtained byte
 }
 
 Word CPU::FetchWord(u32& Cycles, Mem& memory) {
-    Word Data = memory[PC]; // Obtener el byte bajo de la palabra
+    Word Data = memory[PC]; // Get the low byte of the word
     if (debugger) debugger->notifyMemoryAccess(PC, Data, false);
-    LogMemoryAccess(PC, Data, false); // Registrar el acceso de lectura a la memoria
-    PC++; // Incrementar el contador de programa
-    Data |= (memory[PC] << 8); // Obtener el byte alto de la palabra y combinarlo con el byte bajo
+    LogMemoryAccess(PC, Data, false); // Log the memory read access
+    PC++; // Increment the program counter
+    Data |= (memory[PC] << 8); // Get the high byte of the word and combine it with the low byte
     if (debugger) debugger->notifyMemoryAccess(PC, memory[PC], false);
-    LogMemoryAccess(PC, memory[PC], false); // Registrar el acceso de lectura a la memoria
-    PC++; // Incrementar el contador de programa
-    Cycles -= 2; // Decrementar los ciclos restantes
-    return Data; // Devolver la palabra obtenida
+    LogMemoryAccess(PC, memory[PC], false); // Log the memory read access
+    PC++; // Increment the program counter
+    Cycles -= 2; // Decrement remaining cycles
+    return Data; // Return the obtained word
 }
 
 Word CPU::FetchWordFromMemory(const Mem& memory, Word address) const {
-    LogMemoryAccess(address, memory[address], false); // Registrar el acceso de lectura a la memoria
-    LogMemoryAccess(address + 1, memory[address + 1], false); // Registrar el acceso de lectura a la memoria
+    LogMemoryAccess(address, memory[address], false); // Log the memory read access
+    LogMemoryAccess(address + 1, memory[address + 1], false); // Log the memory read access
+    // Definition of instructions with their opcodes, cycles, bytes, and names
     return (memory[address] | (memory[address + 1] << 8));
 } 
 
 
 Byte CPU::ReadByte(u32& Cycles, Byte Address, Mem& memory) {
-    // Consultar IODevices primero
+    // Check IODevices first
     if (IODevice* io = findIODeviceForRead(Address)) {
         Byte Data = io->read(Address);
         if (debugger) debugger->notifyMemoryAccess(Address, Data, false);
@@ -117,20 +116,20 @@ Byte CPU::ReadByte(u32& Cycles, Byte Address, Mem& memory) {
 }
 
 Word CPU::ReadWord(u32& Cycles, Word Address, Mem& memory) {
-    Word Data = memory[Address]; // Leer el byte bajo de la palabra
+    Word Data = memory[Address]; // Read the low byte of the word
     if (debugger) debugger->notifyMemoryAccess(Address, Data, false);
-    LogMemoryAccess(Address, Data, false); // Registrar el acceso de lectura a la memoria
-    Address++; // Incrementar la dirección
-    Data |= (memory[Address] << 8); // Leer el byte alto de la palabra y combinarlo con el byte bajo
+    LogMemoryAccess(Address, Data, false); // Log the memory read access
+    Address++; // Increment the address
+    Data |= (memory[Address] << 8); // Read the high byte of the word and combine it with the low byte
     if (debugger) debugger->notifyMemoryAccess(Address, memory[Address], false);
-    LogMemoryAccess(Address, memory[Address], false); // Registrar el acceso de lectura a la memoria
-    Cycles--; // Decrementar los ciclos restantes
-    return Data; // Devolver la palabra leída
+    LogMemoryAccess(Address, memory[Address], false); // Log the memory read access
+    Cycles--; // Decrement remaining cycles
+    return Data; // Return the read word
 }
 
 
 void CPU::WriteByte(u32& Cycles, Byte Address, Byte Data, Mem& memory) {
-    // Consultar IODevices primero
+    // Check IODevices first
     if (IODevice* io = findIODeviceForWrite(Address)) {
         io->write(Address, Data);
         if (debugger) debugger->notifyMemoryAccess(Address, Data, true);
@@ -143,7 +142,7 @@ void CPU::WriteByte(u32& Cycles, Byte Address, Byte Data, Mem& memory) {
     LogMemoryAccess(Address, Data, true);
     Cycles--;
 }
-// --- Métodos de integración IODevice ---
+// --- IODevice integration methods ---
 void CPU::registerIODevice(std::shared_ptr<IODevice> device) {
     ioDevices.push_back(device);
 }
@@ -166,7 +165,7 @@ IODevice* CPU::findIODeviceForWrite(uint16_t address) const {
     return nullptr;
 }
 
-// Métodos de acceso a memoria con soporte IODevice
+// Memory access methods with IODevice support
 Byte CPU::ReadMemory(Word address, Mem& memory) {
     if (IODevice* io = findIODeviceForRead(address)) {
         return io->read(address);
@@ -185,18 +184,18 @@ void CPU::WriteMemory(Word address, Byte value, Mem& memory) {
 }
 
 void CPU::WriteWord(u32& Cycles, Word Address, Word Data, Mem& memory) {
-    memory[Address] = Data & 0x00FF; // Escribir el byte bajo de la palabra en la memoria
+    memory[Address] = Data & 0x00FF; // Write the low byte of the word to memory
     if (debugger) debugger->notifyMemoryAccess(Address, Data & 0x00FF, true);
-    LogMemoryAccess(Address, Data & 0x00FF, true); // Registrar el acceso de escritura a la memoria
-    Cycles--; // Decrementar los ciclos restantes
-    memory[Address + 1] = (Data & 0xFF00) >> 8; // Escribir el byte alto de la palabra en la memoria
+    LogMemoryAccess(Address, Data & 0x00FF, true); // Log the memory write access
+    Cycles--; // Decrement remaining cycles
+    memory[Address + 1] = (Data & 0xFF00) >> 8; // Write the high byte of the word to memory
     if (debugger) debugger->notifyMemoryAccess(Address + 1, (Data & 0xFF00) >> 8, true);
-    LogMemoryAccess(Address + 1, (Data & 0xFF00) >> 8, true); // Registrar el acceso de escritura a la memoria
-    Cycles--; // Decrementar los ciclos restantes
+    LogMemoryAccess(Address + 1, (Data & 0xFF00) >> 8, true); // Log the memory write access
+    Cycles--; // Decrement remaining cycles
 }
 
 Word CPU::SPToAddress() const {
-    return 0x0100 + SP; // Devolver la dirección de la pila
+    return 0x0100 + SP; // Return the stack address
 }
 
 void CPU::PushPCToStack(u32& Cycles, Mem& memory) {
@@ -215,24 +214,24 @@ void CPU::PushPCToStack(u32& Cycles, Mem& memory) {
 
 void CPU::PullPCFromStack(u32 &cycles, Mem &memory)
 {
-    PC = PopWordFromStack(cycles, memory); // Recuperar el contador de programa de la pila
-    PC++; // Incrementar el contador de programa
+    PC = PopWordFromStack(cycles, memory); // Restore the program counter from the stack
+    PC++; // Increment the program counter
 }
 
 Word CPU::PopWordFromStack(u32& Cycles, Mem& memory) {
-    Word ValueFromStack = ReadWord(Cycles, SPToAddress(), memory); // Recuperar el contador de programa de la pila
-    SP += 2; // Incrementar el puntero de pila
-    return ValueFromStack; // Devolver el contador de programa recuperado
+    Word ValueFromStack = ReadWord(Cycles, SPToAddress(), memory); // Restore the program counter from the stack
+    SP += 2; // Increment the stack pointer
+    return ValueFromStack; // Return the restored program counter
 }
 
 void CPU::LDASetStatus() {
-    Z = (A == 0); // Establecer el flag de cero si el acumulador es cero
-    N = (A & 0b10000000) > 0; // Establecer el flag de negativo si el bit más significativo del acumulador es 1
+    Z = (A == 0); // Set the zero flag if the accumulator is zero
+    N = (A & 0b10000000) > 0; // Set the negative flag if the most significant bit of the accumulator is 1
 }
 
 void CPU::LDXSetStatus() {
-    Z = (X == 0); // Establecer el flag de cero si el registro X es cero
-    N = (X & 0b10000000) > 0; // Establecer el flag de negativo si el bit más significativo del registro X es 1
+    Z = (X == 0); // Set the zero flag if the X register is zero
+    N = (X & 0b10000000) > 0; // Set the negative flag if the most significant bit of the X register is 1
 }
 
 void CPU::UpdateZeroAndNegativeFlags(Byte value) {
@@ -249,17 +248,16 @@ void CPU::UpdateOverflowFlag(bool overflow) {
 }
 
 void CPU::Reset(Mem& memory) {
-    // Limpiar el fichero de log
+    // Clear the log file
     std::ofstream logFile("cpu_log.txt", std::ios_base::trunc);
     logFile.close();
-    
-    memory.Initialize(); // Inicializar la memoria
-    memory.Data[Mem::RESET_VECTOR] = 0x00; // Establecer la dirección baja del vector de reset
-    memory.Data[Mem::RESET_VECTOR + 1] = 0x80; // Establecer la dirección alta del vector de reset
-    memory.Data[Mem::STACK_END] = 0xff; // Establecer la dirección baja del vector de reset
-    memory.Data[Mem::STACK_END + 1] = 0x00; // Establecer la dirección alta del vector de reset
-    PC = FetchWordFromMemory(memory, Mem::RESET_VECTOR); // Iniciar el contador de programa en la dirección del vector de reset (little-endian)
-    SP = FetchWordFromMemory(memory, Mem::STACK_END); // Iniciar el contador de programa en la dirección del vector de reset (little-endian)
+    memory.Initialize(); // Initialize memory
+    memory.Data[Mem::RESET_VECTOR] = 0x00; // Set the low byte of the reset vector address
+    memory.Data[Mem::RESET_VECTOR + 1] = 0x80; // Set the high byte of the reset vector address
+    memory.Data[Mem::STACK_END] = 0xff; // Set the low byte of the stack end address
+    memory.Data[Mem::STACK_END + 1] = 0x00; // Set the high byte of the stack end address
+    PC = FetchWordFromMemory(memory, Mem::RESET_VECTOR); // Start the program counter at the reset vector address (little-endian)
+    SP = FetchWordFromMemory(memory, Mem::STACK_END); // Start the stack pointer at the stack end address (little-endian)
     A = X = Y = 0;
     C = Z = I = D = B = V = N = 0;
 }
@@ -428,58 +426,50 @@ Debugger* CPU::getDebugger() const {
 }
 
 void CPU::serviceIRQ(Mem& memory) {
-    // Guardar PC en la pila (alto primero, luego bajo)
+    // Save PC to the stack (high byte first, then low byte)
     memory[0x0100 + SP] = static_cast<Byte>((PC >> 8) & 0xFF);
     SP--;
     memory[0x0100 + SP] = static_cast<Byte>(PC & 0xFF);
     SP--;
-    
-    // Guardar el registro de estado (P) en la pila
+    // Save the status register (P) to the stack
     Byte status = 0;
     status |= (C ? 0x01 : 0);
     status |= (Z ? 0x02 : 0);
     status |= (I ? 0x04 : 0);
     status |= (D ? 0x08 : 0);
     status |= (B ? 0x10 : 0);
-    status |= 0x20;  // Bit 5 siempre está en 1
+    status |= 0x20;  // Bit 5 is always set to 1
     status |= (V ? 0x40 : 0);
     status |= (N ? 0x80 : 0);
-    
     memory[0x0100 + SP] = status;
     SP--;
-    
-    // Establecer el flag I (Interrupt Disable)
+    // Set the I flag (Interrupt Disable)
     I = 1;
-    
-    // Cargar el vector de IRQ en PC
+    // Load the IRQ vector into PC
     PC = memory[Mem::IRQ_VECTOR] | (memory[Mem::IRQ_VECTOR + 1] << 8);
 }
 
 void CPU::serviceNMI(Mem& memory) {
-    // Guardar PC en la pila (alto primero, luego bajo)
+    // Save PC to the stack (high byte first, then low byte)
     memory[0x0100 + SP] = static_cast<Byte>((PC >> 8) & 0xFF);
     SP--;
     memory[0x0100 + SP] = static_cast<Byte>(PC & 0xFF);
     SP--;
-    
-    // Guardar el registro de estado (P) en la pila
+    // Save the status register (P) to the stack
     Byte status = 0;
     status |= (C ? 0x01 : 0);
     status |= (Z ? 0x02 : 0);
     status |= (I ? 0x04 : 0);
     status |= (D ? 0x08 : 0);
     status |= (B ? 0x10 : 0);
-    status |= 0x20;  // Bit 5 siempre está en 1
+    status |= 0x20;  // Bit 5 is always set to 1
     status |= (V ? 0x40 : 0);
     status |= (N ? 0x80 : 0);
-    
     memory[0x0100 + SP] = status;
     SP--;
-    
-    // Establecer el flag I (Interrupt Disable)
+    // Set the I flag (Interrupt Disable)
     I = 1;
-    
-    // Cargar el vector de NMI en PC
+    // Load the NMI vector into PC
     PC = memory[Mem::NMI_VECTOR] | (memory[Mem::NMI_VECTOR + 1] << 8);
 }
 
@@ -488,14 +478,14 @@ void CPU::checkAndHandleInterrupts(Mem& memory) {
         return;
     }
     
-    // NMI tiene prioridad sobre IRQ
+    // NMI has priority over IRQ
     if (interruptController->hasNMI()) {
         serviceNMI(memory);
         interruptController->acknowledgeNMI();
         return;
     }
     
-    // IRQ solo se atiende si el flag I está limpio
+    // IRQ is only handled if the I flag is clear
     if (interruptController->hasIRQ() && !I) {
         serviceIRQ(memory);
         interruptController->acknowledgeIRQ();

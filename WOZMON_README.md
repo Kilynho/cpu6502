@@ -67,7 +67,7 @@ The Apple 1 used a 6821 PIA chip for I/O:
 - `src/devices/pia.cpp` - PIA device implementation
 - `examples/wozmon_demo.cpp` - Interactive WOZMON demo
 - `docs/wozmon_integration.md` - Complete documentation
-- `wozmon.asm` - Original WOZMON source code
+- `src/wozmon/wozmon.asm` - Original WOZMON source code
 
 ## More Information
 

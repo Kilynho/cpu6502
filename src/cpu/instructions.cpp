@@ -438,10 +438,14 @@ void RTS(CPU& cpu, u32& cycles, Mem& memory) {
 void Branch(CPU& cpu, u32& cycles, Mem& memory, bool condition) {
     int8_t offset = static_cast<int8_t>(cpu.FetchByte(cycles, memory));
     
+    // Base cycle cost after reading offset
+    cycles--;
+
     if (condition) {
         Word oldPC = cpu.PC;
         cpu.PC += offset;
-        cycles--; // Branch taken
+        // Additional cycle for taken branch
+        cycles--;
         
         // Additional cycle if page boundary crossed
         if (Addressing::PagesCross(oldPC, cpu.PC)) {
@@ -542,13 +546,13 @@ void NOP(CPU& cpu, u32& cycles, Mem& memory) {
 // 65C02: Accumulator INC/DEC
 void INC_A(CPU& cpu, u32& cycles, Mem& memory) {
     cpu.A = static_cast<Byte>(cpu.A + 1);
-    cycles -= 2;
+    cycles--;
     UpdateZeroAndNegativeFlags(cpu, cpu.A);
 }
 
 void DEC_A(CPU& cpu, u32& cycles, Mem& memory) {
     cpu.A = static_cast<Byte>(cpu.A - 1);
-    cycles -= 2;
+    cycles--;
     UpdateZeroAndNegativeFlags(cpu, cpu.A);
 }
 

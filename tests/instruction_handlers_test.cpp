@@ -513,7 +513,7 @@ TEST_F(InstructionHandlersTest, TestBranch_NotTaken)
     Instructions::Branch(cpu, cycles, mem, false);
     
     EXPECT_EQ(cpu.PC, 0x8001); // Only consumed offset byte, no branch taken
-    EXPECT_EQ(cycles, 1); // Should have consumed 1 cycle for fetch
+    EXPECT_EQ(cycles, 0u); // Fetch + base branch cycle consumed
 }
 
 // ========== Flag Tests ==========

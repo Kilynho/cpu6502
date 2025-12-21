@@ -388,8 +388,8 @@ TEST(CpuIntegration, BasicColdstartHandlesUndocumentedNop)
     mem[0xA0C2] = 0xA2; // LDX #$02
     mem[0xA0C3] = 0x02;
     mem[0xA0C4] = 0xCA; // DEX
-    mem[0xA0C5] = 0xD0; // BNE back two bytes
-    mem[0xA0C6] = 0xFE; // Offset to 0xA0C4
+    mem[0xA0C5] = 0xD0; // BNE back three bytes
+    mem[0xA0C6] = 0xFD; // Offset to 0xA0C4 (relative to next PC)
     mem[0xA0C7] = 0x3A; // Undocumented NOP at target address
     mem[0xA0C8] = 0xEA; // Padding NOP (not reached with cycle budget)
     mem[0xA0C9] = 0x00; // BRK safeguard if cycles extend

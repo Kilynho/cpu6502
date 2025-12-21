@@ -1,4 +1,5 @@
 #include "devices/pia.hpp"
+#include <iostream>
 
 PIA::PIA()
     : kbdcr_(0), dspcr_(0), key_ready_(false), display_ready_(true) {}
@@ -14,20 +15,26 @@ bool PIA::handlesWrite(uint16_t address) const {
 }
 
 uint8_t PIA::read(uint16_t address) {
+    static int read_count = 0;
     switch (address) {
         case 0xD010: {  // KBD - Keyboard input
-            // Bit 7: Key ready flag
+            // ...existing code...
+            // Bit 7: Key ready flag (should always be 1 for valid char)
             // Bits 0-6: ASCII character with high bit set
             if (!keyboard_buffer_.empty()) {
                 uint8_t c = keyboard_buffer_.front();
                 keyboard_buffer_.pop();
-                key_ready_ = !keyboard_buffer_.empty();
-                return c;
+                key_ready_ = !keyboard_buffer_.empty(); // Update after reading
+                // ...existing code...
+                return c; // Character already has bit 7 set
             }
             key_ready_ = false;
-            return 0;
+            return 0x00; // No key available
         }
         case 0xD011:  // KBDCR - Keyboard control register
+            // ...existing code...
+            // Check if there's a key available (before consuming it)
+            key_ready_ = !keyboard_buffer_.empty();
             return kbdcr_ | (key_ready_ ? 0x80 : 0x00);
         
         case 0xD012: {  // DSP - Display output

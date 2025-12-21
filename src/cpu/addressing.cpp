@@ -87,6 +87,16 @@ Word IndirectY(CPU& cpu, u32& cycles, Mem& memory, bool pageCrossPenalty) {
     return effectiveAddress;
 }
 
+// 65C02: (Zero Page) Indirect addressing
+Word IndirectZeroPage(CPU& cpu, u32& cycles, Mem& memory) {
+    Byte zpPtr = cpu.FetchByte(cycles, memory); // pointer in zero page
+    // Read address from zero page (wraparound)
+    Byte lowByte = memory[zpPtr];
+    Byte highByte = memory[static_cast<Byte>(zpPtr + 1)];
+    cycles -= 2;
+    return (static_cast<Word>(highByte) << 8) | lowByte;
+}
+
 Word Indirect(CPU& cpu, u32& cycles, Mem& memory) {
     Word indirectAddress = cpu.FetchWord(cycles, memory);
     

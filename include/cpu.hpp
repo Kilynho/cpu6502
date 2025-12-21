@@ -49,10 +49,13 @@ public:
     // Public methods
     void Reset(Mem& memory); // Resets the CPU and memory
     void Execute(u32 Cycles, Mem& memory); // Executes instructions
+    void ExecuteSingleInstruction(Mem& memory); // Executes exactly one instruction
     void PrintCPUState() const; // Prints the CPU state
     u32 CalculateCycles(const Mem& mem) const; // Calculates the cycles needed to run the test program
     Word FetchWordFromMemory(const Mem& memory, Word address) const; // Gets a word from memory
-    void LogMemoryAccess(Word address, Byte data, bool isWrite) const; // Logs memory access
+    void LogMemoryAccess(Word address, Byte data, bool isWrite) const; // Logs memory access (DEBUG)
+    void LogInstruction(Word pc, Byte opcode) const; // Logs one line per instruction (INFO)
+    void RotateLogIfNeeded() const; // Rotates log files if size exceeds limit
     void AssignCyclesAndBytes(Word &pc, u32 &cycles, Byte opcode) const; // Assigns cycles and bytes according to the opcode
     void PushPCToStack(u32& cycles, Mem& memory); // Saves the program counter to the stack
     void PullPCFromStack(u32& cycles, Mem& memory); // Recupera el contador de programa de la pila
@@ -65,6 +68,7 @@ public:
     void WriteWord(u32& Cycles, Word Address, Word Value, Mem& memory); // Escribe una palabra en la memoria
     void LDASetStatus(); // Sets the status for the LDA instruction
     void LDXSetStatus(); // Sets the status for the LDX instruction
+    void LDYSetStatus(); // Sets the status for the LDY instruction
     std::string ByteToBinaryString(Byte byte) const; // Converts a byte to a binary string
     std::string WordToBinaryString(Word word) const; // Converts a word to a binary string
     Word SPToAddress() const; // Converts the stack pointer to a memory address

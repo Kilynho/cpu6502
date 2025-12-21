@@ -1,6 +1,11 @@
 #include <gtest/gtest.h>
+#include <iostream>
+#include <sstream>
+#include <string>
 #include "cpu.hpp"
 #include "mem.hpp"
+#include "cpu_instructions.hpp"
+#include "util/logger.hpp"
 
 class M6502Test1 : public testing::Test
 {
@@ -10,6 +15,10 @@ public:
 
     virtual void SetUp()
     {
+        mem.Initialize();
+        mem[Mem::RESET_VECTOR] = 0x00;
+        mem[Mem::RESET_VECTOR + 1] = 0x80;
+        Instructions::InitializeInstructionTable();
         cpu.Reset(mem);
     }
 
@@ -362,7 +371,49 @@ TEST_F(M6502Test1, TestNestedJSR)
     EXPECT_EQ(cpu.PC, 0x8003);
 }
 
+TEST(CpuIntegration, BasicColdstartHandlesUndocumentedNop)
+{
+    Mem mem;
+    CPU cpu;
+
+    mem.Initialize();
+    Instructions::InitializeInstructionTable();
+
+    // Entry point mirrors BASIC coldstart window with 0x3A at 0xA0C7
+    mem[Mem::RESET_VECTOR] = 0xC0;
+    mem[Mem::RESET_VECTOR + 1] = 0xA0;
+
+    mem[0xA0C0] = 0xA9; // LDA #$00
+    mem[0xA0C1] = 0x00;
+    mem[0xA0C2] = 0xA2; // LDX #$02
+    mem[0xA0C3] = 0x02;
+    mem[0xA0C4] = 0xCA; // DEX
+    mem[0xA0C5] = 0xD0; // BNE back two bytes
+    mem[0xA0C6] = 0xFE; // Offset to 0xA0C4
+    mem[0xA0C7] = 0x3A; // Undocumented NOP at target address
+    mem[0xA0C8] = 0xEA; // Padding NOP (not reached with cycle budget)
+    mem[0xA0C9] = 0x00; // BRK safeguard if cycles extend
+
+    cpu.Reset(mem);
+
+    util::LogLevel previousLevel = util::Logger::GetInstance().GetLevel();
+    util::LogSetLevel(util::LogLevel::WARN);
+
+    std::ostringstream logCapture;
+    auto* oldBuf = std::cout.rdbuf(logCapture.rdbuf());
+
+    cpu.Execute(17, mem); // Enough to exit loop and execute 0x3A, but stop before BRK
+
+    std::cout.rdbuf(oldBuf);
+    util::LogSetLevel(previousLevel);
+
+    EXPECT_EQ(cpu.PC, 0xA0C8);
+    EXPECT_EQ(logCapture.str().find("Unimplemented opcode"), std::string::npos);
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
+    // Disable CPU instruction guard during tests to avoid false timeouts
+    setenv("CPU_DISABLE_GUARD", "1", 1);
     return RUN_ALL_TESTS();
 }

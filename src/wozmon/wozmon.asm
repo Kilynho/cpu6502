@@ -1,8 +1,4 @@
-;  The WOZ Monitor for the Apple 1
-;  Written by Steve Wozniak in 1976
-
-
-; Page 0 Variables
+.setcpu "65C02"
 
 XAML            = $24           ;  Last "opened" location Low
 XAMH            = $25           ;  Last "opened" location High
@@ -12,9 +8,6 @@ L               = $28           ;  Hex value parsing Low
 H               = $29           ;  Hex value parsing High
 YSAV            = $2A           ;  Used to see if hex value is given
 MODE            = $2B           ;  $00=XAM, $7F=STOR, $AE=BLOCK XAM
-
-
-; Other Variables
 
 IN              = $0200         ;  Input buffer to $027F
 KBD             = $D010         ;  PIA.A keyboard input
@@ -152,8 +145,6 @@ ECHO:           BIT DSP         ; DA bit (B7) cleared yet?
 
                 BRK             ; unused
                 BRK             ; unused
-
-; Interrupt Vectors
 
                 .WORD $0F00     ; NMI
                 .WORD RESET     ; RESET

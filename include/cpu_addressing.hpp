@@ -24,6 +24,8 @@ namespace Addressing {
     Word AbsoluteY(CPU& cpu, u32& cycles, Mem& memory, bool pageCrossPenalty = true);
     Word IndirectX(CPU& cpu, u32& cycles, Mem& memory);
     Word IndirectY(CPU& cpu, u32& cycles, Mem& memory, bool pageCrossPenalty = true);
+    // 65C02: (Zero Page) Indirect addressing
+    Word IndirectZeroPage(CPU& cpu, u32& cycles, Mem& memory);
     Word Indirect(CPU& cpu, u32& cycles, Mem& memory);
     
     // Helper to check if page boundary was crossed

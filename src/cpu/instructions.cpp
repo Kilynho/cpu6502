@@ -2,6 +2,8 @@
 #include "cpu.hpp"
 #include "cpu_addressing.hpp"
 #include "util/logger.hpp"
+#include <iomanip>
+#include <sstream>
 #include <array>
 
 namespace Instructions {
@@ -105,7 +107,7 @@ void PHA(CPU& cpu, u32& cycles, Mem& memory) {
     memory[cpu.SPToAddress()] = cpu.A;
     cpu.LogMemoryAccess(cpu.SPToAddress(), cpu.A, true);
     cpu.SP--;
-    cycles -= 2;
+    cycles -= 3; // 65C02: PHA takes 3 cycles
 }
 
 void PHP(CPU& cpu, u32& cycles, Mem& memory) {
@@ -115,14 +117,14 @@ void PHP(CPU& cpu, u32& cycles, Mem& memory) {
     memory[cpu.SPToAddress()] = status;
     cpu.LogMemoryAccess(cpu.SPToAddress(), status, true);
     cpu.SP--;
-    cycles -= 2;
+    cycles -= 3; // 65C02: PHP takes 3 cycles
 }
 
 void PLA(CPU& cpu, u32& cycles, Mem& memory) {
     cpu.SP++;
     cpu.A = memory[cpu.SPToAddress()];
     cpu.LogMemoryAccess(cpu.SPToAddress(), cpu.A, false);
-    cycles -= 3;
+    cycles -= 4; // 65C02: PLA takes 4 cycles
     UpdateZeroAndNegativeFlags(cpu, cpu.A);
 }
 
@@ -135,7 +137,7 @@ void PLP(CPU& cpu, u32& cycles, Mem& memory) {
     cpu.V = (status >> 6) & 1;
     cpu.D = (status >> 3) & 1;
     cpu.I = (status >> 2) & 1;
-    cpu.Z = (status >> 1) & 1;
+    cycles -= 4; // 65C02: PLP takes 4 cycles
     cpu.C = status & 1;
     
     cycles -= 3;
@@ -538,15 +540,139 @@ void NOP(CPU& cpu, u32& cycles, Mem& memory) {
     cycles--;
 }
 
+// 65C02: Accumulator INC/DEC
+void INC_A(CPU& cpu, u32& cycles, Mem& memory) {
+    cpu.A = static_cast<Byte>(cpu.A + 1);
+    cycles -= 2;
+    UpdateZeroAndNegativeFlags(cpu, cpu.A);
+}
+
+void DEC_A(CPU& cpu, u32& cycles, Mem& memory) {
+    cpu.A = static_cast<Byte>(cpu.A - 1);
+    cycles -= 2;
+    UpdateZeroAndNegativeFlags(cpu, cpu.A);
+}
+
+// 65C02: Push/Pop X/Y
+void PHX(CPU& cpu, u32& cycles, Mem& memory) {
+    memory[cpu.SPToAddress()] = cpu.X;
+    cpu.LogMemoryAccess(cpu.SPToAddress(), cpu.X, true);
+    cpu.SP--;
+    cycles -= 3;
+}
+
+void PHY(CPU& cpu, u32& cycles, Mem& memory) {
+    memory[cpu.SPToAddress()] = cpu.Y;
+    cpu.LogMemoryAccess(cpu.SPToAddress(), cpu.Y, true);
+    cpu.SP--;
+    cycles -= 3;
+}
+
+void PLX(CPU& cpu, u32& cycles, Mem& memory) {
+    cpu.SP++;
+    cpu.X = memory[cpu.SPToAddress()];
+    cpu.LogMemoryAccess(cpu.SPToAddress(), cpu.X, false);
+    cycles -= 4;
+    UpdateZeroAndNegativeFlags(cpu, cpu.X);
+}
+
+void PLY(CPU& cpu, u32& cycles, Mem& memory) {
+    cpu.SP++;
+    cpu.Y = memory[cpu.SPToAddress()];
+    cpu.LogMemoryAccess(cpu.SPToAddress(), cpu.Y, false);
+    cycles -= 4;
+    UpdateZeroAndNegativeFlags(cpu, cpu.Y);
+}
+
+// 65C02: STZ (Store Zero)
+void STZ(CPU& cpu, u32& cycles, Mem& memory, Word address) {
+    cpu.WriteMemory(address, 0x00, memory);
+    // cycles for store handled by addressing + write
+}
+
+// 65C02: TSB/TRB
+void TSB(CPU& cpu, u32& cycles, Mem& memory, Word address) {
+    Byte value = cpu.ReadMemory(address, memory);
+    cpu.LogMemoryAccess(address, value, false);
+    cycles--;
+    cpu.Z = ((value & cpu.A) == 0);
+    value |= cpu.A;
+    cpu.WriteMemory(address, value, memory);
+    cpu.LogMemoryAccess(address, value, true);
+    cycles--;
+}
+
+void TRB(CPU& cpu, u32& cycles, Mem& memory, Word address) {
+    Byte value = cpu.ReadMemory(address, memory);
+    cpu.LogMemoryAccess(address, value, false);
+    cycles--;
+    cpu.Z = ((value & cpu.A) == 0);
+    value &= static_cast<Byte>(~cpu.A);
+    cpu.WriteMemory(address, value, memory);
+    cpu.LogMemoryAccess(address, value, true);
+    cycles--;
+}
+
+// 65C02: RMB/SMB (Reset/Set Memory Bit) - zero page only
+void RMB(CPU& cpu, u32& cycles, Mem& memory, Byte zpAddr, int bit) {
+    Byte value = memory[zpAddr];
+    cpu.LogMemoryAccess(zpAddr, value, false);
+    cycles--; // read
+    value &= static_cast<Byte>(~(1 << bit));
+    memory[zpAddr] = value;
+    cpu.LogMemoryAccess(zpAddr, value, true);
+    cycles--; // write
+}
+
+void SMB(CPU& cpu, u32& cycles, Mem& memory, Byte zpAddr, int bit) {
+    Byte value = memory[zpAddr];
+    cpu.LogMemoryAccess(zpAddr, value, false);
+    cycles--; // read
+    value |= static_cast<Byte>(1 << bit);
+    memory[zpAddr] = value;
+    cpu.LogMemoryAccess(zpAddr, value, true);
+    cycles--; // write
+}
+
+// 65C02: BBR/BBS (Branch on Bit Reset/Set) - zero page, relative
+void BBR_BBS(CPU& cpu, u32& cycles, Mem& memory, int bit, bool branchOnSet) {
+    Byte zpAddr = cpu.FetchByte(cycles, memory);
+    Byte value = memory[zpAddr];
+    cpu.LogMemoryAccess(zpAddr, value, false);
+    cycles--; // read
+    bool isSet = (value & (1 << bit)) != 0;
+    bool cond = branchOnSet ? isSet : !isSet;
+    Branch(cpu, cycles, memory, cond);
+}
+
+// 65C02: STP/WAI
+void STP(CPU& cpu, u32& cycles, Mem& memory) {
+    // Stop the processor; end execution window
+    cycles = 0;
+}
+
+void WAI(CPU& cpu, u32& cycles, Mem& memory) {
+    // Wait for interrupt; for now, halt execution slice
+    cycles = 0;
+}
+
 // Initialize instruction table with all 256 opcodes
 void InitializeInstructionTable() {
     // Initialize all opcodes to NOP by default
     for (int i = 0; i < 256; i++) {
-        instructionTable[i] = [](CPU& cpu, u32& cycles, Mem& memory) {
-            util::LogWarn("Unimplemented opcode");
+        instructionTable[i] = [i](CPU& cpu, u32& cycles, Mem& memory) {
+            std::stringstream ss;
+            ss << "Unimplemented opcode: 0x" << std::hex << std::setw(2) << std::setfill('0') << i 
+               << " at PC=0x" << std::hex << std::setw(4) << (cpu.PC - 1);
+            util::LogWarn(ss.str());
             cycles--;
         };
     }
+    
+    // COP - Coprocessor instruction (65C02, treat as 1-byte NOP for compatibility)
+    instructionTable[0x02] = [](CPU& cpu, u32& cycles, Mem& memory) {
+        cycles--;  // 1 cycle for COP instruction
+    };
     
     // LDA - Load Accumulator
     instructionTable[0xA9] = [](CPU& cpu, u32& cycles, Mem& memory) {
@@ -1013,6 +1139,145 @@ void InitializeInstructionTable() {
     instructionTable[0x00] = BRK; // Break
     instructionTable[0x40] = RTI; // Return from Interrupt
     instructionTable[0xEA] = NOP; // No Operation
+
+    // 65C02: INC/DEC A
+    instructionTable[0x1A] = INC_A;
+    instructionTable[0x3A] = DEC_A;
+
+    // Unofficial NOPs (illegal opcodes) - keep others
+    instructionTable[0x5A] = NOP;
+    instructionTable[0x7A] = NOP;
+    // 65C02 PHX/PLX
+    instructionTable[0xDA] = PHX;
+    instructionTable[0xFA] = PLX;
+    // 65C02 PHY/PLY
+    instructionTable[0x5A] = PHY;
+    instructionTable[0x7A] = PLY;
+
+    // 65C02 BRA (Branch Always)
+    instructionTable[0x80] = [](CPU& cpu, u32& cycles, Mem& memory) {
+        Branch(cpu, cycles, memory, true);
+    };
+    // 65C02 BIT immediate
+    instructionTable[0x89] = [](CPU& cpu, u32& cycles, Mem& memory) {
+        BIT(cpu, cycles, memory, Addressing::Immediate(cpu, cycles, memory));
+    };
+
+    // 65C02 TSB/TRB zero page
+    instructionTable[0x04] = [](CPU& cpu, u32& cycles, Mem& memory) {
+        TSB(cpu, cycles, memory, Addressing::ZeroPage(cpu, cycles, memory));
+    };
+    instructionTable[0x14] = [](CPU& cpu, u32& cycles, Mem& memory) {
+        TRB(cpu, cycles, memory, Addressing::ZeroPage(cpu, cycles, memory));
+    };
+    // 65C02 STZ zero page
+    instructionTable[0x64] = [](CPU& cpu, u32& cycles, Mem& memory) {
+        STZ(cpu, cycles, memory, Addressing::ZeroPage(cpu, cycles, memory));
+    };
+
+    // 65C02 BIT ZeroPage,X
+    instructionTable[0x34] = [](CPU& cpu, u32& cycles, Mem& memory) {
+        BIT(cpu, cycles, memory, Addressing::ZeroPageX(cpu, cycles, memory));
+    };
+    // 65C02 STZ ZeroPage,X
+    instructionTable[0x74] = [](CPU& cpu, u32& cycles, Mem& memory) {
+        STZ(cpu, cycles, memory, Addressing::ZeroPageX(cpu, cycles, memory));
+    };
+
+    // 65C02 TSB/TRB absolute
+    instructionTable[0x0C] = [](CPU& cpu, u32& cycles, Mem& memory) {
+        TSB(cpu, cycles, memory, Addressing::Absolute(cpu, cycles, memory));
+    };
+    instructionTable[0x1C] = [](CPU& cpu, u32& cycles, Mem& memory) {
+        TRB(cpu, cycles, memory, Addressing::Absolute(cpu, cycles, memory));
+    };
+
+    // 65C02 BIT Absolute,X
+    instructionTable[0x3C] = [](CPU& cpu, u32& cycles, Mem& memory) {
+        BIT(cpu, cycles, memory, Addressing::AbsoluteX(cpu, cycles, memory));
+    };
+    // 65C02 STZ Absolute/Absolute,X
+    instructionTable[0x9C] = [](CPU& cpu, u32& cycles, Mem& memory) {
+        STZ(cpu, cycles, memory, Addressing::Absolute(cpu, cycles, memory));
+    };
+    instructionTable[0x9E] = [](CPU& cpu, u32& cycles, Mem& memory) {
+        STZ(cpu, cycles, memory, Addressing::AbsoluteX(cpu, cycles, memory, false));
+    };
+    // 65C02 JMP Absolute,X
+    instructionTable[0x7C] = [](CPU& cpu, u32& cycles, Mem& memory) {
+        Word addr = Addressing::AbsoluteX(cpu, cycles, memory, false);
+        // JMP abs: 3 cycles; abs,X is 6 cycles total. Account for extra cycles:
+        cpu.PC = addr;
+        cycles -= 3; // extra timing to reach 6 (FetchWord=2 + this 3 + JMP internal 1)
+    };
+
+    // 65C02 Indirect (zp) addressing variants
+    instructionTable[0x12] = [](CPU& cpu, u32& cycles, Mem& memory) { // ORA (zp)
+        ORA(cpu, cycles, memory, Addressing::IndirectZeroPage(cpu, cycles, memory));
+    };
+    instructionTable[0x32] = [](CPU& cpu, u32& cycles, Mem& memory) { // AND (zp)
+        AND(cpu, cycles, memory, Addressing::IndirectZeroPage(cpu, cycles, memory));
+    };
+    instructionTable[0x52] = [](CPU& cpu, u32& cycles, Mem& memory) { // EOR (zp)
+        EOR(cpu, cycles, memory, Addressing::IndirectZeroPage(cpu, cycles, memory));
+    };
+    instructionTable[0x72] = [](CPU& cpu, u32& cycles, Mem& memory) { // ADC (zp)
+        ADC(cpu, cycles, memory, Addressing::IndirectZeroPage(cpu, cycles, memory));
+    };
+    instructionTable[0x92] = [](CPU& cpu, u32& cycles, Mem& memory) { // STA (zp)
+        STA(cpu, cycles, memory, Addressing::IndirectZeroPage(cpu, cycles, memory));
+    };
+    instructionTable[0xB2] = [](CPU& cpu, u32& cycles, Mem& memory) { // LDA (zp)
+        LDA(cpu, cycles, memory, Addressing::IndirectZeroPage(cpu, cycles, memory));
+    };
+    instructionTable[0xD2] = [](CPU& cpu, u32& cycles, Mem& memory) { // CMP (zp)
+        CMP(cpu, cycles, memory, Addressing::IndirectZeroPage(cpu, cycles, memory));
+    };
+    instructionTable[0xF2] = [](CPU& cpu, u32& cycles, Mem& memory) { // SBC (zp)
+        SBC(cpu, cycles, memory, Addressing::IndirectZeroPage(cpu, cycles, memory));
+    };
+
+    // 65C02 RMB (Reset Memory Bit) zero page
+    instructionTable[0x07] = [](CPU& cpu, u32& cycles, Mem& memory) { RMB(cpu, cycles, memory, cpu.FetchByte(cycles, memory), 0); };
+    instructionTable[0x17] = [](CPU& cpu, u32& cycles, Mem& memory) { RMB(cpu, cycles, memory, cpu.FetchByte(cycles, memory), 1); };
+    instructionTable[0x27] = [](CPU& cpu, u32& cycles, Mem& memory) { RMB(cpu, cycles, memory, cpu.FetchByte(cycles, memory), 2); };
+    instructionTable[0x37] = [](CPU& cpu, u32& cycles, Mem& memory) { RMB(cpu, cycles, memory, cpu.FetchByte(cycles, memory), 3); };
+    instructionTable[0x47] = [](CPU& cpu, u32& cycles, Mem& memory) { RMB(cpu, cycles, memory, cpu.FetchByte(cycles, memory), 4); };
+    instructionTable[0x57] = [](CPU& cpu, u32& cycles, Mem& memory) { RMB(cpu, cycles, memory, cpu.FetchByte(cycles, memory), 5); };
+    instructionTable[0x67] = [](CPU& cpu, u32& cycles, Mem& memory) { RMB(cpu, cycles, memory, cpu.FetchByte(cycles, memory), 6); };
+    instructionTable[0x77] = [](CPU& cpu, u32& cycles, Mem& memory) { RMB(cpu, cycles, memory, cpu.FetchByte(cycles, memory), 7); };
+
+    // 65C02 SMB (Set Memory Bit) zero page
+    instructionTable[0x87] = [](CPU& cpu, u32& cycles, Mem& memory) { SMB(cpu, cycles, memory, cpu.FetchByte(cycles, memory), 0); };
+    instructionTable[0x97] = [](CPU& cpu, u32& cycles, Mem& memory) { SMB(cpu, cycles, memory, cpu.FetchByte(cycles, memory), 1); };
+    instructionTable[0xA7] = [](CPU& cpu, u32& cycles, Mem& memory) { SMB(cpu, cycles, memory, cpu.FetchByte(cycles, memory), 2); };
+    instructionTable[0xB7] = [](CPU& cpu, u32& cycles, Mem& memory) { SMB(cpu, cycles, memory, cpu.FetchByte(cycles, memory), 3); };
+    instructionTable[0xC7] = [](CPU& cpu, u32& cycles, Mem& memory) { SMB(cpu, cycles, memory, cpu.FetchByte(cycles, memory), 4); };
+    instructionTable[0xD7] = [](CPU& cpu, u32& cycles, Mem& memory) { SMB(cpu, cycles, memory, cpu.FetchByte(cycles, memory), 5); };
+    instructionTable[0xE7] = [](CPU& cpu, u32& cycles, Mem& memory) { SMB(cpu, cycles, memory, cpu.FetchByte(cycles, memory), 6); };
+    instructionTable[0xF7] = [](CPU& cpu, u32& cycles, Mem& memory) { SMB(cpu, cycles, memory, cpu.FetchByte(cycles, memory), 7); };
+
+    // 65C02 BBR/BBS (Zero Page, Relative)
+    instructionTable[0x0F] = [](CPU& cpu, u32& cycles, Mem& memory) { BBR_BBS(cpu, cycles, memory, 0, false); };
+    instructionTable[0x1F] = [](CPU& cpu, u32& cycles, Mem& memory) { BBR_BBS(cpu, cycles, memory, 1, false); };
+    instructionTable[0x2F] = [](CPU& cpu, u32& cycles, Mem& memory) { BBR_BBS(cpu, cycles, memory, 2, false); };
+    instructionTable[0x3F] = [](CPU& cpu, u32& cycles, Mem& memory) { BBR_BBS(cpu, cycles, memory, 3, false); };
+    instructionTable[0x4F] = [](CPU& cpu, u32& cycles, Mem& memory) { BBR_BBS(cpu, cycles, memory, 4, false); };
+    instructionTable[0x5F] = [](CPU& cpu, u32& cycles, Mem& memory) { BBR_BBS(cpu, cycles, memory, 5, false); };
+    instructionTable[0x6F] = [](CPU& cpu, u32& cycles, Mem& memory) { BBR_BBS(cpu, cycles, memory, 6, false); };
+    instructionTable[0x7F] = [](CPU& cpu, u32& cycles, Mem& memory) { BBR_BBS(cpu, cycles, memory, 7, false); };
+    instructionTable[0x8F] = [](CPU& cpu, u32& cycles, Mem& memory) { BBR_BBS(cpu, cycles, memory, 0, true); };
+    instructionTable[0x9F] = [](CPU& cpu, u32& cycles, Mem& memory) { BBR_BBS(cpu, cycles, memory, 1, true); };
+    instructionTable[0xAF] = [](CPU& cpu, u32& cycles, Mem& memory) { BBR_BBS(cpu, cycles, memory, 2, true); };
+    instructionTable[0xBF] = [](CPU& cpu, u32& cycles, Mem& memory) { BBR_BBS(cpu, cycles, memory, 3, true); };
+    instructionTable[0xCF] = [](CPU& cpu, u32& cycles, Mem& memory) { BBR_BBS(cpu, cycles, memory, 4, true); };
+    instructionTable[0xDF] = [](CPU& cpu, u32& cycles, Mem& memory) { BBR_BBS(cpu, cycles, memory, 5, true); };
+    instructionTable[0xEF] = [](CPU& cpu, u32& cycles, Mem& memory) { BBR_BBS(cpu, cycles, memory, 6, true); };
+    instructionTable[0xFF] = [](CPU& cpu, u32& cycles, Mem& memory) { BBR_BBS(cpu, cycles, memory, 7, true); };
+
+    // 65C02 WAI/STP
+    instructionTable[0xCB] = WAI;
+    instructionTable[0xDB] = STP;
 }
 
 InstrHandler GetHandler(Byte opcode) {

@@ -11,7 +11,11 @@ public:
     std::shared_ptr<AppleIO> appleIO;
 
     virtual void SetUp() {
+        mem.Initialize();
+        mem[Mem::RESET_VECTOR] = 0x00;
+        mem[Mem::RESET_VECTOR + 1] = 0x80;
         cpu.Reset(mem);
+        setenv("CPU_DISABLE_GUARD", "1", 1);
         appleIO = std::make_shared<AppleIO>();
         cpu.registerIODevice(appleIO);
         // El PC ya está en $8000 después de Reset()

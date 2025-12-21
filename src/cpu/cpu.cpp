@@ -351,6 +351,7 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
     const bool debugEnabled = (debugExecuteEnv != nullptr && debugExecuteEnv[0] != '\0');
 
     while (Cycles > 0) {
+        std::cerr << "[TRACE] PC=0x" << std::hex << PC << ", Cycles=" << std::dec << Cycles << std::endl;
         if (guardEnabled && ++instructionCount > MAX_INSTRUCTIONS) {
             std::stringstream ss;
             ss << "Execution limit reached (" << MAX_INSTRUCTIONS << " instructions) at PC=0x" 
@@ -375,6 +376,8 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
         // Fetch the opcode
         Byte opcode = FetchByte(Cycles, memory);
 
+        std::cerr << "[TRACE] Fetched opcode 0x" << std::hex << (int)opcode << " at PC=0x" << currentPC << ", Cycles left=" << std::dec << Cycles << std::endl;
+
         // Log instruction (INFO mode)
         LogInstruction(currentPC, opcode);
 
@@ -387,6 +390,7 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
         // Execute the instruction
         if (handler) {
             handler(*this, Cycles, memory);
+            std::cerr << "[TRACE] After handler: PC=0x" << std::hex << PC << ", Cycles=" << std::dec << Cycles << std::endl;
         } else {
             // This shouldn't happen if the table is properly initialized
             std::stringstream ss;

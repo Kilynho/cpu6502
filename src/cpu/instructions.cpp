@@ -132,15 +132,14 @@ void PLP(CPU& cpu, u32& cycles, Mem& memory) {
     cpu.SP++;
     Byte status = memory[cpu.SPToAddress()];
     cpu.LogMemoryAccess(cpu.SPToAddress(), status, false);
-    
+
     cpu.N = (status >> 7) & 1;
     cpu.V = (status >> 6) & 1;
     cpu.D = (status >> 3) & 1;
     cpu.I = (status >> 2) & 1;
-    cycles -= 4; // 65C02: PLP takes 4 cycles
+    cpu.Z = (status >> 1) & 1;
     cpu.C = status & 1;
-    
-    cycles -= 3;
+    cycles -= 4; // 65C02: PLP takes 4 cycles
 }
 
 // Logical Instructions

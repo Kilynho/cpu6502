@@ -430,7 +430,7 @@ void CPU::ExecuteSingleInstruction(Mem& memory) {
         util::LogWarn("Unhandled opcode: 0x" + ss.str());
     }
 }
-// --- Integración del Controlador de Interrupciones ---
+// --- Interrupt Controller Integration ---
 
 void CPU::setInterruptController(InterruptController* controller) {
     interruptController = controller;
@@ -523,18 +523,25 @@ constexpr int LOGS_MAX_FILES = 5;
 void CPU::RotateLogIfNeeded() const {
     const char* base = "cpu_log.txt";
     struct stat st;
-    if (stat(base, &st) == 0 && static_cast<size_t>(st.st_size) >= LOGS_MAX_SIZE) {
-        // Remove the oldest log if it exists
-        std::string oldest = std::string(base) + "." + std::to_string(LOGS_MAX_FILES - 1);
-        std::remove(oldest.c_str());
-        // Shift logs: .3->.4, .2->.3, ...
-        for (int i = LOGS_MAX_FILES - 2; i >= 1; --i) {
-            std::string from = std::string(base) + "." + std::to_string(i);
-            std::string to = std::string(base) + "." + std::to_string(i + 1);
-            std::rename(from.c_str(), to.c_str());
+    // Open the file and check its size atomically
+    FILE* file = fopen(base, "r");
+    if (file) {
+        if (fstat(fileno(file), &st) == 0 && static_cast<size_t>(st.st_size) >= LOGS_MAX_SIZE) {
+            fclose(file);
+            // Remove the oldest log if it exists
+            std::string oldest = std::string(base) + "." + std::to_string(LOGS_MAX_FILES - 1);
+            std::remove(oldest.c_str());
+            // Shift logs: .3->.4, .2->.3, ...
+            for (int i = LOGS_MAX_FILES - 2; i >= 1; --i) {
+                std::string from = std::string(base) + "." + std::to_string(i);
+                std::string to = std::string(base) + "." + std::to_string(i + 1);
+                std::rename(from.c_str(), to.c_str());
+            }
+            // cpu_log.txt -> cpu_log.txt.1
+            std::string to = std::string(base) + ".1";
+            std::rename(base, to.c_str());
+        } else {
+            fclose(file);
         }
-        // cpu_log.txt -> cpu_log.txt.1
-        std::string to = std::string(base) + ".1";
-        std::rename(base, to.c_str());
     }
 }

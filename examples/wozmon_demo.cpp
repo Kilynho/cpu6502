@@ -296,9 +296,11 @@ int main() {
     
     // ...existing code...
     
-    // Load MS BASIC + WOZMON ROM from binary file (env override allowed)
+    // Load MS BASIC + WOZMON ROM from binary file (priority: CLI arg > env > default)
     std::string romPath = "../src/wozmon/rom.bin";
-    if (const char* envRom = std::getenv("WOZMON_BIN")) {
+    if (argc > 1 && argv[1][0] != '\0') {
+        romPath = argv[1];
+    } else if (const char* envRom = std::getenv("WOZMON_BIN")) {
         if (*envRom != '\0') romPath = envRom;
     }
 

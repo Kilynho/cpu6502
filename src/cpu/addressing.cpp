@@ -4,7 +4,9 @@
 namespace Addressing {
 
 Word Immediate(CPU& cpu, u32& cycles, Mem& memory) {
-    return cpu.PC;
+    Word address = cpu.PC;
+    cpu.PC++;
+    return address;
 }
 
 Word ZeroPage(CPU& cpu, u32& cycles, Mem& memory) {

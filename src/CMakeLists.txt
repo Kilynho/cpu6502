@@ -13,6 +13,9 @@ set(LIB_SOURCES
     devices/basic_audio.cpp
     devices/tcp_serial.cpp
     devices/basic_timer.cpp
+    devices/pia.cpp
+    devices/acia_device.cpp
+    devices/via_port_device.cpp
     interrupt/interrupt_controller.cpp
     gui/emulator_gui.cpp
 )
@@ -159,3 +162,30 @@ target_include_directories(interrupt_demo PRIVATE
 
 # Establecer el nombre de salida del ejecutable
 set_target_properties(interrupt_demo PROPERTIES OUTPUT_NAME interrupt_demo)
+
+# Crear el ejecutable de WOZMON demo
+add_executable(wozmon_demo ${PROJECT_SOURCE_DIR}/examples/wozmon_demo.cpp)
+
+# Enlazar el ejecutable con la librería
+target_link_libraries(wozmon_demo cpu6502_lib)
+
+# Especificar directorios de inclusión para el demo
+target_include_directories(wozmon_demo PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+)
+
+# Establecer el nombre de salida del ejecutable
+set_target_properties(wozmon_demo PROPERTIES OUTPUT_NAME wozmon_demo)
+# Crear el ejecutable de BASIC trace demo
+add_executable(basic_trace_demo ${PROJECT_SOURCE_DIR}/examples/basic_trace_demo.cpp)
+
+# Enlazar el ejecutable con la librería
+target_link_libraries(basic_trace_demo cpu6502_lib)
+
+# Especificar directorios de inclusión para el demo
+target_include_directories(basic_trace_demo PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+)
+
+# Establecer el nombre de salida del ejecutable
+set_target_properties(basic_trace_demo PROPERTIES OUTPUT_NAME basic_trace_demo)

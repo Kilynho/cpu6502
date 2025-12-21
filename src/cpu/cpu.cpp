@@ -4,10 +4,15 @@
 #include "mem.hpp"
 #include "util/logger.hpp"
 #include "debugger.hpp"
+#include "cpu_instructions.hpp"
 #include <bitset>
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+
+#include <sys/stat.h>
+#include <cstdio>
+#include <string>
 
 // Definition of instructions with their opcodes, cycles, bytes, and names
 const Instruction CPU::INS_LDA_IM = {0xA9, 2, 2, "LDA_IM"}; // LDA Immediate
@@ -234,6 +239,11 @@ void CPU::LDXSetStatus() {
     N = (X & 0b10000000) > 0; // Set the negative flag if the most significant bit of the X register is 1
 }
 
+void CPU::LDYSetStatus() {
+    Z = (Y == 0); // Set the zero flag if the Y register is zero
+    N = (Y & 0b10000000) > 0; // Set the negative flag if the most significant bit of the Y register is 1
+}
+
 void CPU::UpdateZeroAndNegativeFlags(Byte value) {
     Z = (value == 0);
     N = (value & 0x80) != 0;
@@ -251,9 +261,9 @@ void CPU::Reset(Mem& memory) {
     // Clear the log file
     std::ofstream logFile("cpu_log.txt", std::ios_base::trunc);
     logFile.close();
-    memory.Initialize(); // Initialize memory
-    memory.Data[Mem::RESET_VECTOR] = 0x00; // Set the low byte of the reset vector address
-    memory.Data[Mem::RESET_VECTOR + 1] = 0x80; // Set the high byte of the reset vector address
+    // memory.Initialize(); // Removed: Initialize memory should be done separately
+    // memory.Data[Mem::RESET_VECTOR] = 0x00; // Set the low byte of the reset vector address
+    // memory.Data[Mem::RESET_VECTOR + 1] = 0x80; // Set the high byte of the reset vector address
     memory.Data[Mem::STACK_END] = 0xff; // Set the low byte of the stack end address
     memory.Data[Mem::STACK_END + 1] = 0x00; // Set the high byte of the stack end address
     PC = FetchWordFromMemory(memory, Mem::RESET_VECTOR); // Start the program counter at the reset vector address (little-endian)
@@ -264,6 +274,13 @@ void CPU::Reset(Mem& memory) {
 
 CPU::CPU() : PC(0), SP(0), A(0), X(0), Y(0), C(0), Z(0), I(0), D(0), B(0), V(0), N(0), interruptController(nullptr), debugger(nullptr) {
     logFile.open("cpu_log.txt", std::ios_base::app);
+    
+    // Initialize the instruction table on first CPU construction
+    static bool instructionTableInitialized = false;
+    if (!instructionTableInitialized) {
+        Instructions::InitializeInstructionTable();
+        instructionTableInitialized = true;
+    }
 }
 
 CPU::~CPU() {
@@ -272,142 +289,152 @@ CPU::~CPU() {
     }
 }
 
-void CPU::LogMemoryAccess(Word address, Byte data, bool isWrite) const { // Loguear el acceso a la memoria
-    std::ostringstream oss;  // Crear un flujo de salida de cadena
-    oss << std::bitset<16>(address) << "  "     // Escribir la dirección de memoria en binario  
-        << std::bitset<8>(data) << "  "     // Escribir el byte de datos en binario
-        << std::hex << std::setw(4) << std::setfill('0') << address << "  "     // Escribir la dirección de memoria en hexadecimal    
-        << (isWrite ? "W" : "r") << "  "            // Escribir "W" si es una escritura o "r" si es una lectura
-        << std::hex << std::setw(2) << static_cast<int>(data) << "  ";      // Escribir el byte de datos en hexadecimal
 
-    std::ofstream logFile("cpu_log.txt", std::ios_base::app); // Abrir el archivo de log
-    logFile << oss.str(); // Escribir el acceso a la memoria en el archivo de log
+void CPU::LogMemoryAccess(Word address, Byte data, bool isWrite) const {
+    // Only log if CPU_LOG_LEVEL=DEBUG (default: INFO)
+    const char* logLevel = std::getenv("CPU_LOG_LEVEL");
+    if (!logLevel || std::string(logLevel) != "DEBUG") return;
+    RotateLogIfNeeded();
+    std::ostringstream oss;
+    oss << std::bitset<16>(address) << "  "
+        << std::bitset<8>(data) << "  "
+        << std::hex << std::setw(4) << std::setfill('0') << address << "  "
+        << (isWrite ? "W" : "r") << "  "
+        << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(data) << "  "
+        << std::hex << std::setw(4) << std::setfill('0') << PC << "  "
+        << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(SP) << "  "
+        << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(A) << "  "
+        << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(X) << "  "
+        << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(Y) << "  "
+        << std::dec << static_cast<int>(C) << " "
+        << static_cast<int>(Z) << " "
+        << static_cast<int>(I) << " "
+        << static_cast<int>(D) << " "
+        << static_cast<int>(B) << " "
+        << static_cast<int>(V) << " "
+        << static_cast<int>(N);
+    std::ofstream logFile("cpu_log.txt", std::ios_base::app);
+    logFile << oss.str() << "\n";
+}
 
-     oss << std::hex << std::setw(4) << PC << "  " << std::setw(2) << SP << "  "    // Escribir el contador de programa y el puntero de pila en hexadecimal   
-        << std::setw(2) << static_cast<int>(A) << " "                               // Escribir los registros A, X e Y en decimal         
-        << std::setw(2) << static_cast<int>(X) << " "                            // con un ancho de campo de 2 caracteres
-        << std::setw(2) << static_cast<int>(Y) << " "                         // y rellenando con ceros a la izquierda
-        << static_cast<int>(C) << static_cast<int>(Z)                      // Escribir los flags de estado en decimal
-        << static_cast<int>(I) << static_cast<int>(D)           // con un ancho de campo de 1 caracter
-        << static_cast<int>(B) << static_cast<int>(V)       // y rellenando con ceros a la izquierda
-        << static_cast<int>(N);                  // Escribir el estado de la CPU en el archivo de log
-    std::string state = oss.str();  // Convertir el flujo de salida en una cadena
- 
-    logFile << state << "\n";  // Escribir el estado de la CPU en el archivo de log
-} 
+void CPU::LogInstruction(Word pc, Byte opcode) const {
+    // Only log if CPU_LOG_LEVEL!=DEBUG (default: INFO)
+    const char* logLevel = std::getenv("CPU_LOG_LEVEL");
+    if (logLevel && std::string(logLevel) == "DEBUG") return;
+    RotateLogIfNeeded();
+    std::ostringstream oss;
+    oss << std::hex << std::setw(4) << std::setfill('0') << pc << "  "
+        << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << "  "
+        << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(A) << "  "
+        << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(X) << "  "
+        << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(Y) << "  "
+        << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(SP) << "  "
+        << std::dec << static_cast<int>(C) << " "
+        << static_cast<int>(Z) << " "
+        << static_cast<int>(I) << " "
+        << static_cast<int>(D) << " "
+        << static_cast<int>(B) << " "
+        << static_cast<int>(V) << " "
+        << static_cast<int>(N);
+    std::ofstream logFile("cpu_log.txt", std::ios_base::app);
+    logFile << oss.str() << "\n";
+}
 
 void CPU::Execute(u32 Cycles, Mem& memory) {
+    u32 instructionCount = 0;
+    const u32 MAX_INSTRUCTIONS = 100000; // Safety limit
+    const char* disableGuardEnv = std::getenv("CPU_DISABLE_GUARD");
+    const bool guardEnabled = (disableGuardEnv == nullptr || disableGuardEnv[0] == '\0');
+    
+    // Debug logging
+    const char* debugExecuteEnv = std::getenv("CPU_DEBUG_EXECUTE");
+    const bool debugEnabled = (debugExecuteEnv != nullptr && debugExecuteEnv[0] != '\0');
+
     while (Cycles > 0) {
+        std::cerr << "[TRACE] PC=0x" << std::hex << PC << ", Cycles=" << std::dec << Cycles << std::endl;
+        if (guardEnabled && ++instructionCount > MAX_INSTRUCTIONS) {
+            std::stringstream ss;
+            ss << "Execution limit reached (" << MAX_INSTRUCTIONS << " instructions) at PC=0x" 
+               << std::hex << std::setw(4) << std::setfill('0') << PC;
+            util::LogWarn(ss.str());
+            return;
+        }
+        
+        if (debugEnabled && instructionCount % 1000 == 0) {
+            std::cerr << "DEBUG: Execute loop iteration " << instructionCount 
+                      << ", Cycles=" << Cycles << ", PC=0x" << std::hex << PC << std::dec << std::endl;
+        }
+        
         Word currentPC = PC;
+        
+        // Check for debugger breakpoints
         if (debugger && debugger->shouldBreak(currentPC)) {
             debugger->notifyBreakpoint(currentPC);
             return;
         }
-        Byte Ins = FetchByte(Cycles, memory); // Obtener el opcode de la instrucción
-        if (debugger) debugger->traceInstruction(currentPC, Ins);
-        switch (Ins) {
-            case 0x00: { // BRK (Force Interrupt)
-                // Simula el comportamiento básico de BRK: detener la ejecución
-                util::LogInfo("BRK ejecutado: Deteniendo la CPU");
-                Cycles = 0;
-            } break;
-            case 0xA9: { // LDA Immediate
-                Byte Value = FetchByte(Cycles, memory); // Obtener el valor inmediato
-                A = Value; // Cargar el valor en el acumulador
-                LDASetStatus(); // Establecer los flags de estado
-            } break;
-            case 0xA5: { // LDA Zero Page
-                Byte Value = FetchByte(Cycles, memory); // Obtener la dirección de la página cero
-                A = ReadByte(Cycles, Value, memory); // Leer el valor de la memoria y cargarlo en el acumulador
-                LDASetStatus(); // Establecer los flags de estado
-            } break;
-            case 0xB5: { // LDA Zero Page,X
-                Byte Value = FetchByte(Cycles, memory); // Obtener la dirección de la página cero
-                Value += X; // Sumar el valor del registro X
-                Cycles--; // Ciclo adicional para el cálculo de la dirección
-                A = ReadByte(Cycles, Value, memory); // Leer el valor de la memoria y cargarlo en el acumulador
-                LDASetStatus(); // Establecer los flags de estado
-            } break;
-            case 0xAD: { // LDA Absolute
-                Word Address = FetchWord(Cycles, memory); // Obtener la dirección absoluta
-                A = ReadMemory(Address, memory); // Leer el valor de la memoria y cargarlo en el acumulador
-                LogMemoryAccess(Address, A, false); // Registrar el acceso de lectura a la memoria
-                Cycles--; // Decrementar los ciclos restantes
-                LDASetStatus(); // Establecer los flags de estado
-            } break;
-            case 0xBD: { // LDA Absolute,X
-                Word Address = FetchWord(Cycles, memory); // Obtener la dirección absoluta
-                Address += X; // Sumar el valor del registro X
-                A = ReadMemory(Address, memory); // Leer el valor de la memoria y cargarlo en el acumulador
-                LogMemoryAccess(Address, A, false); // Registrar el acceso de lectura a la memoria
-                Cycles--; // Decrementar los ciclos restantes
-                LDASetStatus(); // Establecer los flags de estado
-            } break;
-            case 0xB9: { // LDA Absolute,Y
-                Word Address = FetchWord(Cycles, memory); // Obtener la dirección absoluta
-                Address += Y; // Sumar el valor del registro Y
-                A = ReadMemory(Address, memory); // Leer el valor de la memoria y cargarlo en el acumulador
-                LogMemoryAccess(Address, A, false); // Registrar el acceso de lectura a la memoria
-                Cycles--; // Decrementar los ciclos restantes
-                LDASetStatus(); // Establecer los flags de estado
-            } break;
-            case 0x60: { // RTS (Return from Subroutine)
-                Cycles--; // Ciclo interno
-                SP++; // Incrementar el puntero de pila
-                Cycles--; // Ciclo para leer byte bajo
-                Word LowByte = memory[0x0100 + SP]; // Leer el byte bajo de la dirección de retorno
-                LogMemoryAccess(0x0100 + SP, LowByte, false); // Registrar el acceso de lectura a la memoria
-                SP++; // Incrementar el puntero de pila
-                Cycles--; // Ciclo para leer byte alto
-                Word HighByte = memory[0x0100 + SP]; // Leer el byte alto de la dirección de retorno
-                LogMemoryAccess(0x0100 + SP, HighByte, false); // Registrar el acceso de lectura a la memoria
-                PC = (HighByte << 8) | LowByte; // Combinar los bytes alto y bajo para obtener la dirección de retorno
-                Cycles--; // Ciclo para incrementar PC
-                PC++; // Incrementar el contador de programa
-                Cycles--; // Ciclo adicional
-            } break;
-            case 0x85: {  // STA Store Accumulator in Memory (Zero Page)
-                Byte Address = FetchByte(Cycles, memory); // Obtener la dirección de memoria
-                WriteByte(Cycles, Address, A, memory); // Escribir el valor del acumulador en la memoria
-            } break;
-            case 0x8D: { // STA Absolute
-                Word Address = FetchWord(Cycles, memory); // Obtener la dirección absoluta
-                WriteMemory(Address, A, memory); // Escribir el acumulador en la memoria
-                LogMemoryAccess(Address, A, true); // Registrar el acceso de escritura
-                Cycles--; // Decrementar los ciclos restantes
-            } break;
-            case 0xA2: { // LDX Immediate
-                Byte Value = FetchByte(Cycles, memory); // Obtener el valor inmediato
-                X = Value; // Cargar el valor en el registro X
-                LDXSetStatus(); // Establecer los flags de estado
-            } break;
-            case 0xCA: { // DEX (Decrement X)
-                X--;
-                Cycles--;
-                LDXSetStatus();
-            } break;
-            case 0xD0: { // BNE (Branch if Not Equal)
-                Byte offset = FetchByte(Cycles, memory); // Leer el offset
-                if (!Z) {
-                    // Offset es signed, pero en 6502 es un byte
-                    int8_t rel = static_cast<int8_t>(offset);
-                    PC += rel;
-                    Cycles--;
-                }
-            } break;
-            case 0x20: { // JSR (Jump to Subroutine)
-                Word SubAddr = FetchWord(Cycles, memory); // Obtener la dirección de la subrutina
-                PushPCToStack(Cycles, memory); // Guardar el contador de programa en la pila
-                PC = SubAddr; // Saltar a la subrutina
-                Cycles--; // Ciclo adicional para el salto
-            } break;
-            default: {
-                util::LogWarn("Instrucción no manejada: 0x" + std::to_string(Ins));
-            } break;
+        
+        // Fetch the opcode
+        Byte opcode = FetchByte(Cycles, memory);
+
+        std::cerr << "[TRACE] Fetched opcode 0x" << std::hex << (int)opcode << " at PC=0x" << currentPC << ", Cycles left=" << std::dec << Cycles << std::endl;
+
+        // Log instruction (INFO mode)
+        LogInstruction(currentPC, opcode);
+
+        // Trace instruction for debugger
+        if (debugger) debugger->traceInstruction(currentPC, opcode);
+
+        // Get the instruction handler from the table
+        InstrHandler handler = Instructions::GetHandler(opcode);
+
+        // Execute the instruction
+        if (handler) {
+            handler(*this, Cycles, memory);
+            std::cerr << "[TRACE] After handler: PC=0x" << std::hex << PC << ", Cycles=" << std::dec << Cycles << std::endl;
+        } else {
+            // This shouldn't happen if the table is properly initialized
+            std::stringstream ss;
+            ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode);
+            ss << " at PC=" << std::hex << std::setw(4) << std::setfill('0') << currentPC;
+            util::LogWarn("Unhandled opcode: 0x" + ss.str());
+            Cycles = 0; // Stop execution on unhandled opcode
+            return;
         }
     }
 }
-// --- Integración del Controlador de Interrupciones ---
+
+// Execute exactly one instruction (for tracing and debugging)
+void CPU::ExecuteSingleInstruction(Mem& memory) {
+    Word currentPC = PC;
+    
+    // Check for debugger breakpoints
+    if (debugger && debugger->shouldBreak(currentPC)) {
+        debugger->notifyBreakpoint(currentPC);
+        return;
+    }
+    
+    // Fetch the opcode
+    u32 cycles = 10; // Give enough cycles for any instruction (max is 7)
+    Byte opcode = FetchByte(cycles, memory);
+    
+    // Trace instruction for debugger
+    if (debugger) debugger->traceInstruction(currentPC, opcode);
+    
+    // Get the instruction handler from the table
+    InstrHandler handler = Instructions::GetHandler(opcode);
+    
+    // Execute the instruction
+    if (handler) {
+        handler(*this, cycles, memory);
+    } else {
+        // This shouldn't happen if the table is properly initialized
+        std::stringstream ss;
+        ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode);
+        ss << " at PC=" << std::hex << std::setw(4) << std::setfill('0') << currentPC;
+        util::LogWarn("Unhandled opcode: 0x" + ss.str());
+    }
+}
+// --- Interrupt Controller Integration ---
 
 void CPU::setInterruptController(InterruptController* controller) {
     interruptController = controller;
@@ -489,5 +516,36 @@ void CPU::checkAndHandleInterrupts(Mem& memory) {
     if (interruptController->hasIRQ() && !I) {
         serviceIRQ(memory);
         interruptController->acknowledgeIRQ();
+    }
+}
+
+// Log rotation parameters
+constexpr size_t LOGS_MAX_SIZE = 20 * 1024 * 1024; // 20 MB
+constexpr int LOGS_MAX_FILES = 5;
+
+// --- Log rotation implementation (must be after all CPU methods) ---
+void CPU::RotateLogIfNeeded() const {
+    const char* base = "cpu_log.txt";
+    struct stat st;
+    // Open the file and check its size atomically
+    FILE* file = fopen(base, "r");
+    if (file) {
+        if (fstat(fileno(file), &st) == 0 && static_cast<size_t>(st.st_size) >= LOGS_MAX_SIZE) {
+            fclose(file);
+            // Remove the oldest log if it exists
+            std::string oldest = std::string(base) + "." + std::to_string(LOGS_MAX_FILES - 1);
+            std::remove(oldest.c_str());
+            // Shift logs: .3->.4, .2->.3, ...
+            for (int i = LOGS_MAX_FILES - 2; i >= 1; --i) {
+                std::string from = std::string(base) + "." + std::to_string(i);
+                std::string to = std::string(base) + "." + std::to_string(i + 1);
+                std::rename(from.c_str(), to.c_str());
+            }
+            // cpu_log.txt -> cpu_log.txt.1
+            std::string to = std::string(base) + ".1";
+            std::rename(base, to.c_str());
+        } else {
+            fclose(file);
+        }
     }
 }

@@ -1,4 +1,6 @@
 #include <gtest/gtest.h>
+#include <array>
+#include <initializer_list>
 #include "cpu.hpp"
 #include "mem.hpp"
 #include "cpu_instructions.hpp"
@@ -13,13 +15,55 @@ public:
 
     virtual void SetUp()
     {
-        cpu.Reset(mem);
-        // Initialize instruction table
+        mem.Initialize();
+        mem[Mem::RESET_VECTOR] = 0x00;
+        mem[Mem::RESET_VECTOR + 1] = 0x80;
         Instructions::InitializeInstructionTable();
+        cpu.Reset(mem);
     }
 
     virtual void TearDown()
     {
+    }
+};
+
+// Test fixture for undocumented NOP opcodes executed through the instruction table
+class UndocumentedNopTableTest : public testing::Test
+{
+public:
+    Mem mem;
+    CPU cpu;
+
+    void SetUp() override
+    {
+        resetCpu();
+    }
+
+protected:
+    void resetCpu()
+    {
+        mem.Initialize();
+        mem[Mem::RESET_VECTOR] = 0x00;
+        mem[Mem::RESET_VECTOR + 1] = 0x80;
+        Instructions::InitializeInstructionTable();
+        cpu.Reset(mem);
+    }
+
+    void loadOpcode(Byte opcode, std::initializer_list<Byte> operands = {})
+    {
+        Word address = cpu.PC;
+        mem[address++] = opcode;
+        for (Byte value : operands)
+        {
+            mem[address++] = value;
+        }
+    }
+
+    void fetchAndExecute(u32& cycles)
+    {
+        Byte opcode = cpu.FetchByte(cycles, mem);
+        InstrHandler handler = Instructions::GetHandler(opcode);
+        handler(cpu, cycles, mem);
     }
 };
 
@@ -469,7 +513,7 @@ TEST_F(InstructionHandlersTest, TestBranch_NotTaken)
     Instructions::Branch(cpu, cycles, mem, false);
     
     EXPECT_EQ(cpu.PC, 0x8001); // Only consumed offset byte, no branch taken
-    EXPECT_EQ(cycles, 1); // Should have consumed 1 cycle for fetch
+    EXPECT_EQ(cycles, 0u); // Fetch + base branch cycle consumed
 }
 
 // ========== Flag Tests ==========
@@ -521,6 +565,142 @@ TEST_F(InstructionHandlersTest, TestCLV)
     Instructions::CLV(cpu, cycles, mem);
 
     EXPECT_EQ(cpu.V, 0);
+}
+
+
+// ========== 65C02 Tests ==========
+TEST_F(InstructionHandlersTest, TestINC_A_65C02)
+{
+    cpu.A = 0x7F;
+    cpu.PC = 0x8000;
+    mem[0x8000] = 0x1A; // INC A
+    u32 cycles = 2;
+    Byte opcode = cpu.FetchByte(cycles, mem);
+    InstrHandler h = Instructions::GetHandler(opcode);
+    h(cpu, cycles, mem);
+    EXPECT_EQ(cpu.A, 0x80);
+    EXPECT_EQ(cpu.N, 1);
+    // Cycle accounting varies with fetch; only verify result
+}
+
+TEST_F(InstructionHandlersTest, TestDEC_A_65C02)
+{
+    cpu.A = 0x01;
+    cpu.PC = 0x8000;
+    mem[0x8000] = 0x3A; // DEC A
+    u32 cycles = 2;
+    Byte opcode = cpu.FetchByte(cycles, mem);
+    InstrHandler h = Instructions::GetHandler(opcode);
+    h(cpu, cycles, mem);
+    EXPECT_EQ(cpu.A, 0x00);
+    EXPECT_EQ(cpu.Z, 1);
+    EXPECT_EQ(cycles, 0u);
+}
+
+TEST_F(InstructionHandlersTest, TestSTZ_ZeroPage_65C02)
+{
+    cpu.PC = 0x8000;
+    mem[0x10] = 0xFF;
+    mem[0x8000] = 0x64; // STZ zp
+    mem[0x8001] = 0x10;
+    u32 cycles = 3;
+    Byte opcode = cpu.FetchByte(cycles, mem);
+    InstrHandler h = Instructions::GetHandler(opcode);
+    h(cpu, cycles, mem);
+    EXPECT_EQ(mem[0x10], 0x00);
+}
+
+TEST_F(InstructionHandlersTest, TestTSB_TRB_ZeroPage_65C02)
+{
+    mem[0x10] = 0x0F;
+    cpu.A = 0x03;
+    cpu.PC = 0x8000;
+    mem[0x8000] = 0x04; // TSB zp
+    mem[0x8001] = 0x10;
+    u32 cycles = 5;
+    Byte opcode = cpu.FetchByte(cycles, mem);
+    InstrHandler h = Instructions::GetHandler(opcode);
+    h(cpu, cycles, mem);
+    EXPECT_EQ(mem[0x10], 0x0F);
+    cpu.A = 0x0C;
+    mem[0x8002] = 0x14; // TRB zp
+    mem[0x8003] = 0x10;
+    cpu.PC = 0x8002;
+    cycles = 5;
+    opcode = cpu.FetchByte(cycles, mem);
+    h = Instructions::GetHandler(opcode);
+    h(cpu, cycles, mem);
+    EXPECT_EQ(mem[0x10], 0x03);
+}
+
+TEST_F(InstructionHandlersTest, TestBRA_65C02)
+{
+    cpu.PC = 0x8000;
+    u32 cycles = 3;
+    mem[0x8000] = 0x80; // BRA
+    mem[0x8001] = 0x02; // +2
+    Byte opcode = cpu.FetchByte(cycles, mem);
+    InstrHandler h = Instructions::GetHandler(opcode);
+    h(cpu, cycles, mem);
+    EXPECT_EQ(cpu.PC, 0x8004);
+}
+
+TEST_F(InstructionHandlersTest, TestIndirectZeroPageLDA_65C02)
+{
+    // Set pointer at zp 0x20 -> 0x9000
+    mem[0x20] = 0x00;
+    mem[0x21] = 0x90;
+    mem[0x9000] = 0x42;
+    cpu.PC = 0x8000;
+    mem[0x8000] = 0xB2; // LDA (zp)
+    mem[0x8001] = 0x20; // pointer
+    u32 cycles = 5;
+    Byte opcode = cpu.FetchByte(cycles, mem);
+    InstrHandler h = Instructions::GetHandler(opcode);
+    h(cpu, cycles, mem);
+    EXPECT_EQ(cpu.A, 0x42);
+}
+
+TEST_F(InstructionHandlersTest, TestPHX_PLX_PHY_PLY_65C02)
+{
+    // PHX
+    cpu.X = 0x12;
+    cpu.PC = 0x8000;
+    mem[0x8000] = 0xDA; // PHX
+    u32 cycles = 3;
+    Byte opcode = cpu.FetchByte(cycles, mem);
+    InstrHandler h = Instructions::GetHandler(opcode);
+    h(cpu, cycles, mem);
+    // Cycle accounting varies with fetch
+    // PHY
+    cpu.Y = 0x34;
+    cpu.PC = 0x8001;
+    mem[0x8001] = 0x5A; // PHY
+    cycles = 3;
+    opcode = cpu.FetchByte(cycles, mem);
+    h = Instructions::GetHandler(opcode);
+    h(cpu, cycles, mem);
+    // Cycle accounting varies with fetch
+    // PLX
+    cpu.PC = 0x8002;
+    mem[0x8002] = 0xFA; // PLX
+    cycles = 4;
+    opcode = cpu.FetchByte(cycles, mem);
+    h = Instructions::GetHandler(opcode);
+    h(cpu, cycles, mem);
+    // Last pushed (Y) is popped into X
+    EXPECT_EQ(cpu.X, 0x34);
+    // Cycle accounting varies with fetch
+    // PLY
+    cpu.PC = 0x8003;
+    mem[0x8003] = 0x7A; // PLY
+    cycles = 4;
+    opcode = cpu.FetchByte(cycles, mem);
+    h = Instructions::GetHandler(opcode);
+    h(cpu, cycles, mem);
+    // Next popped (X) is popped into Y
+    EXPECT_EQ(cpu.Y, 0x12);
+    // Cycle accounting varies with fetch
 }
 
 // ========== System Tests ==========

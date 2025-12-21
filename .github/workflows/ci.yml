@@ -80,7 +80,7 @@ jobs:
         set -eux
         cd build
         if [ -x ./runTests ]; then
-          ./runTests
+          timeout 180s ./runTests || { echo "Tests timed out"; exit 124; }
         else
           echo "ERROR: runTests not found in build/"; ls -la; exit 2
         fi
@@ -101,7 +101,7 @@ jobs:
       run: |
         set -eux
         if [ -x ./build/runTests ]; then
-          ./build/runTests
+          timeout 180s ./build/runTests || { echo "Tests timed out"; exit 124; }
         else
           echo "ERROR: runTests not found in build/ after Make build"; ls -la build/; exit 2
         fi

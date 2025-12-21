@@ -1,31 +1,164 @@
 # cpu6502
 
-## Recent Changes (December 2025)
+# cpu6502
 
-- `cpu_demo` now allows loading external binaries using:
+**Emulador 65C02/6502 avanzado con integración de WOZMON y BASIC**
+
+---
+
+## Tabla de Contenidos
+
+- [Descripción General](#descripción-general)
+- [Características Principales](#características-principales)
+- [Novedades Destacadas](#novedades-destacadas)
+- [Instalación](#instalación)
+- [Ejemplos y Demos](#ejemplos-y-demos)
+  - [WOZMON (Apple 1 Monitor)](#wozmon-apple-1-monitor)
+  - [BASIC (Microsoft BASIC)](#basic-microsoft-basic)
+- [Uso Básico](#uso-básico)
+- [Sistema de Interrupciones](#sistema-de-interrupciones)
+- [Depurador y Scripting](#depurador-y-scripting)
+- [Contribuir](#contribuir)
+- [Documentación Avanzada](#documentación-avanzada)
+- [Licencia](#licencia)
+
+---
+
+## Descripción General
+
+cpu6502 es un emulador moderno y modular del microprocesador 65C02/6502, orientado a la precisión, extensibilidad y facilidad de integración con sistemas retro y modernos. Incluye soporte para dispositivos, scripting en Python, depuración avanzada y ejemplos completos de integración con monitores y lenguajes clásicos.
+
+---
+
+## Características Principales
+
+- Emulación precisa de 65C02 y 6502 clásico
+- Sistema de interrupciones centralizado (IRQ/NMI)
+- Dispositivos integrados: PIA, ACIA, VIA, Timer, Audio, Serial, etc.
+- Depurador avanzado con breakpoints, watchpoints y traza de instrucciones
+- Scripting API en Python
+- Ejemplos completos: integración con WOZMON (Apple 1 Monitor) y Microsoft BASIC
+- Cobertura de tests exhaustiva (más de 200 tests automáticos)
+- Documentación modular y ejemplos listos para usar
+
+---
+
+## Novedades Destacadas
+
+### Integración de WOZMON (Apple 1 Monitor)
+
+- Demo y documentación completa en [docs/wozmon_integration.md](docs/wozmon_integration.md)
+- Ejecutable: `wozmon_demo`
+- Permite interactuar con el monitor original Apple 1, examinar memoria, ejecutar código y probar la emulación en un entorno clásico.
+
+### Integración de Microsoft BASIC
+
+- Soporte para cargar y ejecutar binarios de BASIC (ver carpeta `msbasic/`)
+- Ejemplo de traza y ejecución en [examples/basic_trace_demo.cpp](examples/basic_trace_demo.cpp)
+- Permite validar la compatibilidad y estabilidad de la emulación con uno de los intérpretes más populares de la época.
+
+---
+
+## Instalación
+
+```bash
+git clone https://github.com/Kilynho/cpu6502.git
+cd cpu6502
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+```
+
+---
+
+## Ejemplos y Demos
+
+### WOZMON (Apple 1 Monitor)
+
+- Ejecuta el demo:
+  ```bash
+  ./wozmon_demo
   ```
-  ./cpu_demo file ../examples/demo_program.bin
+- Consulta la guía de uso y comandos en [docs/wozmon_integration.md](docs/wozmon_integration.md).
+
+### BASIC (Microsoft BASIC)
+
+- Ejecuta el demo de traza:
+  ```bash
+  ./basic_trace_demo
   ```
-- If no binary is specified, it runs a classic test program in memory.
-- Detailed logging of memory accesses has been added to `cpu_log.txt`.
-- Command line arguments:
-  - `file <path>`: loads an external binary at 0x8000.
-  - `infinite`: runs infinite cycles.
-- Improvements to inline documentation and code comments.
+- Carga binarios de BASIC desde la carpeta `msbasic/` y explora la integración con el emulador.
 
-### Apple II I/O Integration
+---
 
-- The CPU now supports modular I/O devices via the `IODevice` interface.
-- `AppleIO` is included to simulate the keyboard ($FD0C) and screen ($FDED) of the Apple II.
-- Registering I/O devices:
+## Uso Básico
+
+```cpp
+#include "cpu.hpp"
+#include "mem.hpp"
+
+Mem mem;
+CPU cpu;
+cpu.Reset(mem);
+// ...cargar programa...
+cpu.Execute(1000, mem);
+```
+
+Consulta [docs/interrupt_system.md](docs/interrupt_system.md) y [docs/debugger.md](docs/debugger.md) para detalles avanzados.
+
+---
+
+## Sistema de Interrupciones
+
+- Controlador centralizado (`InterruptController`)
+- Soporte completo para IRQ y NMI
+- Ejemplo de uso:
   ```cpp
-  auto appleIO = std::make_shared<AppleIO>();
-  cpu.registerIODevice(appleIO);
+  InterruptController intCtrl;
+  cpu.setInterruptController(&intCtrl);
+  // ...registrar dispositivos...
+  cpu.checkAndHandleInterrupts(mem);
   ```
-- I/O devices intercept memory accesses before standard read/write.
-- Ideal for extending the emulator with peripherals, timers, graphics, etc.
+- Más información en [docs/interrupt_system.md](docs/interrupt_system.md) y [examples/interrupt_demo.cpp](examples/interrupt_demo.cpp).
 
-### File Storage Support (FileDevice)
+---
+
+## Depurador y Scripting
+
+- Breakpoints, watchpoints, inspección de estado y traza
+- API de scripting en Python: [docs/scripting_api.md](docs/scripting_api.md)
+- Ejemplo de integración:
+  ```cpp
+  Debugger dbg;
+  dbg.attach(&cpu, &mem);
+  cpu.setDebugger(&dbg);
+  dbg.addBreakpoint(0x8003);
+  cpu.Execute(100, mem);
+  ```
+- Más detalles en [docs/debugger.md](docs/debugger.md)
+
+---
+
+## Contribuir
+
+- Lee [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) para guías de estilo y flujo de trabajo.
+- Tests automáticos: `make test` o `ctest`.
+
+---
+
+## Documentación Avanzada
+
+- [docs/wozmon_integration.md](docs/wozmon_integration.md): Integración Apple 1 Monitor
+- [docs/interrupt_system.md](docs/interrupt_system.md): Sistema de interrupciones
+- [docs/debugger.md](docs/debugger.md): Depurador avanzado
+- [docs/scripting_api.md](docs/scripting_api.md): Scripting en Python
+- [RELEASE_NOTES_v2.0.md](RELEASE_NOTES_v2.0.md): Notas de la versión
+
+---
+
+## Licencia
+
+MIT License. Consulta el archivo LICENSE para más detalles.
 
 - New `FileDevice` that allows loading and saving binaries to/from host files.
 - Two modes of operation:

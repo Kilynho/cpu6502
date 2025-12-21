@@ -305,8 +305,20 @@ TEST_F(FileDeviceTest, CPUIntegration) {
     
     // Ejecutar el programa
     cpu.PC = 0x8000;
+    std::cout << "[TEST] Ejecutando CPU desde 0x8000 con 10 ciclos..." << std::endl;
     cpu.Execute(10, mem);
-    
+    std::cout << "[TEST] CPU terminó. PC=0x" << std::hex << cpu.PC << ", mem[0x0200]=0x" << std::hex << (int)mem[0x0200] << std::endl;
     // Verificar que el programa se ejecutó correctamente
     EXPECT_EQ(mem[0x0200], 0x42);
+    // Asegurar que el PC terminó después de BRK (PC debe avanzar 2 bytes tras BRK)
+    EXPECT_EQ(cpu.PC, 0x8008);
+    // Si el test falla, mostrar el contenido de la memoria relevante
+    if (mem[0x0200] != 0x42 || cpu.PC != 0x8008) {
+        std::cerr << "[TEST][ERROR] Dump mem[0x0200]=0x" << std::hex << (int)mem[0x0200]
+                  << ", cpu.PC=0x" << std::hex << cpu.PC << std::endl;
+        for (int i = 0x8000; i < 0x8006; ++i) {
+            std::cerr << "mem[" << std::hex << i << "]=0x" << (int)mem[i] << ", ";
+        }
+        std::cerr << std::endl;
+    }
 }

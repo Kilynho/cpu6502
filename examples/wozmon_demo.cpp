@@ -282,7 +282,7 @@ void inputLoop(Mem& mem, CPU& cpu, std::shared_ptr<PIA>& pia) {
     }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     printWelcome();
     
     // Initialize components

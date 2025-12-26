@@ -1,7 +1,7 @@
 #include "gui/emulator_gui.hpp"
 #include "devices/text_screen.hpp"
-#include "cpu.hpp"
-#include "mem.hpp"
+#include "cpu/cpu.hpp"
+#include "mem/mem.hpp"
 #include <memory>
 #include <iostream>
 #include <chrono>

@@ -1,4 +1,4 @@
-#include "via_device.hpp"
+#include "devices/via_device.hpp"
 
 void VIADevice::writeRegister(uint16_t address, uint8_t value) {
     // TODO: Implement VIA register write

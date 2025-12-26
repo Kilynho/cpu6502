@@ -1,5 +1,5 @@
 #pragma once
-#include "../audio_device.hpp"
+#include "devices/audio_device.hpp"
 #include <SDL2/SDL.h>
 #include <cstdint>
 #include <atomic>

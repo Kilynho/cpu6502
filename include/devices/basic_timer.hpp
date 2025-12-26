@@ -1,6 +1,6 @@
 #pragma once
-#include "../timer_device.hpp"
-#include "../interrupt_controller.hpp"
+#include "devices/timer_device.hpp"
+#include "devices/interrupt_controller.hpp"
 #include <cstdint>
 #include <atomic>
 #include <mutex>

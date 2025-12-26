@@ -1,4 +1,4 @@
-#include "mem.hpp"
+#include "mem/mem.hpp"
 
 // Initializes memory by setting all bytes to 0
 void Mem::Initialize() {

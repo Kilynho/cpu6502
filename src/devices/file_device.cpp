@@ -1,5 +1,5 @@
 #include "devices/file_device.hpp"
-#include "mem.hpp"
+#include "mem/mem.hpp"
 #include <fstream>
 #include <iostream>
 #include <cstring>

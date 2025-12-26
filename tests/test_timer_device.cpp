@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "cpu.hpp"
-#include "mem.hpp"
+#include "cpu/cpu.hpp"
+#include "mem/mem.hpp"
 #include "devices/basic_timer.hpp"
 #include <memory>
 #include <thread>

@@ -20,8 +20,8 @@
  *   ./basic_trace_demo 50000 100    # Run max 50K, trace every 100
  */
 
-#include <cpu.hpp>
-#include <mem.hpp>
+#include "cpu/cpu.hpp"
+#include "mem/mem.hpp"
 #include <devices/pia.hpp>
 #include <iostream>
 #include <iomanip>

@@ -1,4 +1,4 @@
-#include "joystick_device.hpp"
+#include "include/devices/joystick_device.hpp"
 
 void JoystickDevice::writeRegister(uint16_t address, uint8_t value) {
     // TODO: Implement joystick register write

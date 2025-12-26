@@ -1,6 +1,6 @@
 #include "peripheral_device.hpp"
-#include "src/devices/via_device.hpp"
-#include "src/devices/joystick_device.hpp"
+#include "include/src/devices/via_device.hpp"
+#include "include/devices/joystick_device.hpp"
 #include <gtest/gtest.h>
 
 TEST(PeripheralDeviceTest, VIADeviceAccess) {

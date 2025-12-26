@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "cpu.hpp"
-#include "mem.hpp"
+#include "cpu/cpu.hpp"
+#include "mem/mem.hpp"
 #include "devices/tcp_serial.hpp"
 #include <memory>
 #include <thread>

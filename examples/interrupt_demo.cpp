@@ -8,9 +8,9 @@
 
 #include <iostream>
 #include <iomanip>
-#include "cpu.hpp"
-#include "mem.hpp"
-#include "interrupt_controller.hpp"
+#include "cpu/cpu.hpp"
+#include "mem/mem.hpp"
+#include "devices/interrupt_controller.hpp"
 #include "devices/basic_timer.hpp"
 
 void printCPUState(const CPU& cpu, const std::string& context) {

@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 #include <array>
 #include <initializer_list>
-#include "cpu.hpp"
-#include "mem.hpp"
-#include "cpu_instructions.hpp"
-#include "cpu_addressing.hpp"
+#include "cpu/cpu.hpp"
+#include "mem/mem.hpp"
+#include "cpu/cpu_instructions.hpp"
+#include "cpu/cpu_addressing.hpp"
 
 // Test fixture for new instruction handlers
 class InstructionHandlersTest : public testing::Test

@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include "cpu_instructions.hpp"
-#include "cpu.hpp"
-#include "mem.hpp"
-#include "instruction_set.hpp"
+#include "cpu/cpu_instructions.hpp"
+#include "cpu/cpu.hpp"
+#include "mem/mem.hpp"
+#include "cpu/instruction_set.hpp"
 #include <set>
 #include <sstream>
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "../serial_device.hpp"
+#include "devices/serial_device.hpp"
 #include <string>
 #include <queue>
 #include <cstdint>

@@ -2,7 +2,7 @@
 #define CPU_ADDRESSING_HPP
 
 #include <cstdint>
-#include "mem.hpp"
+#include "mem/mem.hpp"
 
 using Byte = uint8_t;
 using Word = uint16_t;

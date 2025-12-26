@@ -9,9 +9,9 @@
 #include <iostream>
 #include <vector>
 #include <memory>
-#include "mem.hpp"
-#include "io_device.hpp"
-#include "interrupt_controller.hpp"
+#include "mem/mem.hpp"
+#include "devices/io_device.hpp"
+#include "devices/interrupt_controller.hpp"
 
 class Debugger;
 
@@ -33,41 +33,28 @@ struct Instruction {
 
 // Class representing the system CPU
 class CPU {
+    Byte ReadByte(u32& Cycles, Byte Address, Mem& memory);
+    Word ReadWord(u32& Cycles, Word Address, Mem& memory);
+    void WriteByte(u32& Cycles, Byte Address, Byte Data, Mem& memory);
+    void WriteWord(u32& Cycles, Word Address, Word Data, Mem& memory);
+    void PullPCFromStack(u32& Cycles, Mem& memory);
+    Word PopWordFromStack(u32& Cycles, Mem& memory);
+    void LDASetStatus();
+    void LDXSetStatus();
 public:
+    void PushPCToStack(u32& Cycles, Mem& memory);
+    Byte FetchByte(u32& Cycles, Mem& memory);
+    Word FetchWord(u32& Cycles, Mem& memory);
     // Instruction definitions with their opcodes, cycles, bytes, and names
-    static const Instruction INS_LDA_IM; // Instrucción LDA Immediate
-    static const Instruction INS_LDA_ZP; // Instrucción LDA Zero Page
-    static const Instruction INS_LDA_ZPX; // Instrucción LDA Zero Page,X
-    static const Instruction INS_LDX_IM; // Instrucción LDX Immediate
-    static const Instruction INS_STA_ZP; // Instrucción STA Zero Page
-    static const Instruction INS_JSR;   // Instrucción JSR (Jump to Subroutine)
-    static const Instruction INS_RTS;   // Instrucción RTS (Return from Subroutine)
-    static const Instruction INS_LDA_ABS; // Instrucción LDA Absolute
-    static const Instruction INS_LDA_ABSX; // Instrucción LDA Absolute,X
-    static const Instruction INS_LDA_ABSY; // Instrucción LDA Absolute,Y
-
-    // Public methods
+public:
     void Reset(Mem& memory); // Resets the CPU and memory
     void Execute(u32 Cycles, Mem& memory); // Executes instructions
     void ExecuteSingleInstruction(Mem& memory); // Executes exactly one instruction
     void PrintCPUState() const; // Prints the CPU state
-    u32 CalculateCycles(const Mem& mem) const; // Calculates the cycles needed to run the test program
     Word FetchWordFromMemory(const Mem& memory, Word address) const; // Gets a word from memory
     void LogMemoryAccess(Word address, Byte data, bool isWrite) const; // Logs memory access (DEBUG)
     void LogInstruction(Word pc, Byte opcode) const; // Logs one line per instruction (INFO)
     void RotateLogIfNeeded() const; // Rotates log files if size exceeds limit
-    void AssignCyclesAndBytes(Word &pc, u32 &cycles, Byte opcode) const; // Assigns cycles and bytes according to the opcode
-    void PushPCToStack(u32& cycles, Mem& memory); // Saves the program counter to the stack
-    void PullPCFromStack(u32& cycles, Mem& memory); // Recupera el contador de programa de la pila
-    Word PopWordFromStack(u32& cycles, Mem& memory); // Recupera el contador de programa de la pila
-    Byte FetchByte(u32& Cycles, Mem& memory); // Obtiene un byte de la memoria
-    Word FetchWord(u32& Cycles, Mem& memory); // Obtiene una palabra de la memoria
-    Byte ReadByte(u32& Cycles, Byte Address, Mem& memory); // Lee un byte de la memoria
-    Word ReadWord(u32& Cycles, Word Address, Mem& memory); // Lee una palabra de la memoria
-    void WriteByte(u32& Cycles, Byte Address, Byte Value, Mem& memory); // Escribe un byte en la memoria
-    void WriteWord(u32& Cycles, Word Address, Word Value, Mem& memory); // Escribe una palabra en la memoria
-    void LDASetStatus(); // Sets the status for the LDA instruction
-    void LDXSetStatus(); // Sets the status for the LDX instruction
     void LDYSetStatus(); // Sets the status for the LDY instruction
     std::string ByteToBinaryString(Byte byte) const; // Converts a byte to a binary string
     std::string WordToBinaryString(Word word) const; // Converts a word to a binary string

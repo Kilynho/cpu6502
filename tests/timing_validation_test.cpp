@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <instruction_set.hpp>
+#include "cpu/instruction_set.hpp"
 #include <map>
 #include <string>
 

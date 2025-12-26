@@ -1,4 +1,4 @@
-#include "interrupt_controller.hpp"
+#include "devices/interrupt_controller.hpp"
 #include <algorithm>
 
 InterruptController::InterruptController() {

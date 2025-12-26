@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "cpu.hpp"
-#include "mem.hpp"
-#include "debugger.hpp"
+#include "cpu/cpu.hpp"
+#include "mem/mem.hpp"
+#include "debugger/debugger.hpp"
 
 TEST(DebuggerBasic, BreakpointStopsExecution) {
     Mem mem;

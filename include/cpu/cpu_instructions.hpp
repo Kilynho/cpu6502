@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <functional>
-#include "mem.hpp"
+#include "mem/mem.hpp"
 
 using Byte = uint8_t;
 using Word = uint16_t;

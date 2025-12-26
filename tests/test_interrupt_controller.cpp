@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "interrupt_controller.hpp"
-#include "cpu.hpp"
-#include "mem.hpp"
+#include "devices/interrupt_controller.hpp"
+#include "cpu/cpu.hpp"
+#include "mem/mem.hpp"
 #include "devices/basic_timer.hpp"
 #include <memory>
 

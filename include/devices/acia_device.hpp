@@ -14,7 +14,7 @@
 #ifndef ACIA_DEVICE_HPP
 #define ACIA_DEVICE_HPP
 
-#include "io_device.hpp"
+#include "devices/io_device.hpp"
 #include <queue>
 #include <string>
 

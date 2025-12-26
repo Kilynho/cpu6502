@@ -76,6 +76,7 @@ void PIA::write(uint16_t address, uint8_t value) {
     }
 }
 
+
 void PIA::pushKeyboardCharacter(char c) {
     // Set high bit for keyboard input
     keyboard_buffer_.push(static_cast<uint8_t>(c) | 0x80);

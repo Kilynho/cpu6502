@@ -1,10 +1,10 @@
-#include "io_device.hpp"
+#include "devices/io_device.hpp"
 #include <algorithm>
-#include "cpu.hpp"
-#include "mem.hpp"
+#include "cpu/cpu.hpp"
+#include "mem/mem.hpp"
 #include "util/logger.hpp"
-#include "debugger.hpp"
-#include "cpu_instructions.hpp"
+#include "debugger/debugger.hpp"
+#include "cpu/cpu_instructions.hpp"
 #include <bitset>
 #include <fstream>
 #include <iomanip>
@@ -14,65 +14,7 @@
 #include <cstdio>
 #include <string>
 
-// Definition of instructions with their opcodes, cycles, bytes, and names
-const Instruction CPU::INS_LDA_IM = {0xA9, 2, 2, "LDA_IM"}; // LDA Immediate
-const Instruction CPU::INS_LDA_ZP = {0xA5, 3, 2, "LDA_ZP"}; // LDA Zero Page
-const Instruction CPU::INS_LDA_ZPX = {0xB5, 4, 2, "LDA_ZPX"}; // LDA Zero Page,X
-const Instruction CPU::INS_LDX_IM = {0xA2, 2, 2, "LDX_IM"}; // LDX Immediate
-const Instruction CPU::INS_STA_ZP = {0x85, 3, 2, "STA_ZP"}; // STA Zero Page
-const Instruction CPU::INS_JSR = {0x20, 6, 3, "JSR"};   // JSR (Jump to Subroutine)
-const Instruction CPU::INS_RTS = {0x60, 6, 1, "RTS"};   // RTS (Return from Subroutine)
-const Instruction CPU::INS_LDA_ABS = {0xAD, 4, 3, "LDA_ABS"}; // LDA Absolute
-const Instruction CPU::INS_LDA_ABSX = {0xBD, 4, 3, "LDA_ABSX"}; // LDA Absolute,X
-const Instruction CPU::INS_LDA_ABSY = {0xB9, 4, 3, "LDA_ABSY"}; // LDA Absolute,Y
 
-u32 CPU::CalculateCycles(const Mem& mem) const {
-    u32 cycles = 0;
-    Word pc = Mem::ROM_START; // Start of the program in ROM memory
-
-    while (true) { // Infinite loop
-        Byte opcode = mem[pc];
-        AssignCyclesAndBytes(pc, cycles, opcode); // Assign cycles and bytes according to the opcode
-        // Stop if the end of memory is reached
-        if (pc == Mem::ROM_END) { break; }
-    }
-    return cycles;
-}
-
-void CPU::AssignCyclesAndBytes(Word &pc, u32 &cycles, Byte opcode) const {
-    const Instruction* instruction = nullptr;
-
-    // Assign the corresponding instruction according to the opcode
-    if (opcode == INS_JSR.opcode) {
-        instruction = &INS_JSR;
-    } else if (opcode == INS_LDA_IM.opcode) {
-        instruction = &INS_LDA_IM;
-    } else if (opcode == INS_LDA_ZP.opcode) {
-        instruction = &INS_LDA_ZP;
-    } else if (opcode == INS_LDA_ZPX.opcode) {
-        instruction = &INS_LDA_ZPX;
-    } else if (opcode == INS_LDX_IM.opcode) {
-        instruction = &INS_LDX_IM;
-    } else if (opcode == INS_STA_ZP.opcode) {
-        instruction = &INS_STA_ZP;
-    } else if (opcode == INS_RTS.opcode) {
-        instruction = &INS_RTS;
-    } else if (opcode == INS_LDA_ABS.opcode) {
-        instruction = &INS_LDA_ABS;
-    } else if (opcode == INS_LDA_ABSX.opcode) {
-        instruction = &INS_LDA_ABSX;
-    } else if (opcode == INS_LDA_ABSY.opcode) {
-        instruction = &INS_LDA_ABSY;
-    }
-
-    // If a valid instruction was found, assign cycles and bytes
-    if (instruction) {
-        cycles += instruction->cycles;
-        pc += instruction->bytes;
-    } else {
-        pc++;
-    }
-}
 
 Byte CPU::FetchByte(u32& Cycles, Mem& memory) {
     Byte Data = memory[PC]; // Get the byte from memory at the program counter address
@@ -351,7 +293,7 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
     const bool debugEnabled = (debugExecuteEnv != nullptr && debugExecuteEnv[0] != '\0');
 
     while (Cycles > 0) {
-        std::cerr << "[TRACE] PC=0x" << std::hex << PC << ", Cycles=" << std::dec << Cycles << std::endl;
+        // std::cerr << "[TRACE] PC=0x" << std::hex << PC << ", Cycles=" << std::dec << Cycles << std::endl;
         if (guardEnabled && ++instructionCount > MAX_INSTRUCTIONS) {
             std::stringstream ss;
             ss << "Execution limit reached (" << MAX_INSTRUCTIONS << " instructions) at PC=0x" 
@@ -376,7 +318,7 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
         // Fetch the opcode
         Byte opcode = FetchByte(Cycles, memory);
 
-        std::cerr << "[TRACE] Fetched opcode 0x" << std::hex << (int)opcode << " at PC=0x" << currentPC << ", Cycles left=" << std::dec << Cycles << std::endl;
+        // std::cerr << "[TRACE] Fetched opcode 0x" << std::hex << (int)opcode << " at PC=0x" << currentPC << ", Cycles left=" << std::dec << Cycles << std::endl;
 
         // Log instruction (INFO mode)
         LogInstruction(currentPC, opcode);
@@ -390,7 +332,7 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
         // Execute the instruction
         if (handler) {
             handler(*this, Cycles, memory);
-            std::cerr << "[TRACE] After handler: PC=0x" << std::hex << PC << ", Cycles=" << std::dec << Cycles << std::endl;
+            // std::cerr << "[TRACE] After handler: PC=0x" << std::hex << PC << ", Cycles=" << std::dec << Cycles << std::endl;
         } else {
             // This shouldn't happen if the table is properly initialized
             std::stringstream ss;

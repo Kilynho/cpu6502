@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include <mem.hpp>
-#include <cpu.hpp>
+#include "mem/mem.hpp"
+#include "cpu/cpu.hpp"
 #include <devices/pia.hpp>
 #include <fstream>
 #include <vector>

@@ -1,5 +1,5 @@
-#include "cpu_addressing.hpp"
-#include "cpu.hpp"
+#include "cpu/cpu_addressing.hpp"
+#include "cpu/cpu.hpp"
 
 namespace Addressing {
 

@@ -176,6 +176,20 @@ target_include_directories(wozmon_demo PRIVATE
 
 # Establecer el nombre de salida del ejecutable
 set_target_properties(wozmon_demo PROPERTIES OUTPUT_NAME wozmon_demo)
+
+# Crear el ejecutable de WOZMON Serial demo
+add_executable(wozmon_serial_demo ${PROJECT_SOURCE_DIR}/examples/wozmon_serial_demo.cpp)
+
+# Enlazar el ejecutable con la librería
+target_link_libraries(wozmon_serial_demo cpu6502_lib)
+
+# Especificar directorios de inclusión para el demo
+target_include_directories(wozmon_serial_demo PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+)
+
+# Establecer el nombre de salida del ejecutable
+set_target_properties(wozmon_serial_demo PROPERTIES OUTPUT_NAME wozmon_serial_demo)
 # Crear el ejecutable de BASIC trace demo
 add_executable(basic_trace_demo ${PROJECT_SOURCE_DIR}/examples/basic_trace_demo.cpp)
 

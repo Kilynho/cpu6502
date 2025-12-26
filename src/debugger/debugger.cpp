@@ -1,6 +1,6 @@
-#include "debugger.hpp"
-#include "cpu.hpp"
-#include "mem.hpp"
+#include "debugger/debugger.hpp"
+#include "cpu/cpu.hpp"
+#include "mem/mem.hpp"
 
 Debugger::Debugger()
     : cpu_(nullptr), mem_(nullptr), lastBreakpoint_(0), hitBreakpoint_(false) {}

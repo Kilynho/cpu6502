@@ -9,8 +9,8 @@
  * - Interactive interface for programming and debugging
  */
 
-#include "cpu.hpp"
-#include "mem.hpp"
+#include "cpu/cpu.hpp"
+#include "mem/mem.hpp"
 #include "devices/pia.hpp"
 #include <iostream>
 #include <iomanip>
@@ -312,8 +312,8 @@ int main(int argc, char* argv[]) {
     }
     
     // Set reset vector to BASIC coldstart at 0x9F06 (COLD_START)
-    mem[0xFFFC] = 0x06;      // Low byte of 0x9F06
-    mem[0xFFFD] = 0x9F;      // High byte
+    mem[0xFFFC] = 0x00;      // Low byte of 0x9F06
+    mem[0xFFFD] = 0xFE;      // High byte
     cpu.Reset(mem);
     
     // Execute directly from BASIC coldstart until we see output, then drop to interactive inputLoop

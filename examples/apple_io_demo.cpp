@@ -1,5 +1,5 @@
-#include "cpu.hpp"
-#include "mem.hpp"
+#include "cpu/cpu.hpp"
+#include "mem/mem.hpp"
 #include "devices/apple_io.hpp"
 #include <memory>
 #include <iostream>

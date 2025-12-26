@@ -1,6 +1,6 @@
-#include "cpu_instructions.hpp"
-#include "cpu.hpp"
-#include "cpu_addressing.hpp"
+#include "cpu/cpu_instructions.hpp"
+#include "cpu/cpu.hpp"
+#include "cpu/cpu_addressing.hpp"
 #include "util/logger.hpp"
 #include <iomanip>
 #include <sstream>

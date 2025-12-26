@@ -1,5 +1,5 @@
-#include "cpu.hpp"
-#include "mem.hpp"
+#include "cpu/cpu.hpp"
+#include "mem/mem.hpp"
 #include "devices/text_screen.hpp"
 #include <memory>
 #include <iostream>

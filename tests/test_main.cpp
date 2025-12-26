@@ -2,9 +2,9 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include "cpu.hpp"
-#include "mem.hpp"
-#include "cpu_instructions.hpp"
+#include "cpu/cpu.hpp"
+#include "mem/mem.hpp"
+#include "cpu/cpu_instructions.hpp"
 #include "util/logger.hpp"
 
 class M6502Test1 : public testing::Test
@@ -31,7 +31,7 @@ public:
 TEST_F(M6502Test1, TestSTA_ZP)
 {
     cpu.A = 0x42;
-    mem[0x8000] = CPU::INS_STA_ZP.opcode;
+        mem[0x8000] = 0x85;
     mem[0x8001] = 0x40;
 
     cpu.Execute(3, mem);
@@ -42,7 +42,7 @@ TEST_F(M6502Test1, TestSTA_ZP)
 TEST_F(M6502Test1, TestSTA_ZP_Zero)
 {
     cpu.A = 0x00;
-    mem[0x8000] = CPU::INS_STA_ZP.opcode;
+        mem[0x8000] = 0x85;
     mem[0x8001] = 0x50;
 
     cpu.Execute(3, mem);
@@ -53,7 +53,7 @@ TEST_F(M6502Test1, TestSTA_ZP_Zero)
 TEST_F(M6502Test1, TestSTA_ZP_MaxValue)
 {
     cpu.A = 0xFF;
-    mem[0x8000] = CPU::INS_STA_ZP.opcode;
+        mem[0x8000] = 0x85;
     mem[0x8001] = 0xFF;
 
     cpu.Execute(3, mem);
@@ -64,7 +64,7 @@ TEST_F(M6502Test1, TestSTA_ZP_MaxValue)
 // ========== LDA Immediate Tests ==========
 TEST_F(M6502Test1, TestLDA_IM)
 {
-    mem[0x8000] = CPU::INS_LDA_IM.opcode;
+    mem[0x8000] = 0xA9;
     mem[0x8001] = 0x84;
 
     cpu.Execute(2, mem);
@@ -76,7 +76,7 @@ TEST_F(M6502Test1, TestLDA_IM)
 
 TEST_F(M6502Test1, TestLDA_IM_Zero)
 {
-    mem[0x8000] = CPU::INS_LDA_IM.opcode;
+    mem[0x8000] = 0xA9;
     mem[0x8001] = 0x00;
 
     cpu.Execute(2, mem);
@@ -88,7 +88,7 @@ TEST_F(M6502Test1, TestLDA_IM_Zero)
 
 TEST_F(M6502Test1, TestLDA_IM_Positive)
 {
-    mem[0x8000] = CPU::INS_LDA_IM.opcode;
+    mem[0x8000] = 0xA9;
     mem[0x8001] = 0x42;
 
     cpu.Execute(2, mem);
@@ -100,7 +100,7 @@ TEST_F(M6502Test1, TestLDA_IM_Positive)
 
 TEST_F(M6502Test1, TestLDA_IM_MaxValue)
 {
-    mem[0x8000] = CPU::INS_LDA_IM.opcode;
+    mem[0x8000] = 0xA9;
     mem[0x8001] = 0xFF;
 
     cpu.Execute(2, mem);
@@ -114,7 +114,7 @@ TEST_F(M6502Test1, TestLDA_IM_MaxValue)
 TEST_F(M6502Test1, TestLDA_ZP)
 {
     mem[0x0040] = 0x55;
-    mem[0x8000] = CPU::INS_LDA_ZP.opcode;
+    mem[0x8000] = 0xA5;
     mem[0x8001] = 0x40;
 
     cpu.Execute(3, mem);
@@ -127,7 +127,7 @@ TEST_F(M6502Test1, TestLDA_ZP)
 TEST_F(M6502Test1, TestLDA_ZP_Zero)
 {
     mem[0x0010] = 0x00;
-    mem[0x8000] = CPU::INS_LDA_ZP.opcode;
+    mem[0x8000] = 0xA5;
     mem[0x8001] = 0x10;
 
     cpu.Execute(3, mem);
@@ -139,7 +139,7 @@ TEST_F(M6502Test1, TestLDA_ZP_Zero)
 TEST_F(M6502Test1, TestLDA_ZP_Boundary)
 {
     mem[0x00FF] = 0xAA;
-    mem[0x8000] = CPU::INS_LDA_ZP.opcode;
+    mem[0x8000] = 0xA5;
     mem[0x8001] = 0xFF;
 
     cpu.Execute(3, mem);
@@ -152,7 +152,7 @@ TEST_F(M6502Test1, TestLDA_ZPX)
 {
     cpu.X = 0x01;
     mem[0x0041] = 0x77;
-    mem[0x8000] = CPU::INS_LDA_ZPX.opcode;
+    mem[0x8000] = 0xB5;
     mem[0x8001] = 0x40;
 
     cpu.Execute(4, mem);
@@ -164,7 +164,7 @@ TEST_F(M6502Test1, TestLDA_ZPX_ZeroOffset)
 {
     cpu.X = 0x00;
     mem[0x0030] = 0x66;
-    mem[0x8000] = CPU::INS_LDA_ZPX.opcode;
+    mem[0x8000] = 0xB5;
     mem[0x8001] = 0x30;
 
     cpu.Execute(4, mem);
@@ -176,7 +176,7 @@ TEST_F(M6502Test1, TestLDA_ZPX_Wraparound)
 {
     cpu.X = 0x10;
     mem[0x000F] = 0x88; // 0xFF + 0x10 wraps to 0x0F
-    mem[0x8000] = CPU::INS_LDA_ZPX.opcode;
+    mem[0x8000] = 0xB5;
     mem[0x8001] = 0xFF;
 
     cpu.Execute(4, mem);
@@ -188,7 +188,7 @@ TEST_F(M6502Test1, TestLDA_ZPX_Wraparound)
 TEST_F(M6502Test1, TestLDA_ABS)
 {
     mem[0x4400] = 0x99;
-    mem[0x8000] = CPU::INS_LDA_ABS.opcode;
+    mem[0x8000] = 0xAD;
     mem[0x8001] = 0x00; // Low byte
     mem[0x8002] = 0x44; // High byte
 
@@ -200,7 +200,7 @@ TEST_F(M6502Test1, TestLDA_ABS)
 TEST_F(M6502Test1, TestLDA_ABS_HighAddress)
 {
     mem[0xFFFE] = 0xCC;
-    mem[0x8000] = CPU::INS_LDA_ABS.opcode;
+    mem[0x8000] = 0xAD;
     mem[0x8001] = 0xFE; // Low byte
     mem[0x8002] = 0xFF; // High byte
 
@@ -214,7 +214,7 @@ TEST_F(M6502Test1, TestLDA_ABSX)
 {
     cpu.X = 0x02;
     mem[0x4402] = 0xBB;
-    mem[0x8000] = CPU::INS_LDA_ABSX.opcode;
+    mem[0x8000] = 0xBD;
     mem[0x8001] = 0x00; // Low byte
     mem[0x8002] = 0x44; // High byte
 
@@ -227,7 +227,7 @@ TEST_F(M6502Test1, TestLDA_ABSX_ZeroOffset)
 {
     cpu.X = 0x00;
     mem[0x5000] = 0xDD;
-    mem[0x8000] = CPU::INS_LDA_ABSX.opcode;
+    mem[0x8000] = 0xBD;
     mem[0x8001] = 0x00; // Low byte
     mem[0x8002] = 0x50; // High byte
 
@@ -241,7 +241,7 @@ TEST_F(M6502Test1, TestLDA_ABSY)
 {
     cpu.Y = 0x05;
     mem[0x3005] = 0xEE;
-    mem[0x8000] = CPU::INS_LDA_ABSY.opcode;
+    mem[0x8000] = 0xB9;
     mem[0x8001] = 0x00; // Low byte
     mem[0x8002] = 0x30; // High byte
 
@@ -254,7 +254,7 @@ TEST_F(M6502Test1, TestLDA_ABSY_ZeroOffset)
 {
     cpu.Y = 0x00;
     mem[0x6000] = 0xFF;
-    mem[0x8000] = CPU::INS_LDA_ABSY.opcode;
+    mem[0x8000] = 0xB9;
     mem[0x8001] = 0x00; // Low byte
     mem[0x8002] = 0x60; // High byte
 
@@ -266,7 +266,7 @@ TEST_F(M6502Test1, TestLDA_ABSY_ZeroOffset)
 // ========== LDX Tests ==========
 TEST_F(M6502Test1, TestLDX_IM)
 {
-    mem[0x8000] = CPU::INS_LDX_IM.opcode;
+    mem[0x8000] = 0xA2;
     mem[0x8001] = 0x55;
 
     cpu.Execute(2, mem);
@@ -278,7 +278,7 @@ TEST_F(M6502Test1, TestLDX_IM)
 
 TEST_F(M6502Test1, TestLDX_IM_Zero)
 {
-    mem[0x8000] = CPU::INS_LDX_IM.opcode;
+    mem[0x8000] = 0xA2;
     mem[0x8001] = 0x00;
 
     cpu.Execute(2, mem);
@@ -290,7 +290,7 @@ TEST_F(M6502Test1, TestLDX_IM_Zero)
 
 TEST_F(M6502Test1, TestLDX_IM_MaxValue)
 {
-    mem[0x8000] = CPU::INS_LDX_IM.opcode;
+    mem[0x8000] = 0xA2;
     mem[0x8001] = 0xFF;
 
     cpu.Execute(2, mem);
@@ -303,7 +303,7 @@ TEST_F(M6502Test1, TestLDX_IM_MaxValue)
 // ========== JSR/RTS Tests ==========
 TEST_F(M6502Test1, TestJSR)
 {
-    mem[0x8000] = CPU::INS_JSR.opcode;
+    mem[0x8000] = 0x20;
     mem[0x8001] = 0x00;
     mem[0x8002] = 0x81;
 
@@ -315,10 +315,10 @@ TEST_F(M6502Test1, TestJSR)
 TEST_F(M6502Test1, TestRTS)
 {
     // Simular una llamada a subrutina
-    mem[0x8000] = CPU::INS_JSR.opcode;
+        mem[0x8000] = 0x20;
     mem[0x8001] = 0x00;
     mem[0x8002] = 0x81;
-    mem[0x8100] = CPU::INS_RTS.opcode;
+        mem[0x8100] = 0x60;
 
     cpu.Execute(12, mem); // Ejecutar JSR y RTS
     
@@ -328,7 +328,7 @@ TEST_F(M6502Test1, TestRTS)
 TEST_F(M6502Test1, TestJSR_StackPointer)
 {
     Byte initialSP = cpu.SP;
-    mem[0x8000] = CPU::INS_JSR.opcode;
+        mem[0x8000] = 0x20;
     mem[0x8001] = 0x00;
     mem[0x8002] = 0x90;
 
@@ -341,10 +341,10 @@ TEST_F(M6502Test1, TestJSR_StackPointer)
 TEST_F(M6502Test1, TestRTS_StackPointer)
 {
     Byte initialSP = cpu.SP;
-    mem[0x8000] = CPU::INS_JSR.opcode;
+        mem[0x8000] = 0x20;
     mem[0x8001] = 0x00;
     mem[0x8002] = 0x81;
-    mem[0x8100] = CPU::INS_RTS.opcode;
+        mem[0x8100] = 0x60;
 
     cpu.Execute(12, mem);
 
@@ -355,16 +355,17 @@ TEST_F(M6502Test1, TestRTS_StackPointer)
 TEST_F(M6502Test1, TestNestedJSR)
 {
     // Test nested subroutine calls
-    mem[0x8000] = CPU::INS_JSR.opcode;
+        mem[0x8000] = 0x20;
     mem[0x8001] = 0x00;
     mem[0x8002] = 0x81;
     
-    mem[0x8100] = CPU::INS_JSR.opcode; // Nested JSR
-    mem[0x8101] = 0x00;
-    mem[0x8102] = 0x82;
+        mem[0x8100] = 0x20; // Nested JSR
     
-    mem[0x8200] = CPU::INS_RTS.opcode; // Return from nested
-    mem[0x8103] = CPU::INS_RTS.opcode; // Return from first
+        mem[0x8200] = 0x60; // Return from nested
+        mem[0x8101] = 0x00;
+        mem[0x8102] = 0x82;
+        mem[0x8200] = 0x60; // Return from nested
+        mem[0x8103] = 0x60; // Return from first
 
     cpu.Execute(24, mem); // JSR(6) + JSR(6) + RTS(6) + RTS(6)
 

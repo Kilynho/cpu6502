@@ -163,7 +163,7 @@ tcpSerial->write(0xFA06, 2);    // LISTEN
 ```cpp
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "devices/tcp_serial.hpp"
+#include "tcp_serial.hpp"
 
 int main() {
     Mem mem;

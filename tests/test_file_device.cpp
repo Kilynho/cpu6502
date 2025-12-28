@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "devices/file_device.hpp"
+#include "file_device.hpp"
 #include <memory>
 #include <fstream>
 #include <vector>

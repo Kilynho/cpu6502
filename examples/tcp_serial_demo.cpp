@@ -1,6 +1,6 @@
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "devices/tcp_serial.hpp"
+#include "tcp_serial.hpp"
 #include <memory>
 #include <iostream>
 #include <thread>

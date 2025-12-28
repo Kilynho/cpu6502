@@ -112,7 +112,7 @@ success:
 ```cpp
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "devices/file_device.hpp"
+#include "file_device.hpp"
 
 int main() {
     Mem mem;

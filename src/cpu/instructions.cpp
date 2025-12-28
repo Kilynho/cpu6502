@@ -1,7 +1,7 @@
 #include "cpu_instructions.hpp"
 #include "cpu.hpp"
 #include "cpu_addressing.hpp"
-#include "util/logger.hpp"
+#include "logger.hpp"
 #include <array>
 
 namespace Instructions {

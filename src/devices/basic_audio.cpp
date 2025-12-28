@@ -1,4 +1,4 @@
-#include "devices/basic_audio.hpp"
+#include "basic_audio.hpp"
 #include <cmath>
 #include <algorithm>
 #include <cstring>

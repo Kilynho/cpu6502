@@ -59,8 +59,8 @@ make gui_demo
 ### Ejemplo Básico
 
 ```cpp
-#include "gui/emulator_gui.hpp"
-#include "devices/text_screen.hpp"
+#include "emulator_gui.hpp"
+#include "text_screen.hpp"
 #include <memory>
 
 int main() {
@@ -182,8 +182,8 @@ La GUI se integra perfectamente con el emulador de CPU 6502 y el dispositivo Tex
 ```cpp
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "gui/emulator_gui.hpp"
-#include "devices/text_screen.hpp"
+#include "emulator_gui.hpp"
+#include "text_screen.hpp"
 
 int main() {
     // Inicializar componentes

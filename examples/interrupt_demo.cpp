@@ -11,7 +11,7 @@
 #include "cpu.hpp"
 #include "mem.hpp"
 #include "interrupt_controller.hpp"
-#include "devices/basic_timer.hpp"
+#include "basic_timer.hpp"
 
 void printCPUState(const CPU& cpu, const std::string& context) {
     std::cout << "  [" << context << "] PC: 0x" 

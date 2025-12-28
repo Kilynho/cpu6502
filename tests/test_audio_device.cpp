@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "devices/basic_audio.hpp"
+#include "basic_audio.hpp"
 #include <memory>
 #include <thread>
 #include <chrono>

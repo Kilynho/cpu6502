@@ -37,7 +37,7 @@ The emulator supports Apple II I/O simulation through the `AppleIO` class:
 ```cpp
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "devices/apple_io.hpp"
+#include "apple_io.hpp"
 
 CPU cpu;
 Mem mem;

@@ -112,8 +112,8 @@ The 16-color palette recreates the classic 8-bit computer experience:
 ## Usage Example
 
 ```cpp
-#include "gui/emulator_gui.hpp"
-#include "devices/text_screen.hpp"
+#include "emulator_gui.hpp"
+#include "text_screen.hpp"
 
 int main() {
     // Create and initialize GUI

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "devices/text_screen.hpp"
+#include "text_screen.hpp"
 #include <memory>
 
 class TextScreenTest : public testing::Test {

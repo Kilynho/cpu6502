@@ -13,7 +13,7 @@
 #include <chrono>
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "devices/basic_audio.hpp"
+#include "basic_audio.hpp"
 
 // Frecuencias de la escala musical en Hz (octava 4)
 const uint16_t NOTE_C4 = 262;  // Do

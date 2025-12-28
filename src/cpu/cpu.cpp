@@ -2,7 +2,7 @@
 #include <algorithm>
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "util/logger.hpp"
+#include "logger.hpp"
 #include "debugger.hpp"
 #include <bitset>
 #include <fstream>

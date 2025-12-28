@@ -173,7 +173,7 @@ NOT_PLAYING:
 ### Initialization
 
 ```cpp
-#include "devices/basic_audio.hpp"
+#include "basic_audio.hpp"
 
 // Create audio device
 auto audio = std::make_shared<BasicAudio>();

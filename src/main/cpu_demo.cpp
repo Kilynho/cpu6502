@@ -1,6 +1,6 @@
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "util/logger.hpp"
+#include "logger.hpp"
 #include <cstdio>
 #include <unistd.h>
 #include <cstring>

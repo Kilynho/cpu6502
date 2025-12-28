@@ -2,7 +2,7 @@
 #include "interrupt_controller.hpp"
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "devices/basic_timer.hpp"
+#include "basic_timer.hpp"
 #include <memory>
 
 // Mock interrupt source para pruebas

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "devices/basic_timer.hpp"
+#include "basic_timer.hpp"
 #include <memory>
 #include <thread>
 #include <chrono>

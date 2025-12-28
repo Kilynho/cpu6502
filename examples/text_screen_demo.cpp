@@ -1,6 +1,6 @@
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "devices/text_screen.hpp"
+#include "text_screen.hpp"
 #include <memory>
 #include <iostream>
 #include <thread>

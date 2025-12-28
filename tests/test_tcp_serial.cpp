@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "devices/tcp_serial.hpp"
+#include "tcp_serial.hpp"
 #include <memory>
 #include <thread>
 #include <chrono>

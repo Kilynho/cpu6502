@@ -186,7 +186,7 @@ add_custom_command(
     OUTPUT ${WOZMON_BIN}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/wozmon
     COMMAND ca65 -D kilynho ${WOZMON_SRC} -o ${WOZMON_OBJ}
-    COMMAND ld65 -C ${PROJECT_SOURCE_DIR}/msbasic/kilynho.cfg ${WOZMON_OBJ} -o ${WOZMON_BIN}
+    COMMAND /bin/sh -c "ld65 -C ${PROJECT_SOURCE_DIR}/msbasic/wozmon.cfg ${WOZMON_OBJ} -o ${WOZMON_BIN}"
     COMMAND ${CMAKE_COMMAND} -E env python3 ${PROJECT_SOURCE_DIR}/tools/inject_wozmon.py ${WOZMON_BIN}
     COMMENT "Assembling WOZMON and injecting into src/wozmon/rom.bin"
     VERBATIM

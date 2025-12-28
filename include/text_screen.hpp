@@ -1,5 +1,5 @@
 #pragma once
-#include "../video_device.hpp"
+#include "video_device.hpp"
 #include <string>
 #include <vector>
 #include <cstdint>

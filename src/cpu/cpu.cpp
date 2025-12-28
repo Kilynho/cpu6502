@@ -293,7 +293,6 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
     const bool debugEnabled = (debugExecuteEnv != nullptr && debugExecuteEnv[0] != '\0');
 
     while (Cycles > 0) {
-        // std::cerr << "[TRACE] PC=0x" << std::hex << PC << ", Cycles=" << std::dec << Cycles << std::endl;
         if (guardEnabled && ++instructionCount > MAX_INSTRUCTIONS) {
             std::stringstream ss;
             ss << "Execution limit reached (" << MAX_INSTRUCTIONS << " instructions) at PC=0x" 
@@ -301,24 +300,25 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
             util::LogWarn(ss.str());
             return;
         }
-        
-        if (debugEnabled && instructionCount % 1000 == 0) {
-            std::cerr << "DEBUG: Execute loop iteration " << instructionCount 
-                      << ", Cycles=" << Cycles << ", PC=0x" << std::hex << PC << std::dec << std::endl;
+
+        // Traza: mostrar PC y opcode en las primeras 1000 instrucciones
+        if (instructionCount <= 1000) {
+            Word currentPC = PC;
+            Byte opcodePeek = memory[PC];
+            std::cout << "[CPU] PC=$" << std::hex << std::setw(4) << std::setfill('0') << currentPC
+                      << " OPCODE=$" << std::setw(2) << (int)opcodePeek << std::dec << std::endl;
         }
-        
+
         Word currentPC = PC;
-        
+
         // Check for debugger breakpoints
         if (debugger && debugger->shouldBreak(currentPC)) {
             debugger->notifyBreakpoint(currentPC);
             return;
         }
-        
+
         // Fetch the opcode
         Byte opcode = FetchByte(Cycles, memory);
-
-        // std::cerr << "[TRACE] Fetched opcode 0x" << std::hex << (int)opcode << " at PC=0x" << currentPC << ", Cycles left=" << std::dec << Cycles << std::endl;
 
         // Log instruction (INFO mode)
         LogInstruction(currentPC, opcode);
@@ -332,14 +332,12 @@ void CPU::Execute(u32 Cycles, Mem& memory) {
         // Execute the instruction
         if (handler) {
             handler(*this, Cycles, memory);
-            // std::cerr << "[TRACE] After handler: PC=0x" << std::hex << PC << ", Cycles=" << std::dec << Cycles << std::endl;
         } else {
-            // This shouldn't happen if the table is properly initialized
             std::stringstream ss;
             ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode);
             ss << " at PC=" << std::hex << std::setw(4) << std::setfill('0') << currentPC;
             util::LogWarn("Unhandled opcode: 0x" + ss.str());
-            Cycles = 0; // Stop execution on unhandled opcode
+            Cycles = 0;
             return;
         }
     }

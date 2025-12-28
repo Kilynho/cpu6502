@@ -195,92 +195,24 @@ void printCommands() {
     std::cout << "  Q            - Quit emulator\n\n";
 }
 
-void inputLoop(Mem& mem, CPU& cpu, std::shared_ptr<PIA>& pia) {
-    std::string input;
-    uint16_t examineAddr = 0x8000;
-    uint16_t storeAddr = 0x8000;
-    
-    std::cout << "\n> ";
-    while (std::getline(std::cin, input)) {
-        if (input.empty()) {
-            std::cout << "> ";
-            continue;
-        }
-        
-        char cmd = input[0];
-        
-        switch (cmd) {
-            case 'X':
-            case 'x': {
-                // Examine memory
-                if (input.length() > 1) {
-                    examineAddr = std::stoul(input.substr(1), nullptr, 16);
-                }
-                std::cout << std::hex << std::uppercase;
-                std::cout << examineAddr << ": ";
-                for (int i = 0; i < 8; i++) {
-                    std::cout << std::setw(2) << std::setfill('0') 
-                             << static_cast<int>(mem[examineAddr + i]) << " ";
-                }
-                std::cout << std::dec << "\n";
-                break;
-            }
-            case '.': {
-                // Block examine
-                if (input.length() > 1) {
-                    examineAddr = std::stoul(input.substr(1), nullptr, 16);
-                }
-                std::cout << "Block examine at " << std::hex << examineAddr << "\n";
-                for (int row = 0; row < 8; row++) {
-                    std::cout << std::hex << std::uppercase << (examineAddr + row * 16) 
-                             << ": ";
-                    for (int col = 0; col < 16; col++) {
-                        std::cout << std::setw(2) << std::setfill('0')
-                                 << static_cast<int>(mem[examineAddr + row * 16 + col]) << " ";
-                    }
-                    std::cout << "\n";
-                }
-                std::cout << std::dec;
-                break;
-            }
-            case ':': {
-                // Store bytes
-                if (input.length() > 1) {
-                    storeAddr = std::stoul(input.substr(1), nullptr, 16);
-                }
-                std::cout << "Store at " << std::hex << storeAddr << "\n";
-                break;
-            }
-            case 'R':
-            case 'r': {
-                // Run program
-                uint16_t runAddr = examineAddr;
-                if (input.length() > 1) {
-                    runAddr = std::stoul(input.substr(1), nullptr, 16);
-                }
-                std::cout << "Running program at " << std::hex << runAddr << "\n";
-                cpu.PC = runAddr;
-                std::cout << "PC set to " << std::hex << cpu.PC << std::dec << "\n";
-                cpu.Execute(1000000, mem); // Run for a million cycles
-                return; // Exit after running
-            }
-            case 'Q':
-            case 'q': {
-                std::cout << "Exiting WOZMON emulator\n";
-                return;
-            }
-            case '?': {
-                printCommands();
-                break;
-            }
-            default:
-                std::cout << "Unknown command: " << cmd << "\n";
-                std::cout << "Type ? for help\n";
-        }
-        
-        std::cout << "> ";
+
+// --- DEPURACIÓN PROFUNDA DE ENTRADA/SALIDA WOZMON ---
+// Añadir wrappers para trazar entrada/salida en la PIA
+#include <functional>
+
+struct DebugPIA : public PIA {
+    void pushKeyboardCharacter(char c) {
+        std::cout << "[PIA] pushKeyboardCharacter: '" << (isprint(c & 0x7F) ? (char)(c & 0x7F) : '.') << "' (0x" << std::hex << (int)(c & 0xFF) << ")" << std::dec << std::endl;
+        PIA::pushKeyboardCharacter(c);
     }
-}
+    std::string getDisplayOutput() {
+        std::string out = PIA::getDisplayOutput();
+        if (!out.empty()) {
+            std::cout << "[PIA] getDisplayOutput: " << out << std::endl;
+        }
+        return out;
+    }
+};
 
 int main(int argc, char* argv[]) {
     printWelcome();
@@ -288,7 +220,7 @@ int main(int argc, char* argv[]) {
     // Initialize components
     Mem mem;
     CPU cpu;
-    auto pia = std::make_shared<PIA>();
+    auto pia = std::make_shared<DebugPIA>();
     
     mem.Initialize();
     // cpu.Reset(mem);  // Mover después de cargar el binario
@@ -313,8 +245,27 @@ int main(int argc, char* argv[]) {
     
     // Set reset vector to BASIC coldstart at 0x9F06 (COLD_START)
     mem[0xFFFC] = 0x00;      // Low byte of 0x9F06
-    mem[0xFFFD] = 0xFE;      // High byte
+    mem[0xFFFD] = 0xFF;      // High byte
     cpu.Reset(mem);
+    // Optional single-instruction tracer for debugging (set TRACE_STEPS env var)
+    if (const char* ts = std::getenv("TRACE_STEPS")) {
+        int steps = std::atoi(ts);
+        std::cout << "TRACE: single-instruction mode, steps=" << steps << std::endl;
+        for (int i = 0; i < steps; ++i) {
+            std::cout << "TRACE: PC=0x" << std::hex << std::setw(4) << std::setfill('0') << cpu.PC
+                      << " OPCODE=0x" << std::setw(2) << (int)mem[cpu.PC] << std::dec << std::endl;
+            std::cout << "TRACE: BYTES:";
+            for (int j = 0; j < 8; ++j) {
+                std::cout << " " << std::hex << std::setw(2) << std::setfill('0') << (int)mem[cpu.PC + j];
+            }
+            std::cout << std::dec << std::endl;
+            cpu.ExecuteSingleInstruction(mem);
+            std::cout << "TRACE: REG A=0x" << std::hex << (int)cpu.A << " X=0x" << (int)cpu.X
+                      << " Y=0x" << (int)cpu.Y << " SP=0x" << (int)cpu.SP << std::dec << std::endl;
+        }
+        std::cout << "TRACE: done\n";
+        return 0;
+    }
     
     // Execute directly from BASIC coldstart until we see output, then drop to interactive inputLoop
     // ...existing code...
@@ -338,18 +289,25 @@ int main(int argc, char* argv[]) {
     std::cout << "> " << std::flush;
     while (std::getline(std::cin, line)) {
         if (line.empty()) {
+            std::cout << "[HOST] (empty line) -> CR+0x80" << std::endl;
             pia->pushKeyboardCharacter('\r' | 0x80); // Only CR with high bit
         } else {
-            for (char c : line) pia->pushKeyboardCharacter(static_cast<Byte>(c) | 0x80);
+            std::cout << "[HOST] Input: '" << line << "'" << std::endl;
+            for (char c : line) {
+                std::cout << "[HOST->PIA] '" << c << "' | 0x80 = 0x" << std::hex << (int)(c | 0x80) << std::dec << std::endl;
+                pia->pushKeyboardCharacter(static_cast<Byte>(c) | 0x80);
+            }
             pia->pushKeyboardCharacter('\r' | 0x80);
         }
 
         // Run a large batch to ensure prompt advances
+        std::cout << "[CPU] Ejecutando 1M instrucciones..." << std::endl;
         cpu.Execute(1000000, mem);
 
         std::string output = pia->getDisplayOutput();
+        std::cout << "[DEBUG] pia->getDisplayOutput() = '" << output << "' (size: " << output.size() << ")" << std::endl;
         if (!output.empty()) {
-            std::cout << output;
+            std::cout << "[WOZMON OUTPUT] " << output << std::endl;
         }
         std::cout << "> " << std::flush;
     }

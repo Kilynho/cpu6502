@@ -1,3 +1,7 @@
+# Genera la ROM de msbasic antes de configurar el emulador
+.PHONY: msbasic_rom
+msbasic_rom:
+	cd msbasic && ./make.sh
 # Makefile - CMake wrapper for CPU 6502 Emulator
 # This Makefile provides convenient shortcuts for CMake-based builds
 
@@ -15,11 +19,11 @@ all: configure
 	@echo "  - Tests:   $(BUILDDIR)/runTests"
 
 # Configure CMake (only runs if build directory doesn't exist or CMakeLists.txt changed)
-configure:
+configure: msbasic_rom
 	@if [ ! -d "$(BUILDDIR)" ] || [ ! -f "$(BUILDDIR)/Makefile" ]; then \
 		echo "Initializing Git submodules (GoogleTest)..."; \
 		git submodule update --init --recursive; \
-		echo "Configuring project with CMake..."; \
+		echo "Configurando proyecto con CMake..."; \
 		mkdir -p $(BUILDDIR); \
 		cd $(BUILDDIR) && cmake ..; \
 	fi

@@ -177,6 +177,24 @@ target_include_directories(wozmon_demo PRIVATE
 # Establecer el nombre de salida del ejecutable
 set_target_properties(wozmon_demo PROPERTIES OUTPUT_NAME wozmon_demo)
 
+# Assemble canonical WOZMON and inject into src/wozmon/rom.bin before building demos
+set(WOZMON_SRC ${PROJECT_SOURCE_DIR}/src/wozmon/wozmon.asm)
+set(WOZMON_OBJ ${CMAKE_BINARY_DIR}/wozmon/wozmon.o)
+set(WOZMON_BIN ${CMAKE_BINARY_DIR}/wozmon/wozmon.bin)
+
+add_custom_command(
+    OUTPUT ${WOZMON_BIN}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/wozmon
+    COMMAND ca65 -D kilynho ${WOZMON_SRC} -o ${WOZMON_OBJ}
+    COMMAND ld65 -C ${PROJECT_SOURCE_DIR}/msbasic/kilynho.cfg ${WOZMON_OBJ} -o ${WOZMON_BIN}
+    COMMAND ${CMAKE_COMMAND} -E env python3 ${PROJECT_SOURCE_DIR}/tools/inject_wozmon.py ${WOZMON_BIN}
+    COMMENT "Assembling WOZMON and injecting into src/wozmon/rom.bin"
+    VERBATIM
+)
+
+add_custom_target(wozmon_build DEPENDS ${WOZMON_BIN})
+add_dependencies(wozmon_demo wozmon_build)
+
 # Crear el ejecutable de WOZMON Serial demo
 add_executable(wozmon_serial_demo ${PROJECT_SOURCE_DIR}/examples/wozmon_serial_demo.cpp)
 

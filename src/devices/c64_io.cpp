@@ -45,15 +45,30 @@ void C64IO::write(uint16_t address, uint8_t value) {
     if (address >= C64_SCREEN_ADDR_START && address <= C64_SCREEN_ADDR_END) {
         size_t pos = address - C64_SCREEN_ADDR_START;
         screenRAM[pos] = value;
-        // Para mostrar en consola, convertimos PETSCII a ASCII básico
-        char out = (value >= 32 && value < 128) ? value : '?';
-        screenBuffer += out;
-        std::cout << out;
+        // Para mostrar en consola, normalizamos PETSCII a ASCII básico:
+        // - Mapear CR (0x0D) a nueva línea
+        // - Quitar bit 7 (PETSCII usa a veces el bit alto) y usar el
+        //   caracter si es imprimible, en caso contrario mostrar '?'
+        if (value == 0x0D) {
+            screenBuffer += '\n';
+            std::cout << '\n';
+        } else {
+            uint8_t v = value & 0x7F;
+            char out = (v >= 32 && v < 127) ? static_cast<char>(v) : '?';
+            screenBuffer += out;
+            std::cout << out;
+        }
     } else if (address == WOZMON_CHAR_OUT) {
         // WOZMON character output - display directly
-        char out = static_cast<char>(value);
-        screenBuffer += out;
-        std::cout << out << std::flush;
+        if (value == 0x0D) {
+            screenBuffer += '\n';
+            std::cout << '\n' << std::flush;
+        } else {
+            uint8_t v = value & 0x7F;
+            char out = (v >= 32 && v < 127) ? static_cast<char>(v) : '?';
+            screenBuffer += out;
+            std::cout << out << std::flush;
+        }
     }
 }
 

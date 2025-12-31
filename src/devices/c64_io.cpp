@@ -54,9 +54,17 @@ void C64IO::write(uint16_t address, uint8_t value) {
             std::cout << '\n';
         } else {
             uint8_t v = value & 0x7F;
-            char out = (v >= 32 && v < 127) ? static_cast<char>(v) : '?';
-            screenBuffer += out;
-            std::cout << out;
+            if (v >= 32 && v < 127) {
+                char out = static_cast<char>(v);
+                screenBuffer += out;
+                std::cout << out;
+            } else {
+                // Mostrar como hex para depuración en vez de '?'
+                char buf[8];
+                std::snprintf(buf, sizeof(buf), "<0x%02X>", value);
+                screenBuffer += buf;
+                std::cout << buf;
+            }
         }
     } else if (address == WOZMON_CHAR_OUT) {
         // WOZMON character output - display directly
@@ -65,9 +73,16 @@ void C64IO::write(uint16_t address, uint8_t value) {
             std::cout << '\n' << std::flush;
         } else {
             uint8_t v = value & 0x7F;
-            char out = (v >= 32 && v < 127) ? static_cast<char>(v) : '?';
-            screenBuffer += out;
-            std::cout << out << std::flush;
+            if (v >= 32 && v < 127) {
+                char out = static_cast<char>(v);
+                screenBuffer += out;
+                std::cout << out << std::flush;
+            } else {
+                char buf[8];
+                std::snprintf(buf, sizeof(buf), "<0x%02X>", value);
+                screenBuffer += buf;
+                std::cout << buf << std::flush;
+            }
         }
     }
 }

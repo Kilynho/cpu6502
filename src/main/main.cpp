@@ -132,10 +132,23 @@ int main(int argc, char* argv[]) {
         } else {
             std::string line;
             while (g_running.load()) {
-                if (std::getline(std::cin, line)) {
-                    for (char c : line) sys.getC64IO().pushInput(c);
-                    sys.getC64IO().pushInput('\r');
-                } else {
+                        if (std::getline(std::cin, line)) {
+                            // Trim whitespace
+                            auto trim = [](std::string s) {
+                                size_t a = s.find_first_not_of(" \t\r\n");
+                                if (a == std::string::npos) return std::string();
+                                size_t b = s.find_last_not_of(" \t\r\n");
+                                return s.substr(a, b - a + 1);
+                            };
+                            std::string t = trim(line);
+                            // Recognize local exit commands
+                            if (t == ".quit" || t == ".exit" || t == ":q" || t == "BYE" || t == "bye") {
+                                g_running.store(false);
+                                break;
+                            }
+                            for (char c : line) sys.getC64IO().pushInput(c);
+                            sys.getC64IO().pushInput('\r');
+                        } else {
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 }
             }

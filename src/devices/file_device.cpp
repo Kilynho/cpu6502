@@ -1,11 +1,18 @@
-#include "devices/file_device.hpp"
+#include "file_device.hpp"
 #include "mem.hpp"
+#include "system_map.hpp"
 #include <fstream>
 #include <iostream>
 #include <cstring>
 
-FileDevice::FileDevice(Mem* memory) 
-    : mem(memory), controlReg(0), startAddress(0), length(0), status(0) {
+
+FileDevice::FileDevice(Mem* memory)
+    : mem(memory), bus(nullptr), controlReg(0), startAddress(0), length(0), status(0) {
+    filenameBuffer.resize(FILENAME_END - FILENAME_START + 1, 0);
+}
+
+FileDevice::FileDevice(SystemMap* bus)
+    : mem(nullptr), bus(bus), controlReg(0), startAddress(0), length(0), status(0) {
     filenameBuffer.resize(FILENAME_END - FILENAME_START + 1, 0);
 }
 
@@ -101,8 +108,8 @@ void FileDevice::executeOperation() {
 }
 
 bool FileDevice::loadBinary(const std::string& filename, uint16_t startAddr) {
-    if (!mem) {
-        std::cerr << "FileDevice: Memoria no inicializada\n";
+    if (!mem && !bus) {
+        std::cerr << "FileDevice: Memoria/bus no inicializado\n";
         return false;
     }
     
@@ -136,7 +143,11 @@ bool FileDevice::loadBinary(const std::string& filename, uint16_t startAddr) {
     
     // Copiar el buffer a la memoria
     for (size_t i = 0; i < buffer.size(); ++i) {
-        (*mem)[startAddr + i] = buffer[i];
+        if (bus) {
+            bus->write(startAddr + i, buffer[i]);
+        } else {
+            (*mem)[startAddr + i] = buffer[i];
+        }
     }
     
     std::cout << "FileDevice: Cargados " << fileSize << " bytes desde '" 
@@ -146,8 +157,8 @@ bool FileDevice::loadBinary(const std::string& filename, uint16_t startAddr) {
 }
 
 bool FileDevice::saveBinary(const std::string& filename, uint16_t startAddr, uint16_t len) {
-    if (!mem) {
-        std::cerr << "FileDevice: Memoria no inicializada\n";
+    if (!mem && !bus) {
+        std::cerr << "FileDevice: Memoria/bus no inicializado\n";
         return false;
     }
     
@@ -167,7 +178,11 @@ bool FileDevice::saveBinary(const std::string& filename, uint16_t startAddr, uin
     // Copiar datos de memoria a un buffer temporal
     std::vector<uint8_t> buffer(len);
     for (uint16_t i = 0; i < len; ++i) {
-        buffer[i] = (*mem)[startAddr + i];
+        if (bus) {
+            buffer[i] = bus->read(startAddr + i);
+        } else {
+            buffer[i] = (*mem)[startAddr + i];
+        }
     }
     
     // Escribir el buffer al archivo

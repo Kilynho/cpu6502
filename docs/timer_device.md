@@ -255,7 +255,7 @@ CYCLES:
 ### Initialization
 
 ```cpp
-#include "devices/basic_timer.hpp"
+#include "basic_timer.hpp"
 
 // Create timer device
 auto timer = std::make_shared<BasicTimer>();
@@ -332,7 +332,7 @@ The `BasicTimer` can generate IRQ interrupts that the CPU must handle. Here is a
 ```cpp
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "devices/basic_timer.hpp"
+#include "basic_timer.hpp"
 
 int main() {
     Mem mem;

@@ -1,8 +1,7 @@
 #pragma once
-#include "../serial_device.hpp"
 #include <string>
 #include <queue>
-#include <cstdint>
+#include "serial_device.hpp"
 
 /**
  * @brief Implementación de dispositivo serial usando sockets TCP

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "cpu.hpp"
-#include "mem.hpp"
-#include "devices/file_device.hpp"
+#include "system_map.hpp"
+#include "file_device.hpp"
 #include <memory>
 #include <fstream>
 #include <vector>
@@ -9,7 +9,7 @@
 
 class FileDeviceTest : public testing::Test {
 public:
-    Mem mem;
+    SystemMap bus;
     CPU cpu;
     std::shared_ptr<FileDevice> fileDevice;
     
@@ -18,8 +18,11 @@ public:
     const std::string testOutputFile = "/tmp/test_output.bin";
 
     virtual void SetUp() {
-        cpu.Reset(mem);
-        fileDevice = std::make_shared<FileDevice>(&mem);
+        cpu.PC = 0x8000;
+        cpu.SP = 0xFD;
+        cpu.A = cpu.X = cpu.Y = 0;
+        cpu.C = cpu.Z = cpu.I = cpu.D = cpu.B = cpu.V = cpu.N = 0;
+        fileDevice = std::make_shared<FileDevice>(&bus);
         cpu.registerIODevice(fileDevice);
         
         // Limpiar archivos de prueba anteriores
@@ -124,7 +127,7 @@ TEST_F(FileDeviceTest, LoadBinaryDirect) {
     
     // Verificar que los datos se cargaron correctamente
     for (size_t i = 0; i < testData.size(); ++i) {
-        EXPECT_EQ(mem[0x8000 + i], testData[i]);
+        EXPECT_EQ(bus.read(0x8000 + i), testData[i]);
     }
 }
 
@@ -133,7 +136,7 @@ TEST_F(FileDeviceTest, SaveBinaryDirect) {
     // Escribir datos en memoria
     std::vector<uint8_t> testData = {0xEA, 0xEA, 0xEA, 0x4C, 0x00, 0x80};
     for (size_t i = 0; i < testData.size(); ++i) {
-        mem[0x9000 + i] = testData[i];
+        bus.write(0x9000 + i, testData[i]);
     }
     
     // Guardar el archivo
@@ -180,20 +183,16 @@ TEST_F(FileDeviceTest, LoadUsingMemoryMappedRegisters) {
     std::vector<uint8_t> testData = {0x01, 0x02, 0x03, 0x04, 0x05};
     createTestFile(testFile, testData);
     
-    // Configurar registros
     writeFilename(testFile);
     fileDevice->write(0xFE01, 0x00);  // Start addr = 0x8000
     fileDevice->write(0xFE02, 0x80);
-    
     // Ejecutar operación LOAD (escribir 1 en control)
     fileDevice->write(0xFE00, 1);
-    
     // Verificar estado exitoso
     EXPECT_EQ(fileDevice->read(0xFE05), 0);
-    
     // Verificar datos cargados
     for (size_t i = 0; i < testData.size(); ++i) {
-        EXPECT_EQ(mem[0x8000 + i], testData[i]);
+        EXPECT_EQ(bus.read(0x8000 + i), testData[i]);
     }
 }
 
@@ -202,7 +201,7 @@ TEST_F(FileDeviceTest, SaveUsingMemoryMappedRegisters) {
     // Escribir datos en memoria
     std::vector<uint8_t> testData = {0xAA, 0xBB, 0xCC, 0xDD};
     for (size_t i = 0; i < testData.size(); ++i) {
-        mem[0x8500 + i] = testData[i];
+        bus.write(0x8500 + i, testData[i]);
     }
     
     // Configurar registros
@@ -227,8 +226,8 @@ TEST_F(FileDeviceTest, SaveUsingMemoryMappedRegisters) {
 }
 
 // Test: Error al intentar cargar archivo inexistente
-TEST_F(FileDeviceTest, LoadNonexistentFile) {
-    EXPECT_FALSE(fileDevice->loadBinary("/tmp/nonexistent_file.bin", 0x8000));
+TEST_F(FileDeviceTest, LoadNonexistentFileError) {
+    EXPECT_FALSE(fileDevice->loadBinary("/tmp/does_not_exist.bin", 0x8000));
 }
 
 // Test: Verificar fileExists
@@ -246,11 +245,8 @@ TEST_F(FileDeviceTest, FileExists) {
 TEST_F(FileDeviceTest, EmptyFilenameError) {
     // No escribir nombre de archivo
     fileDevice->write(0xFE01, 0x00);
-    fileDevice->write(0xFE02, 0x80);
-    
     // Intentar cargar
     fileDevice->write(0xFE00, 1);
-    
     // Verificar error
     EXPECT_EQ(fileDevice->read(0xFE05), 1);
 }
@@ -289,9 +285,9 @@ TEST_F(FileDeviceTest, LoadLargeFile) {
     EXPECT_TRUE(fileDevice->loadBinary(testFile, 0x8000));
     
     // Verificar algunos bytes
-    EXPECT_EQ(mem[0x8000], 0x00);
-    EXPECT_EQ(mem[0x8100], 0x00);
-    EXPECT_EQ(mem[0x83FF], 0xFF);
+    EXPECT_EQ(bus.read(0x8000), 0x00);
+    EXPECT_EQ(bus.read(0x8100), 0x00);
+    EXPECT_EQ(bus.read(0x83FF), 0xFF);
 }
 
 // Test: Integración con CPU - programa que carga y ejecuta código
@@ -305,8 +301,8 @@ TEST_F(FileDeviceTest, CPUIntegration) {
     
     // Ejecutar el programa
     cpu.PC = 0x8000;
-    cpu.Execute(10, mem);
+    cpu.Execute(10, bus);
     
     // Verificar que el programa se ejecutó correctamente
-    EXPECT_EQ(mem[0x0200], 0x42);
+    EXPECT_EQ(bus.read(0x0200), 0x42);
 }

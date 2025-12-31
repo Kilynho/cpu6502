@@ -1,4 +1,4 @@
-#include "devices/basic_timer.hpp"
+#include "basic_timer.hpp"
 #include <algorithm>
 
 BasicTimer::BasicTimer()

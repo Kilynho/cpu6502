@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include "mem.hpp"
+#include "system_map.hpp"
 
 using Byte = uint8_t;
 using Word = uint16_t;
@@ -15,16 +16,16 @@ namespace Addressing {
     // Addressing mode functions - return the effective address for the instruction
     // Each function updates the cycle count and PC as needed
     
-    Word Immediate(CPU& cpu, u32& cycles, Mem& memory);
-    Word ZeroPage(CPU& cpu, u32& cycles, Mem& memory);
-    Word ZeroPageX(CPU& cpu, u32& cycles, Mem& memory);
-    Word ZeroPageY(CPU& cpu, u32& cycles, Mem& memory);
-    Word Absolute(CPU& cpu, u32& cycles, Mem& memory);
-    Word AbsoluteX(CPU& cpu, u32& cycles, Mem& memory, bool pageCrossPenalty = true);
-    Word AbsoluteY(CPU& cpu, u32& cycles, Mem& memory, bool pageCrossPenalty = true);
-    Word IndirectX(CPU& cpu, u32& cycles, Mem& memory);
-    Word IndirectY(CPU& cpu, u32& cycles, Mem& memory, bool pageCrossPenalty = true);
-    Word Indirect(CPU& cpu, u32& cycles, Mem& memory);
+    Word Immediate(CPU& cpu, u32& cycles, SystemMap& bus);
+    Word ZeroPage(CPU& cpu, u32& cycles, SystemMap& bus);
+    Word ZeroPageX(CPU& cpu, u32& cycles, SystemMap& bus);
+    Word ZeroPageY(CPU& cpu, u32& cycles, SystemMap& bus);
+    Word Absolute(CPU& cpu, u32& cycles, SystemMap& bus);
+    Word AbsoluteX(CPU& cpu, u32& cycles, SystemMap& bus, bool pageCrossPenalty = true);
+    Word AbsoluteY(CPU& cpu, u32& cycles, SystemMap& bus, bool pageCrossPenalty = true);
+    Word IndirectX(CPU& cpu, u32& cycles, SystemMap& bus);
+    Word IndirectY(CPU& cpu, u32& cycles, SystemMap& bus, bool pageCrossPenalty = true);
+    Word Indirect(CPU& cpu, u32& cycles, SystemMap& bus);
     
     // Helper to check if page boundary was crossed
     bool PagesCross(Word addr1, Word addr2);

@@ -1,5 +1,5 @@
-#include "gui/emulator_gui.hpp"
-#include "devices/text_screen.hpp"
+#include "emulator_gui.hpp"
+#include "text_screen.hpp"
 #include <iostream>
 
 // Define the color palette

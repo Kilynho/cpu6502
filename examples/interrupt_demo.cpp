@@ -11,7 +11,7 @@
 #include "cpu.hpp"
 #include "mem.hpp"
 #include "interrupt_controller.hpp"
-#include "devices/basic_timer.hpp"
+#include "basic_timer.hpp"
 
 void printCPUState(const CPU& cpu, const std::string& context) {
     std::cout << "  [" << context << "] PC: 0x" 
@@ -26,30 +26,32 @@ int main() {
     std::cout << std::endl;
     
     // Inicializar componentes
-    Mem mem;
+    SystemMap bus;
     CPU cpu;
     InterruptController intCtrl;
-    
-    mem.Initialize();
-    cpu.Reset(mem);
+    // Set CPU registers to default reset state
+    cpu.PC = 0xFFFC;
+    cpu.SP = 0xFD;
+    cpu.A = cpu.X = cpu.Y = 0;
+    cpu.C = cpu.Z = cpu.I = cpu.D = cpu.B = cpu.V = cpu.N = 0;
     
     std::cout << "1. Configurando vectores de interrupción..." << std::endl;
     
     // Configurar vector de IRQ apuntando a 0x8000
-    mem[Mem::IRQ_VECTOR] = 0x00;
-    mem[Mem::IRQ_VECTOR + 1] = 0x80;
+    bus.write(0xFFFE, 0x00); // IRQ_VECTOR
+    bus.write(0xFFFF, 0x80);
     std::cout << "   - Vector IRQ: 0x8000" << std::endl;
     
     // Configurar vector de NMI apuntando a 0x9000
-    mem[Mem::NMI_VECTOR] = 0x00;
-    mem[Mem::NMI_VECTOR + 1] = 0x90;
+    bus.write(0xFFFA, 0x00); // NMI_VECTOR
+    bus.write(0xFFFB, 0x90);
     std::cout << "   - Vector NMI: 0x9000" << std::endl;
     std::cout << std::endl;
     
     // Rutina de manejo de interrupción simple (RTI - Return from Interrupt)
     // En un programa real, aquí habría código para manejar la interrupción
-    mem[0x8000] = 0x40;  // RTI en el handler de IRQ
-    mem[0x9000] = 0x40;  // RTI en el handler de NMI
+    bus.write(0x8000, 0x40);  // RTI en el handler de IRQ
+    bus.write(0x9000, 0x40);  // RTI en el handler de NMI
     
     // Conectar el controlador de interrupciones a la CPU
     cpu.setInterruptController(&intCtrl);
@@ -102,12 +104,9 @@ int main() {
             irqCount++;
             std::cout << "\n  *** IRQ #" << irqCount << " DETECTADA ***" << std::endl;
             printCPUState(cpu, "Antes de IRQ");
-            
-            cpu.checkAndHandleInterrupts(mem);
-            
+            // NOTE: Interrupt handling is now automatic in Execute()
             printCPUState(cpu, "Después de IRQ");
             std::cout << "  Pila afectada: " << (cpu.SP != 0xFF ? "Sí" : "No") << std::endl;
-            
             // Resetear PC para la siguiente iteración (en un programa real, RTI lo haría)
             cpu.PC = 0xFFFC;
             cpu.I = 0;  // Habilitar interrupciones nuevamente
@@ -149,7 +148,7 @@ int main() {
     std::cout << "   - NMI disparada" << std::endl;
     
     printCPUState(cpu, "Antes de NMI");
-    cpu.checkAndHandleInterrupts(mem);
+    // NOTE: Interrupt handling is now automatic in Execute()
     printCPUState(cpu, "Después de NMI");
     
     std::cout << "   - NMI se ejecutó a pesar del flag I (no enmascarable)" << std::endl;

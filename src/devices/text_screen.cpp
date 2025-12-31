@@ -1,4 +1,4 @@
-#include "devices/text_screen.hpp"
+#include "text_screen.hpp"
 #include <algorithm>
 #include <cstring>
 

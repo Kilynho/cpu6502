@@ -1,13 +1,13 @@
 #include "debugger.hpp"
 #include "cpu.hpp"
-#include "mem.hpp"
+#include "system_map.hpp"
 
 Debugger::Debugger()
-    : cpu_(nullptr), mem_(nullptr), lastBreakpoint_(0), hitBreakpoint_(false) {}
+    : cpu_(nullptr), bus_(nullptr), lastBreakpoint_(0), hitBreakpoint_(false) {}
 
-void Debugger::attach(CPU* cpu, Mem* mem) {
+void Debugger::attach(CPU* cpu, SystemMap* bus) {
     cpu_ = cpu;
-    mem_ = mem;
+    bus_ = bus;
 }
 
 void Debugger::addBreakpoint(uint16_t address) {
@@ -100,15 +100,15 @@ Debugger::CpuState Debugger::inspectCPU() const {
 }
 
 uint8_t Debugger::readMemory(uint16_t address) const {
-    if (!mem_) {
+    if (!bus_) {
         return 0;
     }
-    return (*mem_)[address];
+    return bus_->read(address);
 }
 
 void Debugger::writeMemory(uint16_t address, uint8_t value) {
-    if (!mem_) {
+    if (!bus_) {
         return;
     }
-    (*mem_)[address] = value;
+    bus_->write(address, value);
 }

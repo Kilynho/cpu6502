@@ -59,8 +59,8 @@ make gui_demo
 ### Basic Example
 
 ```cpp
-#include "gui/emulator_gui.hpp"
-#include "devices/text_screen.hpp"
+#include "emulator_gui.hpp"
+#include "text_screen.hpp"
 #include <memory>
 
 int main() {
@@ -182,8 +182,8 @@ The GUI integrates seamlessly with the 6502 CPU emulator and TextScreen device:
 ```cpp
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "gui/emulator_gui.hpp"
-#include "devices/text_screen.hpp"
+#include "emulator_gui.hpp"
+#include "text_screen.hpp"
 
 int main() {
     // Initialize components

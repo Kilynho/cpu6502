@@ -78,7 +78,7 @@ The video buffer is organized in rows:
 ```cpp
 #include "cpu.hpp"
 #include "mem.hpp"
-#include "devices/text_screen.hpp"
+#include "text_screen.hpp"
 #include <memory>
 
 int main() {

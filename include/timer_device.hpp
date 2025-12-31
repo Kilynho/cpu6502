@@ -1,6 +1,5 @@
 #pragma once
 #include "io_device.hpp"
-#include <cstdint>
 
 /**
  * @brief Base interface for timing devices

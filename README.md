@@ -181,8 +181,8 @@
   - **Seamless integration with TextScreen**
 - Example usage:
   ```cpp
-  #include "gui/emulator_gui.hpp"
-  #include "devices/text_screen.hpp"
+  #include "emulator_gui.hpp"
+  #include "text_screen.hpp"
   
   // Create GUI with 16x16 pixel characters
   EmulatorGUI gui("6502 Retro Terminal", 16, 16);

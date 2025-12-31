@@ -9,7 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <memory>
-#include "mem.hpp"
+#include "system_map.hpp"
 #include "io_device.hpp"
 #include "interrupt_controller.hpp"
 
@@ -47,22 +47,21 @@ public:
     static const Instruction INS_LDA_ABSY; // Instrucción LDA Absolute,Y
 
     // Public methods
-    void Reset(Mem& memory); // Resets the CPU and memory
-    void Execute(u32 Cycles, Mem& memory); // Executes instructions
-    void PrintCPUState() const; // Prints the CPU state
-    u32 CalculateCycles(const Mem& mem) const; // Calculates the cycles needed to run the test program
-    Word FetchWordFromMemory(const Mem& memory, Word address) const; // Gets a word from memory
-    void LogMemoryAccess(Word address, Byte data, bool isWrite) const; // Logs memory access
-    void AssignCyclesAndBytes(Word &pc, u32 &cycles, Byte opcode) const; // Assigns cycles and bytes according to the opcode
-    void PushPCToStack(u32& cycles, Mem& memory); // Saves the program counter to the stack
-    void PullPCFromStack(u32& cycles, Mem& memory); // Recupera el contador de programa de la pila
-    Word PopWordFromStack(u32& cycles, Mem& memory); // Recupera el contador de programa de la pila
-    Byte FetchByte(u32& Cycles, Mem& memory); // Obtiene un byte de la memoria
-    Word FetchWord(u32& Cycles, Mem& memory); // Obtiene una palabra de la memoria
-    Byte ReadByte(u32& Cycles, Byte Address, Mem& memory); // Lee un byte de la memoria
-    Word ReadWord(u32& Cycles, Word Address, Mem& memory); // Lee una palabra de la memoria
-    void WriteByte(u32& Cycles, Byte Address, Byte Value, Mem& memory); // Escribe un byte en la memoria
-    void WriteWord(u32& Cycles, Word Address, Word Value, Mem& memory); // Escribe una palabra en la memoria
+    void Execute(u32 Cycles, SystemMap& bus); // Ejecuta instrucciones usando el bus central
+    void PrintCPUState() const;
+    // Métodos migrados a SystemMap& bus
+    Word PopWordFromStack(u32& cycles, SystemMap& bus); // Recupera el contador de programa de la pila (migrado)
+    Byte FetchByte(u32& Cycles, SystemMap& bus); // Obtiene un byte de la memoria (migrado)
+    Word FetchWord(u32& Cycles, SystemMap& bus); // Obtiene una palabra de la memoria (migrado)
+    Byte ReadByte(u32& Cycles, Byte Address, SystemMap& bus); // Lee un byte de la memoria (migrado)
+    Word ReadWord(u32& Cycles, Word Address, SystemMap& bus); // Lee una palabra de la memoria (migrado)
+    void WriteByte(u32& Cycles, Byte Address, Byte Value, SystemMap& bus); // Escribe un byte en la memoria (migrado)
+    void WriteWord(u32& Cycles, Word Address, Word Value, SystemMap& bus); // Escribe una palabra en la memoria (migrado)
+    Byte ReadMemory(Word address, SystemMap& bus); // Lee memoria (migrado)
+    void WriteMemory(Word address, Byte value, SystemMap& bus); // Escribe memoria (migrado)
+    // Métodos aún no migrados
+    // TODO: void PushPCToStack(u32& cycles, SystemMap& bus);
+    // TODO: void PullPCFromStack(u32& cycles, SystemMap& bus);
     void LDASetStatus(); // Sets the status for the LDA instruction
     void LDXSetStatus(); // Sets the status for the LDX instruction
     std::string ByteToBinaryString(Byte byte) const; // Converts a byte to a binary string
@@ -86,7 +85,14 @@ public:
     Byte V : 1; // Overflow Flag
     Byte N : 1; // Negative Flag
     
-    mutable std::ofstream logFile; // CPU log file
+    mutable std::ofstream logFile; // CPU log file (rotating)
+    mutable size_t logFileSize = 0; // Current log file size in bytes
+    mutable int logFileIndex = 0;   // Current log file index (0-4)
+    static constexpr size_t LOG_FILE_MAX_SIZE = 100 * 1024 * 1024; // 100MB
+    static constexpr int LOG_FILE_COUNT = 5;
+    mutable std::string logFileName = "cpu_log.txt";
+    void rotateLogFile() const;
+    bool instructionDumpEnabled = false; // guard for INSTR_DUMP logging
 
     CPU();  // CPU constructor
     // --- IODevice integration ---
@@ -96,30 +102,28 @@ public:
     // --- Interrupt Controller integration ---
     void setInterruptController(InterruptController* controller);
     InterruptController* getInterruptController() const;
+    void checkAndHandleInterrupts(SystemMap& bus);
 
     // --- Debugger integration ---
     void setDebugger(Debugger* debuggerInstance);
     Debugger* getDebugger() const;
     
-    // --- Interrupt handling ---
-    void serviceIRQ(Mem& memory);
-    void serviceNMI(Mem& memory);
-    void checkAndHandleInterrupts(Mem& memory);
-    
-    // Methods for memory access with IODevice support
-    Byte ReadMemory(Word address, Mem& memory);
-    void WriteMemory(Word address, Byte value, Mem& memory);
-    
     ~CPU(); // CPU destructor
+    void LogMemoryAccess(Word address, Byte data, bool isWrite) const;
+    void setInstructionDumpEnabled(bool enabled);
+    bool isInstructionDumpEnabled() const;
     
 private:
     std::vector<std::shared_ptr<IODevice>> ioDevices; // Registered I/O devices
     InterruptController* interruptController; // Interrupt controller (not owned)
     Debugger* debugger; // Attached debugger (not owned)
+    SystemMap* attachedBus = nullptr; // Last bus used to sync IO devices (not owned)
 
     // Auxiliary methods for IO
     IODevice* findIODeviceForRead(uint16_t address) const;
     IODevice* findIODeviceForWrite(uint16_t address) const;
+    void syncIODeviceRegistrations(SystemMap& bus);
+    void AssignCyclesAndBytes(Word &pc, u32 &cycles, Byte opcode) const;
 };
 
 #endif // CPU_HPP

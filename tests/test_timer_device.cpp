@@ -1,26 +1,30 @@
 #include <gtest/gtest.h>
 #include "cpu.hpp"
-#include "mem.hpp"
-#include "devices/basic_timer.hpp"
+#include "system_map.hpp"
+#include "basic_timer.hpp"
 #include <memory>
 #include <thread>
 #include <chrono>
 
 class BasicTimerTest : public testing::Test {
 public:
-    Mem mem;
+    SystemMap bus;
     CPU cpu;
     std::shared_ptr<BasicTimer> timer;
 
     virtual void SetUp() {
-        cpu.Reset(mem);
+        cpu.PC = 0x8000;
+        cpu.SP = 0xFD;
+        cpu.A = cpu.X = cpu.Y = 0;
+        cpu.C = cpu.Z = cpu.I = cpu.D = cpu.B = cpu.V = cpu.N = 0;
+        bus.clearRAM();
         timer = std::make_shared<BasicTimer>();
         ASSERT_TRUE(timer->initialize()) << "Failed to initialize timer device";
-        cpu.registerIODevice(timer);
+        bus.registerIODevice(timer);
     }
 
     virtual void TearDown() {
-        cpu.unregisterIODevice(timer);
+        bus.unregisterIODevice(timer);
         timer->cleanup();
     }
 };
@@ -242,10 +246,10 @@ TEST_F(BasicTimerTest, ReadTimeFromCPU) {
     timer->tick(5432);  // Simular 5432 ciclos
     
     // Leer el contador como lo haría la CPU (byte por byte)
-    uint8_t byte0 = cpu.ReadMemory(0xFC00, mem);
-    uint8_t byte1 = cpu.ReadMemory(0xFC01, mem);
-    uint8_t byte2 = cpu.ReadMemory(0xFC02, mem);
-    uint8_t byte3 = cpu.ReadMemory(0xFC03, mem);
+    uint8_t byte0 = cpu.ReadMemory(0xFC00, bus);
+    uint8_t byte1 = cpu.ReadMemory(0xFC01, bus);
+    uint8_t byte2 = cpu.ReadMemory(0xFC02, bus);
+    uint8_t byte3 = cpu.ReadMemory(0xFC03, bus);
     
     // Reconstruir el valor de 32 bits
     uint32_t timerValue = byte0 | (byte1 << 8) | (byte2 << 16) | (byte3 << 24);

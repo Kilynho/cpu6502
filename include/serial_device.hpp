@@ -1,7 +1,6 @@
 #pragma once
-#include "io_device.hpp"
-#include <cstdint>
 #include <string>
+#include "io_device.hpp"
 
 /**
  * @brief Base interface for serial devices

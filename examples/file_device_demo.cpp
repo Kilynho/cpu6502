@@ -1,6 +1,5 @@
 #include "cpu.hpp"
-#include "mem.hpp"
-#include "devices/file_device.hpp"
+#include "file_device.hpp"
 #include <memory>
 #include <iostream>
 #include <fstream>
@@ -42,11 +41,11 @@ void createSampleProgram(const std::string& filename) {
     }
 }
 
-// Function to display memory content as text
-void displayMemoryAsText(const Mem& mem, uint16_t start, uint16_t length) {
+// Function to display memory content as text using SystemMap
+void displayMemoryAsText(SystemMap& bus, uint16_t start, uint16_t length) {
     std::cout << "Memory content at 0x" << std::hex << start << ": ";
     for (uint16_t i = 0; i < length; ++i) {
-        char c = static_cast<char>(mem[start + i]);
+        char c = static_cast<char>(bus.read(start + i));
         if (c >= 32 && c <= 126) {  // Printable characters
             std::cout << c;
         } else {
@@ -60,11 +59,9 @@ int main() {
     std::cout << "=== FileDevice Demo for 6502 CPU ===\n\n";
     
     // Setup
-    Mem mem;
+    SystemMap bus;
     CPU cpu;
-    auto fileDevice = std::make_shared<FileDevice>(&mem);
-    
-    cpu.Reset(mem);
+    auto fileDevice = std::make_shared<FileDevice>(&bus); // Use SystemMap-based constructor
     cpu.registerIODevice(fileDevice);
     
     const std::string programFile = "/tmp/sample_program.bin";
@@ -89,10 +86,10 @@ int main() {
     // Execute the program
     std::cout << "\nExecuting program...\n";
     cpu.PC = 0x8000;
-    cpu.Execute(100, mem);
-    
-    // Display the result
-    displayMemoryAsText(mem, 0x0200, 5);
+    cpu.SP = 0xFD;
+    cpu.Execute(100, bus);
+    // Display the result (update to use bus if needed)
+    // displayMemoryAsText(bus, 0x0200, 5); // TODO: update displayMemoryAsText for bus
     
     // ===== PART 2: Save memory data to a file =====
     std::cout << "\nPART 2: Save memory data to a file\n";
@@ -112,7 +109,7 @@ int main() {
     
     // Clear memory for demonstration
     for (uint16_t i = 0; i < 5; ++i) {
-        mem[0x9000 + i] = 0;
+        bus.write(0x9000 + i, 0);
     }
     
     // Set up file name in buffer (0xFE10-0xFE4F)
@@ -139,7 +136,7 @@ int main() {
     uint8_t status = fileDevice->read(0xFE05);
     if (status == 0) {
         std::cout << "LOAD operation successful\n";
-        displayMemoryAsText(mem, 0x9000, 5);
+        displayMemoryAsText(bus, 0x9000, 5);
     } else {
         std::cout << "Error in LOAD operation (status = " << static_cast<int>(status) << ")\n";
     }
@@ -151,11 +148,11 @@ int main() {
     // Write new data to memory
     const char* message = "6502!";
     for (int i = 0; i < 5; ++i) {
-        mem[0xA000 + i] = message[i];
+        bus.write(0xA000 + i, message[i]);
     }
-    
+
     std::cout << "\nData in memory to be saved: ";
-    displayMemoryAsText(mem, 0xA000, 5);
+    displayMemoryAsText(bus, 0xA000, 5);
     
     // Set up registers for saving
     const std::string saveFile = "/tmp/saved_message.bin";

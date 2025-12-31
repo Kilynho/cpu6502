@@ -1,26 +1,23 @@
 #include <gtest/gtest.h>
-#include "cpu.hpp"
-#include "mem.hpp"
-#include "devices/basic_audio.hpp"
+#include "system_map.hpp"
+#include "basic_audio.hpp"
 #include <memory>
 #include <thread>
 #include <chrono>
 
 class BasicAudioTest : public testing::Test {
 public:
-    Mem mem;
-    CPU cpu;
+    SystemMap bus;
     std::shared_ptr<BasicAudio> audio;
 
     virtual void SetUp() {
-        cpu.Reset(mem);
         audio = std::make_shared<BasicAudio>();
         ASSERT_TRUE(audio->initialize()) << "Failed to initialize audio device";
-        cpu.registerIODevice(audio);
+        bus.registerIODevice(audio);
     }
 
     virtual void TearDown() {
-        cpu.unregisterIODevice(audio);
+        bus.unregisterIODevice(audio);
         audio->cleanup();
     }
 };
@@ -34,12 +31,12 @@ TEST_F(BasicAudioTest, Initialization) {
 // Test: Lectura y escritura de registros de frecuencia
 TEST_F(BasicAudioTest, FrequencyRegisters) {
     // Escribir frecuencia 440 Hz (La musical) directamente en los registros
-    audio->write(0xFB00, 184);  // 440 & 0xFF
-    audio->write(0xFB01, 1);    // 440 >> 8
+    bus.write(0xFB00, 184);  // 440 & 0xFF
+    bus.write(0xFB01, 1);    // 440 >> 8
     
     // Leer de vuelta los registros
-    uint8_t lowByte = audio->read(0xFB00);
-    uint8_t highByte = audio->read(0xFB01);
+    uint8_t lowByte = bus.read(0xFB00);
+    uint8_t highByte = bus.read(0xFB01);
     
     EXPECT_EQ(lowByte, 184);
     EXPECT_EQ(highByte, 1);
@@ -48,12 +45,12 @@ TEST_F(BasicAudioTest, FrequencyRegisters) {
 // Test: Lectura y escritura de registros de duración
 TEST_F(BasicAudioTest, DurationRegisters) {
     // Escribir duración 500 ms directamente en los registros
-    audio->write(0xFB02, 244);  // 500 & 0xFF
-    audio->write(0xFB03, 1);    // 500 >> 8
+    bus.write(0xFB02, 244);  // 500 & 0xFF
+    bus.write(0xFB03, 1);    // 500 >> 8
     
     // Leer de vuelta los registros
-    uint8_t lowByte = audio->read(0xFB02);
-    uint8_t highByte = audio->read(0xFB03);
+    uint8_t lowByte = bus.read(0xFB02);
+    uint8_t highByte = bus.read(0xFB03);
     
     EXPECT_EQ(lowByte, 244);
     EXPECT_EQ(highByte, 1);
@@ -62,10 +59,10 @@ TEST_F(BasicAudioTest, DurationRegisters) {
 // Test: Control de volumen
 TEST_F(BasicAudioTest, VolumeControl) {
     // Escribir volumen 200 directamente en el registro
-    audio->write(0xFB04, 200);
+    bus.write(0xFB04, 200);
     
     // Leer de vuelta el registro
-    uint8_t volume = audio->read(0xFB04);
+    uint8_t volume = bus.read(0xFB04);
     
     EXPECT_EQ(volume, 200);
 }
@@ -104,7 +101,7 @@ TEST_F(BasicAudioTest, PlaybackStatus) {
     audio->playTone(440, 100, 128);
     
     // Leer el registro de control mientras está reproduciéndose
-    uint8_t controlReg = audio->read(0xFB05);
+    uint8_t controlReg = bus.read(0xFB05);
     
     // El bit 1 (status) debe estar activo si hay audio reproduciéndose
     EXPECT_TRUE((controlReg & 0x02) != 0);
@@ -113,7 +110,7 @@ TEST_F(BasicAudioTest, PlaybackStatus) {
     audio->stop();
     
     // Leer de nuevo el registro de control
-    controlReg = audio->read(0xFB05);
+    controlReg = bus.read(0xFB05);
     
     // El bit 1 (status) debe estar inactivo
     EXPECT_TRUE((controlReg & 0x02) == 0);

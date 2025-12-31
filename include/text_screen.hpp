@@ -1,8 +1,5 @@
 #pragma once
-#include "../video_device.hpp"
-#include <string>
-#include <vector>
-#include <cstdint>
+#include "video_device.hpp"
 
 /**
  * @brief Implementation of a text screen for the 6502 emulator

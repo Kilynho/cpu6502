@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "cpu.hpp"
-#include "mem.hpp"
+#include "system_map.hpp"
 #include "tcp_serial.hpp"
 #include <memory>
 #include <thread>
@@ -12,7 +12,7 @@
 
 class TcpSerialTest : public testing::Test {
 public:
-    Mem mem;
+    SystemMap bus;
     CPU cpu;
     std::shared_ptr<TcpSerial> tcpSerial;
     
@@ -21,16 +21,20 @@ public:
     const uint16_t TEST_PORT = 12345;
 
     virtual void SetUp() {
-        cpu.Reset(mem);
+        cpu.PC = 0x8000;
+        cpu.SP = 0xFD;
+        cpu.A = cpu.X = cpu.Y = 0;
+        cpu.C = cpu.Z = cpu.I = cpu.D = cpu.B = cpu.V = cpu.N = 0;
+        bus.clearRAM();
         tcpSerial = std::make_shared<TcpSerial>();
-        cpu.registerIODevice(tcpSerial);
         tcpSerial->initialize();
+        bus.registerIODevice(tcpSerial);
     }
 
     virtual void TearDown() {
         tcpSerial->disconnect();
         tcpSerial->cleanup();
-        cpu.unregisterIODevice(tcpSerial);
+        bus.unregisterIODevice(tcpSerial);
     }
     
     // Función auxiliar para escribir una dirección en el buffer
@@ -368,16 +372,16 @@ TEST_F(TcpSerialTest, CPUIntegration) {
     
     // Crear un pequeño programa que lee del serial y escribe en memoria
     // LDA $FA01 (status), LDA $FA00 (data), STA $0200, BRK
-    mem[0x8000] = 0xAD;  // LDA absolute
-    mem[0x8001] = 0x01;
-    mem[0x8002] = 0xFA;
-    mem[0x8003] = 0xAD;  // LDA absolute
-    mem[0x8004] = 0x00;
-    mem[0x8005] = 0xFA;
-    mem[0x8006] = 0x8D;  // STA absolute
-    mem[0x8007] = 0x00;
-    mem[0x8008] = 0x02;
-    mem[0x8009] = 0x00;  // BRK
+    bus.write(0x8000, 0xAD);  // LDA absolute
+    bus.write(0x8001, 0x01);
+    bus.write(0x8002, 0xFA);
+    bus.write(0x8003, 0xAD);  // LDA absolute
+    bus.write(0x8004, 0x00);
+    bus.write(0x8005, 0xFA);
+    bus.write(0x8006, 0x8D);  // STA absolute
+    bus.write(0x8007, 0x00);
+    bus.write(0x8008, 0x02);
+    bus.write(0x8009, 0x00);  // BRK
     
     // Enviar un byte desde el cliente
     char data = 'Z';
@@ -387,10 +391,10 @@ TEST_F(TcpSerialTest, CPUIntegration) {
     
     // Ejecutar programa
     cpu.PC = 0x8000;
-    cpu.Execute(20, mem);
+    cpu.Execute(20, bus);
     
     // Verificar que el byte se copió a memoria
-    EXPECT_EQ(mem[0x0200], 'Z');
+    EXPECT_EQ(bus.read(0x0200), 'Z');
     
     close(clientSock);
 }

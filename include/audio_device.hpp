@@ -1,6 +1,5 @@
 #pragma once
 #include "io_device.hpp"
-#include <cstdint>
 
 /**
  * @brief Interfaz base para dispositivos de audio

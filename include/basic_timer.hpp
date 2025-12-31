@@ -1,7 +1,6 @@
 #pragma once
 #include "timer_device.hpp"
 #include "interrupt_controller.hpp"
-#include <cstdint>
 #include <atomic>
 #include <mutex>
 

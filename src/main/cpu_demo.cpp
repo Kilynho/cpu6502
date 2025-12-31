@@ -1,6 +1,7 @@
 #include "cpu.hpp"
 #include "mem.hpp"
 #include "logger.hpp"
+#include "cpu_instructions.hpp"
 #include <cstdio>
 #include <unistd.h>
 #include <cstring>
@@ -15,49 +16,52 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    Mem mem; // Create a memory instance
+
+    SystemMap bus; // Create a system bus instance
     CPU cpu; // Create a CPU instance
 
-    // Reset CPU and memory
-    cpu.Reset(mem);
-    
-    // Write a test program to ROM memory
-    mem[0x0040] = 0x55;                     // Value to load into accumulator
-    mem[0x0050] = 0x77;                     // Value to load into accumulator
-    mem[0x8000] = CPU::INS_LDX_IM.opcode;   // LDX Immediate instruction
-    mem[0x8001] = 0x0f;                     // Value to load into X register
-    mem[0x8002] = CPU::INS_LDA_IM.opcode;   // LDA Immediate instruction
-    mem[0x8003] = 0x84;                     // Value to load into accumulator
-    mem[0x8004] = CPU::INS_LDA_ZP.opcode;   // LDA Zero Page instruction
-    mem[0x8005] = 0x40;                     // Zero page address to load into accumulator
-    mem[0x8006] = CPU::INS_LDA_ZPX.opcode;  // LDA Zero Page X instruction
-    mem[0x8007] = 0x41;                     // Zero page address to load into accumulator with X offset
-    mem[0x8008] = CPU::INS_STA_ZP.opcode;   // STA Zero Page instruction
-    mem[0x8009] = 0x42;                     // Zero page address to store accumulator
-    mem[0x800A] = CPU::INS_JSR.opcode;      // JSR (Jump to Subroutine) instruction
-    mem[0x800B] = 0x00;                     // Low byte of subroutine address
-    mem[0x800C] = 0x80;                     // High byte of subroutine address
-    mem[0x8100] = CPU::INS_RTS.opcode;      // RTS (Return from Subroutine) instruction
-    mem[0x800D] = CPU::INS_LDA_IM.opcode;   // LDA Immediate instruction
-    mem[0x800E] = 0x99;                     // Value to load into accumulator
-    mem[0x800F] = CPU::INS_JSR.opcode;      // JSR (Jump to Subroutine) instruction
-    mem[0x8010] = 0x00;                     // Low byte of subroutine address
-    mem[0x8011] = 0x80;                     // High byte of subroutine address
+    // Manually set CPU registers to reset state
+    cpu.PC = (bus.read(0xFFFC)) | (bus.read(0xFFFD) << 8); // Set PC from reset vector
+    cpu.SP = 0xFD;
+    // Optionally set status flags if needed (e.g., cpu.Status = 0x24;)
+
+    // Write a test program to ROM/RAM via the bus
+    bus.write(0x0040, 0x55);                     // Value to load into accumulator
+    bus.write(0x0050, 0x77);                     // Value to load into accumulator
+    bus.write(0x8000, Instructions::OP_LDX_IM);   // LDX Immediate instruction
+    bus.write(0x8001, 0x0f);                     // Value to load into X register
+    bus.write(0x8002, Instructions::OP_LDA_IM);   // LDA Immediate instruction
+    bus.write(0x8003, 0x84);                     // Value to load into accumulator
+    bus.write(0x8004, Instructions::OP_LDA_ZP);   // LDA Zero Page instruction
+    bus.write(0x8005, 0x40);                     // Zero page address to load into accumulator
+    bus.write(0x8006, Instructions::OP_LDA_ZPX);  // LDA Zero Page X instruction
+    bus.write(0x8007, 0x41);                     // Zero page address to load into accumulator with X offset
+    bus.write(0x8008, Instructions::OP_STA_ZP);   // STA Zero Page instruction
+    bus.write(0x8009, 0x42);                     // Zero page address to store accumulator
+    bus.write(0x800A, Instructions::OP_JSR);      // JSR (Jump to Subroutine) instruction
+    bus.write(0x800B, 0x00);                     // Low byte of subroutine address
+    bus.write(0x800C, 0x80);                     // High byte of subroutine address
+    bus.write(0x8100, Instructions::OP_RTS);      // RTS (Return from Subroutine) instruction
+    bus.write(0x800D, Instructions::OP_LDA_IM);   // LDA Immediate instruction
+    bus.write(0x800E, 0x99);                     // Value to load into accumulator
+    bus.write(0x800F, Instructions::OP_JSR);      // JSR (Jump to Subroutine) instruction
+    bus.write(0x8010, 0x00);                     // Low byte of subroutine address
+    bus.write(0x8011, 0x80);                     // High byte of subroutine address
 
     // Set the reset vector to point to the start address of the program
-    mem[Mem::RESET_VECTOR] = 0x00;          // Low byte of reset vector address
-    mem[Mem::RESET_VECTOR + 1] = 0x80;      // High byte of reset vector address
+    bus.write(0xFFFC, 0x00);          // Low byte of reset vector address
+    bus.write(0xFFFD, 0x80);          // High byte of reset vector address
 
     // Determine the number of cycles to execute
     u32 cycles;
     if (infiniteCycles) {
         cycles = -1; // Infinite cycles
     } else {
-        cycles = cpu.CalculateCycles(mem); // Automatically calculate the number of required cycles
+        cycles = 1000; // Use a fixed cycle count for demo
     }
 
     // Execute the test program
-    cpu.Execute(cycles, mem);
+    cpu.Execute(cycles, bus);
 
     return 0;
 }

@@ -1,8 +1,11 @@
 #include <gtest/gtest.h>
 #include "interrupt_controller.hpp"
 #include "cpu.hpp"
-#include "mem.hpp"
+#include "system_map.hpp"
 #include "basic_timer.hpp"
+
+static constexpr uint16_t IRQ_VECTOR_ADDR = 0xFFFE;
+static constexpr uint16_t NMI_VECTOR_ADDR = 0xFFFA;
 #include <memory>
 
 // Mock interrupt source para pruebas
@@ -156,15 +159,17 @@ TEST_F(InterruptControllerTest, ClearAll) {
 
 // Test: Integración CPU - IRQ básica
 TEST_F(InterruptControllerTest, CPUIntegrationBasicIRQ) {
-    Mem mem;
+    SystemMap bus;
     CPU cpu;
-    
-    mem.Initialize();
-    cpu.Reset(mem);
+    bus.clearRAM();
+    cpu.PC = 0x0000;
+    cpu.SP = 0xFD;
+    cpu.A = cpu.X = cpu.Y = 0;
+    cpu.C = cpu.Z = cpu.I = cpu.D = cpu.B = cpu.V = cpu.N = 0;
     
     // Configurar vector de IRQ a 0x8000
-    mem[Mem::IRQ_VECTOR] = 0x00;
-    mem[Mem::IRQ_VECTOR + 1] = 0x80;
+    bus.write(IRQ_VECTOR_ADDR, 0x00);
+    bus.write(IRQ_VECTOR_ADDR + 1, 0x80);
     
     // Configurar controlador de interrupciones
     cpu.setInterruptController(&intCtrl);
@@ -182,7 +187,7 @@ TEST_F(InterruptControllerTest, CPUIntegrationBasicIRQ) {
     EXPECT_FALSE(cpu.I);
     
     // Manejar la interrupción
-    cpu.checkAndHandleInterrupts(mem);
+    cpu.checkAndHandleInterrupts(bus);
     
     // Verificar que PC apunta al vector de IRQ
     EXPECT_EQ(cpu.PC, 0x8000);
@@ -199,15 +204,17 @@ TEST_F(InterruptControllerTest, CPUIntegrationBasicIRQ) {
 
 // Test: Integración CPU - NMI básica
 TEST_F(InterruptControllerTest, CPUIntegrationBasicNMI) {
-    Mem mem;
+    SystemMap bus;
     CPU cpu;
-    
-    mem.Initialize();
-    cpu.Reset(mem);
+    bus.clearRAM();
+    cpu.PC = 0x0000;
+    cpu.SP = 0xFD;
+    cpu.A = cpu.X = cpu.Y = 0;
+    cpu.C = cpu.Z = cpu.I = cpu.D = cpu.B = cpu.V = cpu.N = 0;
     
     // Configurar vector de NMI a 0x9000
-    mem[Mem::NMI_VECTOR] = 0x00;
-    mem[Mem::NMI_VECTOR + 1] = 0x90;
+    bus.write(NMI_VECTOR_ADDR, 0x00);
+    bus.write(NMI_VECTOR_ADDR + 1, 0x90);
     
     // Configurar controlador de interrupciones
     cpu.setInterruptController(&intCtrl);
@@ -221,7 +228,7 @@ TEST_F(InterruptControllerTest, CPUIntegrationBasicNMI) {
     EXPECT_TRUE(intCtrl.hasNMI());
     
     // Manejar la interrupción
-    cpu.checkAndHandleInterrupts(mem);
+    cpu.checkAndHandleInterrupts(bus);
     
     // Verificar que PC apunta al vector de NMI
     EXPECT_EQ(cpu.PC, 0x9000);
@@ -238,15 +245,17 @@ TEST_F(InterruptControllerTest, CPUIntegrationBasicNMI) {
 
 // Test: IRQ enmascarada por flag I
 TEST_F(InterruptControllerTest, IRQMaskedByIFlag) {
-    Mem mem;
+    SystemMap bus;
     CPU cpu;
-    
-    mem.Initialize();
-    cpu.Reset(mem);
+    bus.clearRAM();
+    cpu.PC = 0x0000;
+    cpu.SP = 0xFD;
+    cpu.A = cpu.X = cpu.Y = 0;
+    cpu.C = cpu.Z = cpu.I = cpu.D = cpu.B = cpu.V = cpu.N = 0;
     
     // Configurar vector de IRQ
-    mem[Mem::IRQ_VECTOR] = 0x00;
-    mem[Mem::IRQ_VECTOR + 1] = 0x80;
+    bus.write(IRQ_VECTOR_ADDR, 0x00);
+    bus.write(IRQ_VECTOR_ADDR + 1, 0x80);
     
     cpu.setInterruptController(&intCtrl);
     intCtrl.registerSource(mockSource1);
@@ -261,7 +270,7 @@ TEST_F(InterruptControllerTest, IRQMaskedByIFlag) {
     EXPECT_TRUE(intCtrl.hasIRQ());
     
     // Intentar manejar la interrupción
-    cpu.checkAndHandleInterrupts(mem);
+    cpu.checkAndHandleInterrupts(bus);
     
     // PC no debe cambiar porque IRQ está enmascarada
     EXPECT_EQ(cpu.PC, initialPC);
@@ -272,15 +281,17 @@ TEST_F(InterruptControllerTest, IRQMaskedByIFlag) {
 
 // Test: NMI no puede ser enmascarada
 TEST_F(InterruptControllerTest, NMINotMasked) {
-    Mem mem;
+    SystemMap bus;
     CPU cpu;
-    
-    mem.Initialize();
-    cpu.Reset(mem);
+    bus.clearRAM();
+    cpu.PC = 0x0000;
+    cpu.SP = 0xFD;
+    cpu.A = cpu.X = cpu.Y = 0;
+    cpu.C = cpu.Z = cpu.I = cpu.D = cpu.B = cpu.V = cpu.N = 0;
     
     // Configurar vector de NMI
-    mem[Mem::NMI_VECTOR] = 0x00;
-    mem[Mem::NMI_VECTOR + 1] = 0x90;
+    bus.write(NMI_VECTOR_ADDR, 0x00);
+    bus.write(NMI_VECTOR_ADDR + 1, 0x90);
     
     cpu.setInterruptController(&intCtrl);
     intCtrl.registerSource(mockSource1);
@@ -295,7 +306,7 @@ TEST_F(InterruptControllerTest, NMINotMasked) {
     EXPECT_TRUE(intCtrl.hasNMI());
     
     // Manejar la interrupción
-    cpu.checkAndHandleInterrupts(mem);
+    cpu.checkAndHandleInterrupts(bus);
     
     // PC debe cambiar porque NMI no puede ser enmascarada
     EXPECT_EQ(cpu.PC, 0x9000);
@@ -306,17 +317,19 @@ TEST_F(InterruptControllerTest, NMINotMasked) {
 
 // Test: Prioridad NMI sobre IRQ
 TEST_F(InterruptControllerTest, NMIPriority) {
-    Mem mem;
+    SystemMap bus;
     CPU cpu;
-    
-    mem.Initialize();
-    cpu.Reset(mem);
+    bus.clearRAM();
+    cpu.PC = 0x0000;
+    cpu.SP = 0xFD;
+    cpu.A = cpu.X = cpu.Y = 0;
+    cpu.C = cpu.Z = cpu.I = cpu.D = cpu.B = cpu.V = cpu.N = 0;
     
     // Configurar vectores
-    mem[Mem::IRQ_VECTOR] = 0x00;
-    mem[Mem::IRQ_VECTOR + 1] = 0x80;
-    mem[Mem::NMI_VECTOR] = 0x00;
-    mem[Mem::NMI_VECTOR + 1] = 0x90;
+    bus.write(IRQ_VECTOR_ADDR, 0x00);
+    bus.write(IRQ_VECTOR_ADDR + 1, 0x80);
+    bus.write(NMI_VECTOR_ADDR, 0x00);
+    bus.write(NMI_VECTOR_ADDR + 1, 0x90);
     
     cpu.setInterruptController(&intCtrl);
     intCtrl.registerSource(mockSource1);
@@ -329,7 +342,7 @@ TEST_F(InterruptControllerTest, NMIPriority) {
     EXPECT_TRUE(intCtrl.hasNMI());
     
     // Manejar interrupciones
-    cpu.checkAndHandleInterrupts(mem);
+    cpu.checkAndHandleInterrupts(bus);
     
     // NMI debe tener prioridad, así que PC apunta al vector de NMI
     EXPECT_EQ(cpu.PC, 0x9000);
@@ -341,16 +354,18 @@ TEST_F(InterruptControllerTest, NMIPriority) {
 
 // Test: Integración con BasicTimer
 TEST_F(InterruptControllerTest, BasicTimerIntegration) {
-    Mem mem;
+    SystemMap bus;
     CPU cpu;
     InterruptController timerIntCtrl;
-    
-    mem.Initialize();
-    cpu.Reset(mem);
+    bus.clearRAM();
+    cpu.PC = 0x0000;
+    cpu.SP = 0xFD;
+    cpu.A = cpu.X = cpu.Y = 0;
+    cpu.C = cpu.Z = cpu.I = cpu.D = cpu.B = cpu.V = cpu.N = 0;
     
     // Configurar vector de IRQ
-    mem[Mem::IRQ_VECTOR] = 0x00;
-    mem[Mem::IRQ_VECTOR + 1] = 0x80;
+    bus.write(IRQ_VECTOR_ADDR, 0x00);
+    bus.write(IRQ_VECTOR_ADDR + 1, 0x80);
     
     // Crear y configurar timer
     auto timer = std::make_shared<BasicTimer>();
@@ -379,7 +394,7 @@ TEST_F(InterruptControllerTest, BasicTimerIntegration) {
     Word initialPC = cpu.PC;
     
     // Manejar la interrupción
-    cpu.checkAndHandleInterrupts(mem);
+    cpu.checkAndHandleInterrupts(bus);
     
     // Verificar que la CPU saltó al vector de IRQ
     EXPECT_EQ(cpu.PC, 0x8000);
@@ -394,11 +409,13 @@ TEST_F(InterruptControllerTest, BasicTimerIntegration) {
 
 // Test: Sin controlador de interrupciones
 TEST_F(InterruptControllerTest, NoInterruptController) {
-    Mem mem;
+    SystemMap bus;
     CPU cpu;
-    
-    mem.Initialize();
-    cpu.Reset(mem);
+    bus.clearRAM();
+    cpu.PC = 0x0000;
+    cpu.SP = 0xFD;
+    cpu.A = cpu.X = cpu.Y = 0;
+    cpu.C = cpu.Z = cpu.I = cpu.D = cpu.B = cpu.V = cpu.N = 0;
     
     // No configurar controlador de interrupciones
     EXPECT_EQ(cpu.getInterruptController(), nullptr);
@@ -406,7 +423,7 @@ TEST_F(InterruptControllerTest, NoInterruptController) {
     Word initialPC = cpu.PC;
     
     // Intentar manejar interrupciones - no debe hacer nada
-    cpu.checkAndHandleInterrupts(mem);
+    cpu.checkAndHandleInterrupts(bus);
     
     EXPECT_EQ(cpu.PC, initialPC);
 }

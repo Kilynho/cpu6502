@@ -5,7 +5,7 @@
 #include <vector>
 
 class CPU;
-class Mem;
+class SystemMap;
 
 class Debugger {
 public:
@@ -37,7 +37,7 @@ public:
 
     Debugger();
 
-    void attach(CPU* cpu, Mem* mem);
+    void attach(CPU* cpu, SystemMap* bus);
 
     void addBreakpoint(uint16_t address);
     void removeBreakpoint(uint16_t address);
@@ -67,7 +67,7 @@ public:
 
 private:
     CPU* cpu_;
-    Mem* mem_;
+    SystemMap* bus_;
     std::unordered_set<uint16_t> breakpoints_;
     std::unordered_set<uint16_t> watchpoints_;
     std::vector<MemoryEvent> memoryEvents_;

@@ -1,5 +1,4 @@
 #include "cpu.hpp"
-#include "mem.hpp"
 #include "text_screen.hpp"
 #include <memory>
 #include <iostream>
@@ -24,12 +23,9 @@ void printScreen(const std::shared_ptr<TextScreen>& screen) {
 }
 
 int main() {
-    Mem mem;
+    SystemMap bus;
     CPU cpu;
     auto textScreen = std::make_shared<TextScreen>();
-
-    // Reiniciar la CPU y registrar el dispositivo de video
-    cpu.Reset(mem);
     cpu.registerIODevice(textScreen);
 
     std::cout << "=== Demostración de TextScreen para CPU 6502 ===\n\n";
@@ -41,14 +37,15 @@ int main() {
     uint16_t addr = 0x8000;
     
     for (int i = 0; message1[i] != '\0'; i++) {
-        mem[addr++] = 0xA9;  // LDA #char
-        mem[addr++] = message1[i];
-        mem[addr++] = 0x8D;  // STA $FFFF (puerto de caracteres)
-        mem[addr++] = 0xFF;
-        mem[addr++] = 0xFF;
+        bus.write(addr++, 0xA9);  // LDA #char
+        bus.write(addr++, message1[i]);
+        bus.write(addr++, 0x8D);  // STA $FFFF (puerto de caracteres)
+        bus.write(addr++, 0xFF);
+        bus.write(addr++, 0xFF);
     }
-    
-    cpu.Execute(65, mem);
+    cpu.PC = 0x8000;
+    cpu.SP = 0xFD;
+    cpu.Execute(65, bus);
     printScreen(textScreen);
     
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -61,55 +58,55 @@ int main() {
     
     // Escribir "CPU 6502" en posición (5, 2)
     addr = 0x8000;
-    mem[addr++] = 0xA9;  // LDA #5
-    mem[addr++] = 5;
-    mem[addr++] = 0x8D;  // STA $FFFC (cursor col)
-    mem[addr++] = 0xFC;
-    mem[addr++] = 0xFF;
-    
-    mem[addr++] = 0xA9;  // LDA #2
-    mem[addr++] = 2;
-    mem[addr++] = 0x8D;  // STA $FFFD (cursor row)
-    mem[addr++] = 0xFD;
-    mem[addr++] = 0xFF;
+    bus.write(addr++, 0xA9);  // LDA #5
+    bus.write(addr++, 5);
+    bus.write(addr++, 0x8D);  // STA $FFFC (cursor col)
+    bus.write(addr++, 0xFC);
+    bus.write(addr++, 0xFF);
+
+    bus.write(addr++, 0xA9);  // LDA #2
+    bus.write(addr++, 2);
+    bus.write(addr++, 0x8D);  // STA $FFFD (cursor row)
+    bus.write(addr++, 0xFD);
+    bus.write(addr++, 0xFF);
     
     const char* message2 = "CPU 6502 Emulator";
     for (int i = 0; message2[i] != '\0'; i++) {
-        mem[addr++] = 0xA9;  // LDA #char
-        mem[addr++] = message2[i];
-        mem[addr++] = 0x8D;  // STA $FFFF
-        mem[addr++] = 0xFF;
-        mem[addr++] = 0xFF;
+        bus.write(addr++, 0xA9);  // LDA #char
+        bus.write(addr++, message2[i]);
+        bus.write(addr++, 0x8D);  // STA $FFFF
+        bus.write(addr++, 0xFF);
+        bus.write(addr++, 0xFF);
     }
     
-    cpu.Execute(100, mem);
+    cpu.Execute(100, bus);
     
     // Escribir "Video Device Demo" en posición (8, 5)
     addr = 0x8100;
-    mem[addr++] = 0xA9;  // LDA #8
-    mem[addr++] = 8;
-    mem[addr++] = 0x8D;  // STA $FFFC
-    mem[addr++] = 0xFC;
-    mem[addr++] = 0xFF;
-    
-    mem[addr++] = 0xA9;  // LDA #5
-    mem[addr++] = 5;
-    mem[addr++] = 0x8D;  // STA $FFFD
-    mem[addr++] = 0xFD;
-    mem[addr++] = 0xFF;
+    bus.write(addr++, 0xA9);  // LDA #8
+    bus.write(addr++, 8);
+    bus.write(addr++, 0x8D);  // STA $FFFC
+    bus.write(addr++, 0xFC);
+    bus.write(addr++, 0xFF);
+
+    bus.write(addr++, 0xA9);  // LDA #5
+    bus.write(addr++, 5);
+    bus.write(addr++, 0x8D);  // STA $FFFD
+    bus.write(addr++, 0xFD);
+    bus.write(addr++, 0xFF);
     
     const char* message3 = "Video Device Demo";
     for (int i = 0; message3[i] != '\0'; i++) {
-        mem[addr++] = 0xA9;  // LDA #char
-        mem[addr++] = message3[i];
-        mem[addr++] = 0x8D;  // STA $FFFF
-        mem[addr++] = 0xFF;
-        mem[addr++] = 0xFF;
+        bus.write(addr++, 0xA9);  // LDA #char
+        bus.write(addr++, message3[i]);
+        bus.write(addr++, 0x8D);  // STA $FFFF
+        bus.write(addr++, 0xFF);
+        bus.write(addr++, 0xFF);
     }
     
     // Configurar PC a 0x8100 para ejecutar el segundo bloque
     cpu.PC = 0x8100;
-    cpu.Execute(100, mem);
+    cpu.Execute(100, bus);
     
     printScreen(textScreen);
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
@@ -173,15 +170,15 @@ int main() {
     
     for (int i = 0; directMsg[i] != '\0'; i++) {
         uint16_t videoAddr = 0xFC00 + 10 * 40 + 10 + i;  // Fila 10, col 10+i
-        mem[addr++] = 0xA9;  // LDA #char
-        mem[addr++] = directMsg[i];
-        mem[addr++] = 0x8D;  // STA videoAddr
-        mem[addr++] = videoAddr & 0xFF;
-        mem[addr++] = (videoAddr >> 8) & 0xFF;
+        bus.write(addr++, 0xA9);  // LDA #char
+        bus.write(addr++, directMsg[i]);
+        bus.write(addr++, 0x8D);  // STA videoAddr
+        bus.write(addr++, videoAddr & 0xFF);
+        bus.write(addr++, (videoAddr >> 8) & 0xFF);
     }
     
     cpu.PC = 0x8000;
-    cpu.Execute(105, mem);
+    cpu.Execute(105, bus);
     
     printScreen(textScreen);
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));

@@ -1,11 +1,11 @@
 #pragma once
-#include "storage_device.hpp"
 #include <string>
 #include <vector>
-#include <cstdint>
+#include "storage_device.hpp"
 
-// Forward declaration
+// Forward declarations
 class Mem;
+class SystemMap;
 
 /**
  * @brief Implementation of a storage device based on host files
@@ -23,6 +23,7 @@ class Mem;
 class FileDevice : public StorageDevice {
 public:
     FileDevice(Mem* memory);
+    FileDevice(SystemMap* bus);
     
     // Implementación de IODevice
     bool handlesRead(uint16_t address) const override;
@@ -40,6 +41,7 @@ public:
     uint8_t getStatus() const { return status; }
     
 private:
+    SystemMap* bus;                    // Referencia al bus del sistema (nuevo)
     static constexpr uint16_t CONTROL_ADDR = 0xFE00;      // Control de operación
     static constexpr uint16_t START_ADDR_LO = 0xFE01;     // Byte bajo dirección inicio
     static constexpr uint16_t START_ADDR_HI = 0xFE02;     // Byte alto dirección inicio

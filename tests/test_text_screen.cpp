@@ -1,23 +1,27 @@
 #include <gtest/gtest.h>
 #include "cpu.hpp"
-#include "mem.hpp"
+#include "system_map.hpp"
 #include "text_screen.hpp"
 #include <memory>
 
 class TextScreenTest : public testing::Test {
 public:
-    Mem mem;
+    SystemMap bus;
     CPU cpu;
     std::shared_ptr<TextScreen> screen;
 
     virtual void SetUp() {
-        cpu.Reset(mem);
+        cpu.PC = 0x8000;
+        cpu.SP = 0xFD;
+        cpu.A = cpu.X = cpu.Y = 0;
+        cpu.C = cpu.Z = cpu.I = cpu.D = cpu.B = cpu.V = cpu.N = 0;
+        bus.clearRAM();
         screen = std::make_shared<TextScreen>();
-        cpu.registerIODevice(screen);
+        bus.registerIODevice(screen);
     }
 
     virtual void TearDown() {
-        cpu.unregisterIODevice(screen);
+        bus.unregisterIODevice(screen);
     }
 };
 
@@ -38,13 +42,13 @@ TEST_F(TextScreenTest, Initialization) {
 // Test: Escritura directa en buffer de video
 TEST_F(TextScreenTest, DirectVideoMemoryWrite) {
     // Escribir 'H' en la primera posición
-    mem[0x8000] = 0xA9;  // LDA #'H'
-    mem[0x8001] = 'H';
-    mem[0x8002] = 0x8D;  // STA $FC00
-    mem[0x8003] = 0x00;
-    mem[0x8004] = 0xFC;
+    bus.write(0x8000, 0xA9);  // LDA #'H'
+    bus.write(0x8001, 'H');
+    bus.write(0x8002, 0x8D);  // STA $FC00
+    bus.write(0x8003, 0x00);
+    bus.write(0x8004, 0xFC);
     
-    cpu.Execute(8, mem);
+    cpu.Execute(8, bus);
     
     std::string buffer = screen->getBuffer();
     EXPECT_EQ(buffer[0], 'H');
@@ -53,13 +57,13 @@ TEST_F(TextScreenTest, DirectVideoMemoryWrite) {
 // Test: Escritura mediante el puerto de caracteres
 TEST_F(TextScreenTest, CharacterPortWrite) {
     // Escribir 'A' mediante el puerto de caracteres
-    mem[0x8000] = 0xA9;  // LDA #'A'
-    mem[0x8001] = 'A';
-    mem[0x8002] = 0x8D;  // STA $FFFF (puerto de caracteres)
-    mem[0x8003] = 0xFF;
-    mem[0x8004] = 0xFF;
+    bus.write(0x8000, 0xA9);  // LDA #'A'
+    bus.write(0x8001, 'A');
+    bus.write(0x8002, 0x8D);  // STA $FFFF (puerto de caracteres)
+    bus.write(0x8003, 0xFF);
+    bus.write(0x8004, 0xFF);
     
-    cpu.Execute(8, mem);
+    cpu.Execute(8, bus);
     
     std::string buffer = screen->getBuffer();
     EXPECT_EQ(buffer[0], 'A');
@@ -72,14 +76,14 @@ TEST_F(TextScreenTest, MultipleCharacterWrite) {
     uint16_t addr = 0x8000;
     
     for (int i = 0; text[i] != '\0'; i++) {
-        mem[addr++] = 0xA9;  // LDA #char
-        mem[addr++] = text[i];
-        mem[addr++] = 0x8D;  // STA $FFFF
-        mem[addr++] = 0xFF;
-        mem[addr++] = 0xFF;
+        bus.write(addr++, 0xA9);  // LDA #char
+        bus.write(addr++, text[i]);
+        bus.write(addr++, 0x8D);  // STA $FFFF
+        bus.write(addr++, 0xFF);
+        bus.write(addr++, 0xFF);
     }
     
-    cpu.Execute(40, mem);
+    cpu.Execute(40, bus);
     
     std::string buffer = screen->getBuffer();
     EXPECT_EQ(buffer.substr(0, 5), "HELLO");
@@ -88,25 +92,25 @@ TEST_F(TextScreenTest, MultipleCharacterWrite) {
 // Test: Control de posición del cursor
 TEST_F(TextScreenTest, CursorPositioning) {
     // Posicionar cursor en columna 10, fila 5
-    mem[0x8000] = 0xA9;  // LDA #10
-    mem[0x8001] = 10;
-    mem[0x8002] = 0x8D;  // STA $FFFC (cursor col)
-    mem[0x8003] = 0xFC;
-    mem[0x8004] = 0xFF;
+    bus.write(0x8000, 0xA9);  // LDA #10
+    bus.write(0x8001, 10);
+    bus.write(0x8002, 0x8D);  // STA $FFFC (cursor col)
+    bus.write(0x8003, 0xFC);
+    bus.write(0x8004, 0xFF);
     
-    mem[0x8005] = 0xA9;  // LDA #5
-    mem[0x8006] = 5;
-    mem[0x8007] = 0x8D;  // STA $FFFD (cursor row)
-    mem[0x8008] = 0xFD;
-    mem[0x8009] = 0xFF;
+    bus.write(0x8005, 0xA9);  // LDA #5
+    bus.write(0x8006, 5);
+    bus.write(0x8007, 0x8D);  // STA $FFFD (cursor row)
+    bus.write(0x8008, 0xFD);
+    bus.write(0x8009, 0xFF);
     
-    mem[0x800A] = 0xA9;  // LDA #'X'
-    mem[0x800B] = 'X';
-    mem[0x800C] = 0x8D;  // STA $FFFF (escribir en cursor)
-    mem[0x800D] = 0xFF;
-    mem[0x800E] = 0xFF;
+    bus.write(0x800A, 0xA9);  // LDA #'X'
+    bus.write(0x800B, 'X');
+    bus.write(0x800C, 0x8D);  // STA $FFFF (escribir en cursor)
+    bus.write(0x800D, 0xFF);
+    bus.write(0x800E, 0xFF);
     
-    cpu.Execute(24, mem);
+    cpu.Execute(24, bus);
     
     std::string buffer = screen->getBuffer();
     // Calcular offset: fila 5 * 40 + columna 10 = 210
@@ -122,13 +126,13 @@ TEST_F(TextScreenTest, ClearScreen) {
     screen->writeCharAtCursor('I');
     
     // Limpiar pantalla mediante registro de control
-    mem[0x8000] = 0xA9;  // LDA #0x02 (bit de clear)
-    mem[0x8001] = 0x02;
-    mem[0x8002] = 0x8D;  // STA $FFFE (control)
-    mem[0x8003] = 0xFE;
-    mem[0x8004] = 0xFF;
+    bus.write(0x8000, 0xA9);  // LDA #0x02 (bit de clear)
+    bus.write(0x8001, 0x02);
+    bus.write(0x8002, 0x8D);  // STA $FFFE (control)
+    bus.write(0x8003, 0xFE);
+    bus.write(0x8004, 0xFF);
     
-    cpu.Execute(8, mem);
+    cpu.Execute(8, bus);
     
     std::string buffer = screen->getBuffer();
     for (char c : buffer) {
@@ -188,19 +192,19 @@ TEST_F(TextScreenTest, ReadCursorRegisters) {
     screen->setCursorPosition(15, 10);
     
     // Leer columna del cursor
-    mem[0x8000] = 0xAD;  // LDA $FFFC
-    mem[0x8001] = 0xFC;
-    mem[0x8002] = 0xFF;
+    bus.write(0x8000, 0xAD);  // LDA $FFFC
+    bus.write(0x8001, 0xFC);
+    bus.write(0x8002, 0xFF);
     
-    cpu.Execute(4, mem);
+    cpu.Execute(4, bus);
     EXPECT_EQ(cpu.A, 15);
     
     // Leer fila del cursor
-    mem[0x8003] = 0xAD;  // LDA $FFFD
-    mem[0x8004] = 0xFD;
-    mem[0x8005] = 0xFF;
+    bus.write(0x8003, 0xAD);  // LDA $FFFD
+    bus.write(0x8004, 0xFD);
+    bus.write(0x8005, 0xFF);
     
-    cpu.Execute(4, mem);
+    cpu.Execute(4, bus);
     EXPECT_EQ(cpu.A, 10);
 }
 

@@ -1,5 +1,5 @@
 #include "cpu.hpp"
-#include "mem.hpp"
+#include "system_map.hpp"
 #include "tcp_serial.hpp"
 #include <memory>
 #include <iostream>
@@ -27,37 +27,38 @@ void signalHandler(int signum) {
 }
 
 // Programa 6502 que implementa un echo server simple
-void loadEchoProgram(Mem& mem, uint16_t startAddr) {
+// TODO: Refactor to use SystemMap for bus-based memory access
+void loadEchoProgram(SystemMap& bus, uint16_t startAddr) {
     uint16_t addr = startAddr;
-    
+
     // LOOP:
     //   LDA $FA01        ; Leer registro de estado
-    mem[addr++] = 0xAD;  // LDA absolute
-    mem[addr++] = 0x01;
-    mem[addr++] = 0xFA;
-    
+    bus.write(addr++, 0xAD);  // LDA absolute
+    bus.write(addr++, 0x01);
+    bus.write(addr++, 0xFA);
+
     //   AND #$01         ; Verificar bit RDR (dato disponible)
-    mem[addr++] = 0x29;  // AND immediate
-    mem[addr++] = 0x01;
-    
+    bus.write(addr++, 0x29);  // AND immediate
+    bus.write(addr++, 0x01);
+
     //   BEQ LOOP         ; Si no hay dato, seguir esperando
-    mem[addr++] = 0xF0;  // BEQ
-    mem[addr++] = 0xF8;  // -8 (volver a LOOP)
-    
+    bus.write(addr++, 0xF0);  // BEQ
+    bus.write(addr++, 0xF8);  // -8 (volver a LOOP)
+
     //   LDA $FA00        ; Leer byte recibido
-    mem[addr++] = 0xAD;  // LDA absolute
-    mem[addr++] = 0x00;
-    mem[addr++] = 0xFA;
-    
+    bus.write(addr++, 0xAD);  // LDA absolute
+    bus.write(addr++, 0x00);
+    bus.write(addr++, 0xFA);
+
     //   STA $FA00        ; Enviar byte (echo)
-    mem[addr++] = 0x8D;  // STA absolute
-    mem[addr++] = 0x00;
-    mem[addr++] = 0xFA;
-    
+    bus.write(addr++, 0x8D);  // STA absolute
+    bus.write(addr++, 0x00);
+    bus.write(addr++, 0xFA);
+
     //   JMP LOOP         ; Volver al inicio
-    mem[addr++] = 0x4C;  // JMP absolute
-    mem[addr++] = (startAddr & 0xFF);
-    mem[addr++] = ((startAddr >> 8) & 0xFF);
+    bus.write(addr++, 0x4C);  // JMP absolute
+    bus.write(addr++, (startAddr & 0xFF));
+    bus.write(addr++, ((startAddr >> 8) & 0xFF));
 }
 
 // Modo 1: Echo server usando API directa (C++)
@@ -94,33 +95,26 @@ void runDirectAPIMode(std::shared_ptr<TcpSerial> tcpSerial) {
 }
 
 // Modo 2: Echo server usando código 6502 y registros mapeados
-void run6502Mode(Mem& mem, CPU& cpu, std::shared_ptr<TcpSerial> tcpSerial) {
+void run6502Mode(SystemMap& bus, CPU& cpu, std::shared_ptr<TcpSerial> tcpSerial) {
     std::cout << "\n=== Modo 2: Echo Server usando código 6502 ===\n";
     std::cout << "Cargando programa 6502...\n";
-    
-    // Cargar programa echo en memoria
-    loadEchoProgram(mem, 0x8000);
+    // Cargar programa echo en memoria (TODO: update to use bus)
+    loadEchoProgram(bus, 0x8000);
     std::cout << "Programa cargado en 0x8000\n";
-    
     // Configurar puerto usando registros mapeados
     tcpSerial->write(0xFA04, 0x39);  // Puerto 12345 & 0xFF
     tcpSerial->write(0xFA05, 0x30);  // Puerto 12345 >> 8
-    
     // Activar modo escucha
     tcpSerial->write(0xFA06, 2);  // LISTEN
-    
     std::cout << "Servidor escuchando en puerto 12345...\n";
     std::cout << "Conéctate con: nc localhost 12345\n";
     std::cout << "El código 6502 hará echo de todo lo que reciba\n";
     std::cout << "Presiona Ctrl+C para salir\n\n";
-    
     // Configurar CPU
     cpu.PC = 0x8000;
-    
     while (running) {
         // Ejecutar algunas instrucciones del programa 6502
-        cpu.Execute(100, mem);
-        
+        cpu.Execute(100, bus);
         // Dar un pequeño delay para no consumir 100% CPU
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
@@ -205,13 +199,13 @@ int main(int argc, char* argv[]) {
     signal(SIGTERM, signalHandler);
     
     // Configuración
-    Mem mem;
+    SystemMap bus;
     CPU cpu;
     auto tcpSerial = std::make_shared<TcpSerial>();
-    
-    cpu.Reset(mem);
     cpu.registerIODevice(tcpSerial);
     tcpSerial->initialize();
+    cpu.PC = 0x8000;
+    cpu.SP = 0xFD;
     
     // Determinar modo de operación
     int mode = 3;  // Por defecto: interactivo
@@ -232,7 +226,7 @@ int main(int argc, char* argv[]) {
             runDirectAPIMode(tcpSerial);
             break;
         case 2:
-            run6502Mode(mem, cpu, tcpSerial);
+            run6502Mode(bus, cpu, tcpSerial);
             break;
         case 3:
         default:

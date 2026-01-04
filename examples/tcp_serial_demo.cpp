@@ -1,5 +1,5 @@
 #include "cpu.hpp"
-#include "system_map.hpp"
+#include "cpu/system_map.hpp"
 #include "tcp_serial.hpp"
 #include <memory>
 #include <iostream>

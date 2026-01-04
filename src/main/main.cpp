@@ -1,5 +1,6 @@
-#include "system_map.hpp"
+#include "cpu/system_map.hpp"
 #include "cpu.hpp"
+#include "logger.hpp"
 #include <iostream>
 #include <fstream>
 #include <thread>
@@ -23,6 +24,11 @@ bool loadBinary(const char* filename, uint8_t* dest, size_t maxSize) {
 }
 
 int main(int argc, char* argv[]) {
+    // Configurar logger al inicio
+    auto& logger = util::Logger::GetInstance();
+    logger.SetLogFile("build/logs/cpu.log", 10 * 1024 * 1024, 5);
+    logger.SetLevel(util::LogLevel::INFO);
+    
     SystemMap sys;
     CPU cpu;
 

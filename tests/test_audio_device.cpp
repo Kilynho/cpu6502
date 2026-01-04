@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "system_map.hpp"
+#include "cpu/system_map.hpp"
 #include "basic_audio.hpp"
 #include <memory>
 #include <thread>

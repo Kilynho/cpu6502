@@ -9,7 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <memory>
-#include "system_map.hpp"
+#include "cpu/system_map.hpp"
 #include "io_device.hpp"
 #include "interrupt_controller.hpp"
 

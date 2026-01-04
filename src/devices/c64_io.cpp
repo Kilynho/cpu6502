@@ -47,42 +47,40 @@ void C64IO::write(uint16_t address, uint8_t value) {
         screenRAM[pos] = value;
         // Para mostrar en consola, normalizamos PETSCII a ASCII básico:
         // - Mapear CR (0x0D) a nueva línea
+        // - LF (0x0A) se ignora para evitar doble salto de línea
         // - Quitar bit 7 (PETSCII usa a veces el bit alto) y usar el
-        //   caracter si es imprimible, en caso contrario mostrar '?'
+        //   caracter si es imprimible
         if (value == 0x0D) {
             screenBuffer += '\n';
             std::cout << '\n';
+        } else if (value == 0x0A) {
+            // Ignore LF to avoid double newlines (CR is sufficient)
+            return;
         } else {
             uint8_t v = value & 0x7F;
             if (v >= 32 && v < 127) {
                 char out = static_cast<char>(v);
                 screenBuffer += out;
                 std::cout << out;
-            } else {
-                // Mostrar como hex para depuración en vez de '?'
-                char buf[8];
-                std::snprintf(buf, sizeof(buf), "<0x%02X>", value);
-                screenBuffer += buf;
-                std::cout << buf;
             }
+            // Silently ignore non-printable characters instead of showing hex
         }
     } else if (address == WOZMON_CHAR_OUT) {
         // WOZMON character output - display directly
         if (value == 0x0D) {
             screenBuffer += '\n';
             std::cout << '\n' << std::flush;
+        } else if (value == 0x0A) {
+            // Ignore LF to avoid double newlines
+            return;
         } else {
             uint8_t v = value & 0x7F;
             if (v >= 32 && v < 127) {
                 char out = static_cast<char>(v);
                 screenBuffer += out;
                 std::cout << out << std::flush;
-            } else {
-                char buf[8];
-                std::snprintf(buf, sizeof(buf), "<0x%02X>", value);
-                screenBuffer += buf;
-                std::cout << buf << std::flush;
             }
+            // Silently ignore non-printable characters
         }
     }
 }

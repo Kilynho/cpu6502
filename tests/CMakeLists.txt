@@ -20,7 +20,6 @@ endif()
 set(TEST_SOURCES
     test_main.cpp
     instruction_handlers_test.cpp
-    test_apple_io.cpp
     test_file_device.cpp
     test_text_screen.cpp
     test_emulator_gui.cpp

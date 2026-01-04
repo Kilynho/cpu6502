@@ -1,6 +1,6 @@
 #include "file_device.hpp"
 #include "mem.hpp"
-#include "system_map.hpp"
+#include "cpu/system_map.hpp"
 #include <fstream>
 #include <iostream>
 #include <cstring>

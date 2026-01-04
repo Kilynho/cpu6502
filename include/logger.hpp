@@ -4,6 +4,8 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <fstream>
+#include <memory>
 
 namespace util {
 
@@ -28,6 +30,9 @@ public:
     // Obtener el nivel de log actual
     LogLevel GetLevel() const;
     
+    // Configurar logging a archivo con rotación
+    void SetLogFile(const std::string& basePath, size_t maxFileSize = 10 * 1024 * 1024, size_t maxFiles = 5);
+    
     // Métodos de log
     void Error(const std::string& message);
     void Warn(const std::string& message);
@@ -39,13 +44,21 @@ public:
     
 private:
     Logger();
-    ~Logger() = default;
+    ~Logger();
     
     // Deshabilitar copia y asignación
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
     
     LogLevel currentLevel;
+    std::unique_ptr<std::ofstream> logFile;
+    std::string logBasePath;
+    size_t maxFileSize;
+    size_t maxFiles;
+    size_t currentFileSize;
+    
+    // Rotar archivos de log
+    void RotateLogFiles();
     
     // Convertir nivel a string
     const char* LevelToString(LogLevel level) const;

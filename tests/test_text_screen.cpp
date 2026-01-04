@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "cpu.hpp"
-#include "cpu/system_map.hpp"
+#include "system_map.hpp"
 #include "text_screen.hpp"
 #include <memory>
 

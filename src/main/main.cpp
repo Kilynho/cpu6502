@@ -1,4 +1,4 @@
-#include "cpu/system_map.hpp"
+#include "system_map.hpp"
 #include "cpu.hpp"
 #include "logger.hpp"
 #include <iostream>
@@ -71,8 +71,9 @@ int main(int argc, char* argv[]) {
 
     sys.clearRAM();
 
-    // Inicializar CPU (Wozmon monitor siempre arranca en 0xFE00 según el vector en $FFFC/$FFFD)
-    uint16_t resetVec = 0xFE00;
+    // Inicializar CPU - Basic COLDSTART en $9F13
+    // (Wozmon estaría en 0xFE00, pero Basic arranca desde COLDSTART)
+    uint16_t resetVec = 0x9F13;  // COLDSTART de Basic
     cpu.PC = resetVec;
     cpu.SP = 0xFD;
     // Set interrupt-disable flag on reset

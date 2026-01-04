@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include "mem.hpp"
-#include "cpu/system_map.hpp"
+#include "system_map.hpp"
 
 using Byte = uint8_t;
 using Word = uint16_t;

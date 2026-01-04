@@ -1,6 +1,6 @@
 #include "debugger.hpp"
 #include "cpu.hpp"
-#include "cpu/system_map.hpp"
+#include "system_map.hpp"
 
 Debugger::Debugger()
     : cpu_(nullptr), bus_(nullptr), lastBreakpoint_(0), hitBreakpoint_(false) {}

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "interrupt_controller.hpp"
 #include "cpu.hpp"
-#include "cpu/system_map.hpp"
+#include "system_map.hpp"
 #include "basic_timer.hpp"
 
 static constexpr uint16_t IRQ_VECTOR_ADDR = 0xFFFE;

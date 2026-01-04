@@ -1,4 +1,4 @@
-#include "cpu/system_map.hpp"
+#include "system_map.hpp"
 #include <cstring>
 #include <stdexcept>
 #include <iostream>

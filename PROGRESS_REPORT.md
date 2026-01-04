@@ -234,10 +234,14 @@ Se han realizado mejoras significativas en el código del emulador:
 - Código base más organizado y mantenible
 - Sistema de logs profesional con rotación automática
 - Eliminación de código obsoleto
+- **Basic ahora arranca correctamente desde COLDSTART ($9F13)**
+- Basic muestra los prompts iniciales (MEMORY SIZE?, TERMINAL WIDTH?)
 
-Sin embargo, queda trabajo importante por hacer en la integración de Basic con el emulador. El siguiente paso crítico es depurar por qué Basic no arranca correctamente y corregir los problemas del mapa de memoria.
+El siguiente paso es ajustar la configuración de memoria de Basic para que pueda ejecutar programas correctamente. Basic está funcionando pero necesita una configuración adecuada de las áreas de memoria RAM disponibles.
 
 ## Commits Realizados
 
 1. **bad538d**: Actualiza configuración de DevContainer, Docker y Compose
-2. **0b6853d**: Mejoras en I/O, refactoring y sistema de logs (este trabajo)
+2. **0b6853d**: Mejoras en I/O, refactoring y sistema de logs
+3. **070dfe9**: Añadir informe de progreso detallado
+4. **f88d946**: Revertir movimiento de system_map a include/ y configurar COLDSTART (Basic arranca correctamente)

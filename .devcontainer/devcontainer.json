@@ -1,0 +1,17 @@
+{
+    "name": "cpu6502-devcontainer",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {},
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-vscode.cmake-tools",
+                "ms-vscode.cmake-tools-extension-pack"
+            ]
+        }
+    },
+    "postCreateCommand": "cmake -S . -B build && cmake --build build -j1"
+}

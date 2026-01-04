@@ -1,0 +1,6 @@
+services:
+  cpu6502:
+    image: cpu6502
+    build:
+      context: .
+      dockerfile: ./Dockerfile

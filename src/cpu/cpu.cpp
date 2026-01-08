@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+#include <filesystem>
 
 // --- IODevice registration ---
 void CPU::registerIODevice(std::shared_ptr<IODevice> device) {
@@ -168,8 +169,17 @@ void CPU::UpdateOverflowFlag(bool overflow) {
 
 
 CPU::CPU() : PC(0), SP(0), A(0), X(0), Y(0), C(0), Z(0), I(0), D(0), B(0), V(0), N(0), interruptController(nullptr), debugger(nullptr) {
-    // Open the main log file and determine its size
-    logFileName = "cpu_log.txt";
+    // Calcular ruta del ejecutable y crear carpeta logs al lado
+    std::filesystem::path exePath;
+    std::error_code ec;
+    exePath = std::filesystem::read_symlink("/proc/self/exe", ec);
+    if (ec) exePath = std::filesystem::current_path();
+    auto exeDir = exePath.has_filename() ? exePath.parent_path() : exePath;
+    auto logsDir = exeDir / "logs";
+    std::filesystem::create_directories(logsDir, ec);
+
+    // Open the main log file and determine its size (en carpeta logs)
+    logFileName = (logsDir / "cpu_log.txt").string();
     logFileIndex = 0;
     logFile.open(logFileName, std::ios_base::app);
     if (logFile.is_open()) {
@@ -197,10 +207,12 @@ void CPU::rotateLogFile() const {
     }
     // Advance index
     logFileIndex = (logFileIndex + 1) % LOG_FILE_COUNT;
+    // Mantener la misma carpeta de logs al rotar
+    std::filesystem::path baseDir = std::filesystem::path(logFileName).parent_path();
     if (logFileIndex == 0) {
-        logFileName = "cpu_log.txt";
+        logFileName = (baseDir / "cpu_memory.log").string();
     } else {
-        logFileName = "cpu_log." + std::to_string(logFileIndex) + ".txt";
+        logFileName = (baseDir / ("cpu_memory." + std::to_string(logFileIndex) + ".log")).string();
     }
     // Open new file (overwrite)
     logFile.open(logFileName, std::ios_base::trunc);

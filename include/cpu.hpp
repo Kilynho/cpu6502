@@ -88,7 +88,7 @@ public:
     mutable std::ofstream logFile; // CPU log file (rotating)
     mutable size_t logFileSize = 0; // Current log file size in bytes
     mutable int logFileIndex = 0;   // Current log file index (0-4)
-    static constexpr size_t LOG_FILE_MAX_SIZE = 100 * 1024 * 1024; // 100MB
+    static constexpr size_t LOG_FILE_MAX_SIZE = 10 * 1024 * 1024; // 10MB
     static constexpr int LOG_FILE_COUNT = 5;
     mutable std::string logFileName = "cpu_log.txt";
     void rotateLogFile() const;
